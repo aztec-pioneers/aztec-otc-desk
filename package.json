@@ -1,0 +1,14 @@
+{
+  "name": "@repo/monorepo",
+  "type": "module",
+  "private": true,
+  "packageManager": "pnpm@10.12.4",
+  "scripts": {
+    "install-deps": "[ -z \"$CI\" ] && pnpm install || echo 'Skipping install-deps on CI because it takes too long'",
+    "aztec:sandbox": "bash scripts/aztec.sh start --sandbox"
+  },
+  "devDependencies": {
+    "turbo": "2.3.3",
+    "typescript": "catalog:"
+  }
+}

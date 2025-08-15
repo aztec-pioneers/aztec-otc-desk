@@ -1,0 +1,6 @@
+{
+  "name": "@repo/scripts",
+  "type": "module",
+  "private": true,
+  "description": "this file is needed to make Turborepo work"
+}

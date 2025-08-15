@@ -1,0 +1,24 @@
+{
+  "name": "@repo/contracts",
+  "type": "module",
+  "private": true,
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "compile:noir": "bash ./scripts/compile-contracts.sh",
+    "test:runtime": "vitest run && bash ../../scripts/aztec-nargo.sh test",
+    "test:lint": "tsc --noEmit --emitDeclarationOnly false && prettier --check . && bash ../../scripts/aztec-nargo.sh fmt --check",
+    "test:lint:fix": "prettier --write . && bash ../../scripts/aztec-nargo.sh fmt"
+  },
+  "dependencies": {
+    "@aztec/aztec.js": "catalog:",
+    "@aztec/stdlib": "catalog:"
+  },
+  "devDependencies": {
+    "@repo/scripts": "workspace:*",
+    "prettier": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

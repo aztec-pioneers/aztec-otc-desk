@@ -1,0 +1,30 @@
+name: Test
+
+on: [push]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Aztec
+        run: bash scripts/install-aztec.sh
+
+      - name: Start Aztec local blockchain
+        run: pnpm aztec:sandbox 2>&1 &
+
+      - name: Run tests
+        env:
+          # Turborepo remote cache
+          TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+          TURBO_TEAM: ${{ vars.TURBO_TEAM }}
+        run: pnpm turbo test
