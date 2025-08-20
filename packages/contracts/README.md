@@ -1,4 +1,4 @@
-# aztec-otc-desk
+# contracts
 
 To install dependencies:
 

@@ -1,14 +1,17 @@
 {
-  "name": "@repo/monorepo",
-  "type": "module",
-  "private": true,
-  "packageManager": "pnpm@10.12.4",
-  "scripts": {
-    "install-deps": "[ -z \"$CI\" ] && pnpm install || echo 'Skipping install-deps on CI because it takes too long'",
-    "aztec:sandbox": "bash scripts/aztec.sh start --sandbox"
+  "name": "aztec-otc-desk-monorepo",
+  "workspaces": {
+    "packages": [
+      "packages/*"
+    ],
+    "catalog": {
+      "@types/bun": "latest",
+      "typescript": "^5.0.0",
+      "@aztec/aztec.js": "^1.2.1",
+    "@aztec/accounts": "^1.2.1"
+    }
   },
-  "devDependencies": {
-    "turbo": "2.3.3",
-    "typescript": "catalog:"
+  "scripts": {
+    "build-token": "git submodule update --init --recursive && cd deps/aztec-standards && aztec-nargo compile --package token_contract && aztec codegen ./target/token_contract-Token.json -o ../../packages/contracts/artifacts && cd ../../"
   }
 }

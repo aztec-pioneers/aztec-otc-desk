@@ -1,2 +1,6 @@
-[workspace]
-members = ["noir/simple"]
+[package]
+name = "contracts"
+type = "contract"
+authors = ["Jack Gilcrest", "Harsh Bajpai"]
+
+[dependencies]
