@@ -1,11 +1,15 @@
 import type { RequestHandler, ApiResponse, OrderResponse, Order, CreateOrderRequest } from "../types/api";
-import { database } from "../db";
+import type { IDatabase } from "../db";
 import { generateOrderId } from "../utils/uuid";
 
 /**
- * Handle POST /order - Create a new order
+ * Create order handlers with database dependency injection
  */
-export const handleCreateOrder: RequestHandler = async (req: Request): Promise<Response> => {
+export function createOrderHandlers(database: IDatabase) {
+  /**
+   * Handle POST /order - Create a new order
+   */
+  const handleCreateOrder: RequestHandler = async (req: Request): Promise<Response> => {
   try {
     // Parse the request body (excluding orderId)
     const createOrderData: CreateOrderRequest = await req.json();
@@ -56,12 +60,12 @@ export const handleCreateOrder: RequestHandler = async (req: Request): Promise<R
       }
     );
   }
-};
+  };
 
-/**
- * Handle GET /order - Retrieve order(s)
- */
-export const handleGetOrder: RequestHandler = async (req: Request): Promise<Response> => {
+  /**
+   * Handle GET /order - Retrieve order(s)
+   */
+  const handleGetOrder: RequestHandler = async (req: Request): Promise<Response> => {
   try {
     const url = new URL(req.url);
     const orderId = url.searchParams.get("id");
@@ -96,4 +100,10 @@ export const handleGetOrder: RequestHandler = async (req: Request): Promise<Resp
       }
     );
   }
-};
+  };
+
+  return {
+    handleCreateOrder,
+    handleGetOrder
+  };
+}

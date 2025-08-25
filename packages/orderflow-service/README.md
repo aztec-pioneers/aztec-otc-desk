@@ -100,16 +100,26 @@ The service uses a **pluggable database architecture** with a clean interface th
 - **Database file**: `orders.sqlite` (created automatically in project root)
 
 ### Database Architecture
-The service uses an interface-based approach (`IDatabase`) that allows easy swapping of database implementations:
+The service uses **dependency injection** with an interface-based approach (`IDatabase`) for clean separation of concerns:
 
 ```typescript
-// Current usage (SQLite)
-import { database } from "./db";
+// Database is created and injected in main function
+const database = new SQLiteDatabase();
+database.initialize();
+
+// Handlers receive database through dependency injection
+const { handleCreateOrder, handleGetOrder } = createOrderHandlers(database);
 
 // Easy to swap for different implementations
-import { PostgreSQLDatabase } from "./db/examples/postgres";
 const database = new PostgreSQLDatabase("connection-string");
+const handlers = createOrderHandlers(database);
 ```
+
+**Benefits:**
+- ✅ No global state or singletons
+- ✅ Easy testing with mock databases
+- ✅ Clean dependency management
+- ✅ Explicit database lifecycle control
 
 ### Database Schema
 ```sql
