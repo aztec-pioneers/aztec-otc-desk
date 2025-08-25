@@ -127,18 +127,21 @@ maker_secret: {
     }
     
 
-  public static get notes(): ContractNotes<'UintNote' | 'DefinitionNote' | 'MakerNote'> {
+  public static get notes(): ContractNotes<'UintNote' | 'EscrowStateNote' | 'DefinitionNote' | 'MakerNote'> {
     return {
       UintNote: {
           id: new NoteSelector(0),
+        },
+EscrowStateNote: {
+          id: new NoteSelector(2),
         },
 DefinitionNote: {
           id: new NoteSelector(1),
         },
 MakerNote: {
-          id: new NoteSelector(2),
+          id: new NoteSelector(3),
         }
-    } as ContractNotes<'UintNote' | 'DefinitionNote' | 'MakerNote'>;
+    } as ContractNotes<'UintNote' | 'EscrowStateNote' | 'DefinitionNote' | 'MakerNote'>;
   }
   
 

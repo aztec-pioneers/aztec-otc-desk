@@ -9,11 +9,12 @@ pub contract DemoContract {
             functions::{initializer, private, utility},
             storage::storage
         },
-        prelude::{AztecAddress, PrivateImmutable},
+        prelude::{AztecAddress, PrivateImmutable, PrivateMutable},
         messages::logs::note::encode_and_encrypt_note,
     };
     use crate::types::{
         definition_note::DefinitionNote,
+        escrow_state_note::{EscrowStateNote, ESCROW_STATE},
         maker_note::MakerNote
     };
 
@@ -34,10 +35,6 @@ pub contract DemoContract {
         ask_token_amount: u128,
     ) {
         // Create a maker secret note
-        //      This note is only shared with the contract deployer
-        //      OTC Escrow order maker. It is used to store a secret
-        //      factor used to constrain access to the sell side of
-        //      the order
         let caller = context.msg_sender();
         let maker_note = MakerNote::new(caller);
         storage.maker_secret.initialize(maker_note).emit(encode_and_encrypt_note(
@@ -65,7 +62,12 @@ pub contract DemoContract {
 
     #[private]
     fn transfer_in_offered_token(_nonce: Field) {
+        // check maker commitment
         let definition = storage.definition.get_note();
+        let maker_note = storage.maker_secret.get_note();
+        definition.check_commitment(maker_note.commitment());
+
+        // transfer tokens in
         let self_address = context.this_address();
         let caller = context.msg_sender();
         Token::at(definition.offer_token_address)

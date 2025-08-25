@@ -34,4 +34,8 @@ impl DefinitionNote {
             ask_token_amount,
         }
     }
+
+    pub fn check_commitment(self, asserted_commitment: Field) {
+        assert(self.maker_commitment == asserted_commitment);
+    }
 }
