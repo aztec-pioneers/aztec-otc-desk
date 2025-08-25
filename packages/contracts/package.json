@@ -2,13 +2,23 @@
   "name": "@aztec-otc-desk/contracts",
   "devDependencies": {
       "@types/bun": "catalog:",
+      "@types/jest": "catalog:",
       "@aztec/aztec.js": "catalog:",
-      "@aztec/accounts": "catalog:"
+      "@aztec/accounts": "catalog:",
+      "@aztec/stdlib": "catalog:",
+      "@aztec/noir-contracts.js": "catalog:",
+      "jest": "catalog:"
   },
   "peerDependencies": {
     "typescript": "catalog:"
   },
   "scripts": {
-    "deploy-token": "bun run ./scripts/deploy_token.ts"
+    "test": "bun test",
+    "deploy-token": "bun run ./scripts/deploy_token.ts",
+    "compile": "aztec-nargo compile",
+    "codegen": "aztec codegen target --outdir artifacts",
+    "build": "yarn compile && yarn codegen -f",
+    "sandbox": "aztec start --sandbox",
+    "pxe:alt": "aztec start --pxe --pxe.nodeUrl http://localhost:8080 --port 8081"
   }
 }

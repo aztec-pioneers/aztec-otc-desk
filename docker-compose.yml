@@ -1,0 +1,46 @@
+services:
+  ethereum:
+    image: "ghcr.io/foundry-rs/foundry:latest"
+    ports:
+      - 8545:8545
+    command: "anvil --host 0.0.0.0"
+  aztec:
+    image: "aztecprotocol/aztec:latest"
+    entrypoint: ["node", "--no-warnings", "/usr/src/yarn-project/aztec/dest/bin/index.js"]
+    command: "start --sandbox"
+    environment:
+      LOG_LEVEL: # Loaded from the user shell if explicitly set
+      HOST_WORKDIR: "${PWD}" # Loaded from the user shell to show log files absolute path in host
+      ETHEREUM_HOST: ${ETHEREUM_HOST:-http://ethereum}:${ANVIL_PORT:-8545}
+      L1_CHAIN_ID: 31337
+      ARCHIVER_POLLING_INTERVAL_MS: 50
+      P2P_BLOCK_CHECK_INTERVAL_MS: 50
+      SEQ_TX_POLLING_INTERVAL_MS: 50
+      WS_BLOCK_CHECK_INTERVAL_MS: 50
+      ARCHIVER_VIEM_POLLING_INTERVAL_MS: 500
+      PXE_PORT: ${PXE_PORT:-8080}
+      PORT: ${AZTEC_NODE_PORT:-8080}
+      TEST_ACCOUNTS: ${TEST_ACCOUNTS:-true}
+    volumes:
+      - ./log:/usr/src/yarn-project/aztec/log:rw
+    depends_on:
+      - ethereum
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://aztec:8080/status"]
+      interval: 1s
+      timeout: 1s
+      retries: 10
+  alternative-pxe:
+    image: "aztecprotocol/aztec:latest"
+    ports:
+      - "${PXE_PORT:-8081}:${PXE_PORT:-8081}"
+    environment:
+      LOG_LEVEL: '${LOG_LEVEL:-info; verbose: simulator:avm:debug_log}'
+      HOST_WORKDIR: "${PWD}"
+      VERSION: latest
+    volumes:
+      - ./pxe/log:/usr/src/yarn-project/aztec/log:rw
+    # depends_on:
+    #   aztec:
+    #     condition: service_healthy
+    command: "start --port 8081 --pxe --pxe.nodeUrl=http://aztec:8080"
