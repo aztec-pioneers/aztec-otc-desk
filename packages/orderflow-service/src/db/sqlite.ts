@@ -107,6 +107,60 @@ export class SQLiteDatabase implements IDatabase {
   }
 
   /**
+   * Get orders by sell token address
+   */
+  getOrdersBySellToken(sellTokenAddress: string): Order[] {
+    const stmt = this.db.prepare("SELECT * FROM orders WHERE sellTokenAddress = ? ORDER BY createdAt DESC");
+    const rows = stmt.all(sellTokenAddress) as any[];
+    
+    return rows.map(row => this.mapRowToOrder(row));
+  }
+
+  /**
+   * Get orders by buy token address
+   */
+  getOrdersByBuyToken(buyTokenAddress: string): Order[] {
+    const stmt = this.db.prepare("SELECT * FROM orders WHERE buyTokenAddress = ? ORDER BY createdAt DESC");
+    const rows = stmt.all(buyTokenAddress) as any[];
+    
+    return rows.map(row => this.mapRowToOrder(row));
+  }
+
+  /**
+   * Get orders with flexible filtering
+   */
+  getOrdersWithFilters(filters: {
+    escrowAddress?: string;
+    sellTokenAddress?: string;
+    buyTokenAddress?: string;
+  }): Order[] {
+    let query = "SELECT * FROM orders WHERE 1=1";
+    const params: string[] = [];
+
+    if (filters.escrowAddress) {
+      query += " AND escrowAddress = ?";
+      params.push(filters.escrowAddress);
+    }
+
+    if (filters.sellTokenAddress) {
+      query += " AND sellTokenAddress = ?";
+      params.push(filters.sellTokenAddress);
+    }
+
+    if (filters.buyTokenAddress) {
+      query += " AND buyTokenAddress = ?";
+      params.push(filters.buyTokenAddress);
+    }
+
+    query += " ORDER BY createdAt DESC";
+
+    const stmt = this.db.prepare(query);
+    const rows = stmt.all(...params) as any[];
+    
+    return rows.map(row => this.mapRowToOrder(row));
+  }
+
+  /**
    * Close database connection
    */
   close(): void {

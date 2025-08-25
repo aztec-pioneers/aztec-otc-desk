@@ -22,6 +22,18 @@ export interface CreateOrderRequest {
 }
 
 /**
+ * Serialized Order Type (for API responses)
+ */
+export interface SerializedOrder {
+  orderId: string;
+  escrowAddress: string;
+  sellTokenAddress: string;
+  sellTokenAmount: string; // BigInt serialized to string
+  buyTokenAddress: string;
+  buyTokenAmount: string;  // BigInt serialized to string
+}
+
+/**
  * API Response Types
  */
 export interface ApiResponse<T = any> {

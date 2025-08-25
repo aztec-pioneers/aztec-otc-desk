@@ -37,6 +37,25 @@ export interface IDatabase {
   getAllOrders(): Order[];
 
   /**
+   * Get orders by sell token address
+   */
+  getOrdersBySellToken(sellTokenAddress: string): Order[];
+
+  /**
+   * Get orders by buy token address
+   */
+  getOrdersByBuyToken(buyTokenAddress: string): Order[];
+
+  /**
+   * Get orders with flexible filtering
+   */
+  getOrdersWithFilters(filters: {
+    escrowAddress?: string;
+    sellTokenAddress?: string;
+    buyTokenAddress?: string;
+  }): Order[];
+
+  /**
    * Close database connection (if applicable)
    */
   close(): void;
