@@ -1,5 +1,5 @@
 import type { RequestHandler, ApiResponse, OrderResponse, Order, CreateOrderRequest } from "../types/api";
-import { insertOrder } from "../db/database";
+import { database } from "../db";
 import { generateOrderId } from "../utils/uuid";
 
 /**
@@ -19,8 +19,8 @@ export const handleCreateOrder: RequestHandler = async (req: Request): Promise<R
       ...createOrderData
     };
     
-    // Save to SQLite database
-    const savedOrder = insertOrder(order);
+    // Save to database
+    const savedOrder = database.insertOrder(order);
     
     const response: ApiResponse<Order> = {
       success: true,

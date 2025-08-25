@@ -1,6 +1,6 @@
 
 import { handleCreateOrder, handleGetOrder } from "./handlers";
-import { initializeDatabase } from "./db/database";
+import { database } from "./db";
 
 /**
  * Orderflow Service
@@ -9,8 +9,8 @@ import { initializeDatabase } from "./db/database";
  */
 
 const main = async () => {
-  // Initialize SQLite database
-  initializeDatabase();
+  // Initialize database
+  database.initialize();
   const server = Bun.serve({
     port: 3000,
     fetch(req) {

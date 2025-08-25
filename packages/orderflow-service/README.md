@@ -93,7 +93,23 @@ bun run build
 
 ## Database
 
-The service uses **Bun SQLite** for data persistence. The database file (`orders.sqlite`) is created automatically in the project root when the server starts.
+The service uses a **pluggable database architecture** with a clean interface that supports multiple database backends.
+
+### Current Implementation
+- **Default**: SQLite using Bun's built-in SQLite support
+- **Database file**: `orders.sqlite` (created automatically in project root)
+
+### Database Architecture
+The service uses an interface-based approach (`IDatabase`) that allows easy swapping of database implementations:
+
+```typescript
+// Current usage (SQLite)
+import { database } from "./db";
+
+// Easy to swap for different implementations
+import { PostgreSQLDatabase } from "./db/examples/postgres";
+const database = new PostgreSQLDatabase("connection-string");
+```
 
 ### Database Schema
 ```sql
@@ -118,8 +134,11 @@ CREATE TABLE orders (
 - [x] Implement order creation logic in `handleCreateOrder`
 - [x] Add database integration with SQLite
 - [x] Add UUID generation for order IDs
+- [x] Implement pluggable database architecture with interfaces
+- [x] Add unique constraint for escrow addresses
 - [ ] Implement order retrieval logic in `handleGetOrder`
 - [ ] Add input validation and sanitization
 - [ ] Add authentication and authorization
 - [ ] Add error handling and logging
 - [ ] Add tests
+- [ ] Implement alternative database providers (PostgreSQL, MongoDB, etc.)
