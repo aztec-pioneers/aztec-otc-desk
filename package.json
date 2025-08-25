@@ -8,7 +8,7 @@
       "@types/bun": "latest",
       "typescript": "^5.0.0",
       "@aztec/aztec.js": "^1.2.1",
-    "@aztec/accounts": "^1.2.1"
+      "@aztec/accounts": "^1.2.1"
     }
   },
   "scripts": {
