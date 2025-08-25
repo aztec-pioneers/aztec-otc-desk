@@ -11,21 +11,22 @@ use poseidon::poseidon2::Poseidon2;
 #[derive(Eq, Serialize, Deserialize)]
 pub struct MakerNote {
     owner: AztecAddress,
-    randomness: Field,
+    secret: Field,
 }
 
 impl MakerNote {
     pub fn new(owner: AztecAddress) -> Self {
-        MakerNote { owner, randomness: unsafe { random() } }
+        MakerNote { owner, secret: unsafe { random() } }
     }
+    
 
     pub fn commitment(self) -> Field {
-        let preimage = [self.owner.to_field(), self.randomness];
+        let preimage = [self.owner.to_field(), self.secret];
         Poseidon2::hash(preimage, 2)
     }
 
     pub fn commitment_from_context(self, context: &mut PrivateContext) -> Field {
-        let preimage = [context.msg_sender().to_field(), self.randomness];
+        let preimage = [context.msg_sender().to_field(), self.secret];
         Poseidon2::hash(preimage, 2)
     }
 }

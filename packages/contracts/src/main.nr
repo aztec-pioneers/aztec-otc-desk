@@ -11,14 +11,17 @@ pub contract DemoContract {
         },
         prelude::{AztecAddress, PrivateImmutable, PrivateMutable},
         messages::logs::note::encode_and_encrypt_note,
+        protocol_types::traits::ToField,
+
     };
     use crate::types::{
         definition_note::DefinitionNote,
-        escrow_state_note::{EscrowStateNote, ESCROW_STATE},
         maker_note::MakerNote
     };
 
+    use poseidon::poseidon2::Poseidon2;
     use token_contract::Token;
+    
 
     #[storage]
     struct Storage<Context> {
@@ -59,17 +62,26 @@ pub contract DemoContract {
             self_address
         ));
     }
-
+    
+    /**
+     * OTC Offer Maker deposits tokens into the shared escrow
+     *
+     * @param maker_secret - the secret value used to bind the market maker
+     *                       retrieve with `get_maker_secret` to avoid extra work
+     * @param _nonce - authwit nonce used in `transfer_private_to_private`
+     */
     #[private]
-    fn transfer_in_offered_token(_nonce: Field) {
-        // check maker commitment
-        let definition = storage.definition.get_note();
-        let maker_note = storage.maker_secret.get_note();
-        definition.check_commitment(maker_note.commitment());
+    fn deposit_tokens(maker_secret: Field, _nonce: Field) {
 
-        // transfer tokens in
         let self_address = context.this_address();
         let caller = context.msg_sender();
+
+        // check maker commitment
+        let definition = storage.definition.get_note();
+        let commitment = compute_maker_commitment(caller, maker_secret);
+        definition.check_commitment(commitment);
+
+        // transfer tokens in
         Token::at(definition.offer_token_address)
             .transfer_private_to_private(
                 caller,
@@ -101,7 +113,13 @@ pub contract DemoContract {
     }
 
     #[utility]
-    pub unconstrained fn get_maker_secret() -> MakerNote {
-        storage.maker_secret.view_note()
+    pub unconstrained fn get_maker_secret() -> Field {
+        storage.maker_secret.view_note().secret
+    }
+
+    #[contract_library_method]
+    pub fn compute_maker_commitment(maker_address: AztecAddress, maker_secret: Field) -> Field {
+        let preimage = [maker_address.to_field(), maker_secret];
+        Poseidon2::hash(preimage, 2)
     }
 }

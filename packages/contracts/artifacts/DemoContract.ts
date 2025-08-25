@@ -127,21 +127,18 @@ maker_secret: {
     }
     
 
-  public static get notes(): ContractNotes<'UintNote' | 'EscrowStateNote' | 'DefinitionNote' | 'MakerNote'> {
+  public static get notes(): ContractNotes<'UintNote' | 'DefinitionNote' | 'MakerNote'> {
     return {
       UintNote: {
           id: new NoteSelector(0),
-        },
-EscrowStateNote: {
-          id: new NoteSelector(2),
         },
 DefinitionNote: {
           id: new NoteSelector(1),
         },
 MakerNote: {
-          id: new NoteSelector(3),
+          id: new NoteSelector(2),
         }
-    } as ContractNotes<'UintNote' | 'EscrowStateNote' | 'DefinitionNote' | 'MakerNote'>;
+    } as ContractNotes<'UintNote' | 'DefinitionNote' | 'MakerNote'>;
   }
   
 
@@ -150,6 +147,9 @@ MakerNote: {
     
     /** constructor(offer_token_address: struct, offer_token_amount: integer, ask_token_address: struct, ask_token_amount: integer) */
     constructor: ((offer_token_address: AztecAddressLike, offer_token_amount: (bigint | number), ask_token_address: AztecAddressLike, ask_token_amount: (bigint | number)) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
+
+    /** deposit_tokens(maker_secret: field, _nonce: field) */
+    deposit_tokens: ((maker_secret: FieldLike, _nonce: FieldLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
 
     /** get_definition() */
     get_definition: (() => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
@@ -165,9 +165,6 @@ MakerNote: {
 
     /** sync_private_state() */
     sync_private_state: (() => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
-
-    /** transfer_in_offered_token(_nonce: field) */
-    transfer_in_offered_token: ((_nonce: FieldLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
 
     /** transfer_out_offered_token() */
     transfer_out_offered_token: (() => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;

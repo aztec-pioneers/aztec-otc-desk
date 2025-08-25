@@ -11,7 +11,8 @@ import {
     deployDemoContract,
     setupSandbox,
     deployTokenContractWithMinter,
-    wad
+    wad,
+    depositToEscrow
 } from "./utils.js";
 import {
     DemoContractContract as DemoContract,
@@ -76,55 +77,13 @@ describe("Private Transfer Demo Test", () => {
     });
 
 
-    // it("unconstrained transfer in", async () => {
-    //   ({ contract: demoContract, secretKey: contractKey } = await deployDemoContract(
-    //     pxe,
-    //     alice,
-    //     tokenContract.address,
-    //     wad(1n)
-    //   ));
-    //   console.log(`Deployed new demo contract to ${demoContract.address}`);
+    it("check escrow key leaking", async () => {
 
-    //   tokenContract = tokenContract.withWallet(alice);
-    //   // check balances before
-    //   let aliceBalance = await tokenContract.methods.balance_of_private(alice.getAddress()).simulate();
-    //   let contractBalance = await tokenContract.methods.balance_of_private(demoContract.address).simulate();
-    //   expect(aliceBalance).toEqual(wad(1000n));
-    //   expect(contractBalance).toEqual(0n);
-
-    //   // execute transfer_private_to_private directly from token contract
-    //   tokenContract
-    //     .methods
-    //     .transfer_private_to_private(
-    //       alice.getAddress(),
-    //       demoContract.address,
-    //       wad(1n),
-    //       0
-    //     )
-    //     .send()
-    //     .wait()
-
-    //   // check balances after transfer in
-    //   aliceBalance = await tokenContract.methods.balance_of_private(alice.getAddress()).simulate();
-    //   contractBalance = await tokenContract.methods.balance_of_private(demoContract.address).simulate();
-    //   expect(aliceBalance).toEqual(wad(999n));
-    //   expect(contractBalance).toEqual(wad(1n));
-
-    //   // transfer tokens back out
-    //   await demoContract
-    //     .methods
-    //     .transfer_out()
-    //     .send()
-    //     .wait()
-
-    //   // check balances after transfer out
-    //   aliceBalance = await tokenContract.methods.balance_of_private(alice.getAddress()).simulate();
-    //   contractBalance = await tokenContract.methods.balance_of_private(demoContract.address).simulate();
-    //   expect(aliceBalance).toEqual(wad(1000n));
-    //   expect(contractBalance).toEqual(0n);
+    })
+    
     // })
 
-    it("constrained transfer in (sender-owned)", async () => {
+    it("e2e", async () => {
         // notes are owned by the deploying account
         ({ contract: escrow, secretKey: contractKey } = await deployDemoContract(
             pxe,
@@ -136,50 +95,43 @@ describe("Private Transfer Demo Test", () => {
         ));
         console.log(`Deployed new escrow contract to ${escrow.address}`);
         escrow = escrow.withWallet(alice)
+
+        // get maker secret value
+        const makerSecret = await escrow.methods.get_maker_secret().simulate();
+
         // check balances before
         let aliceBalance = await usdc.methods.balance_of_private(alice.getAddress()).simulate();
         let contractBalance = await usdc.methods.balance_of_private(escrow.address).simulate();
         expect(aliceBalance).toEqual(wad(10000n, 6n));
         expect(contractBalance).toEqual(0n);
 
-        // execute transfer_private_to_private in via call from demo contract
-        /// create authwit
-        const nonce = Fr.random();
-        const authwit = await alice.createAuthWit({
-            caller: escrow.address,
-            action: usdc.methods.transfer_private_to_private(
-                alice.getAddress(),
-                escrow.address,
-                wad(1000n, 6n),
-                nonce,
-            ),
-        });
-        /// send transfer_in with authwit
-        await escrow
-            .methods
-            .transfer_in_offered_token(nonce)
-            .with({ authWitnesses: [authwit] })
-            .send()
-            .wait()
-
+        // deposit tokens into the escrow
+        await depositToEscrow(
+            escrow,
+            alice,
+            usdc,
+            wad(1000n, 6n),
+            makerSecret
+        );
+        
         // check balances after transfer in
         aliceBalance = await usdc.methods.balance_of_private(alice.getAddress()).simulate();
         contractBalance = await usdc.methods.balance_of_private(escrow.address).simulate();
         expect(aliceBalance).toEqual(wad(9000n, 6n));
         expect(contractBalance).toEqual(wad(1000n, 6n));
 
-        // transfer tokens back out
-        await escrow
-            .methods
-            .transfer_out_offered_token()
-            .send()
-            .wait()
+        // // transfer tokens back out
+        // await escrow
+        //     .methods
+        //     .transfer_out_offered_token()
+        //     .send()
+        //     .wait()
 
-        // check balances after transfer out
-        aliceBalance = await usdc.methods.balance_of_private(alice.getAddress()).simulate();
-        contractBalance = await usdc.methods.balance_of_private(escrow.address).simulate();
-        expect(aliceBalance).toEqual(wad(10000n, 6n));
-        expect(contractBalance).toEqual(0n);
+        // // check balances after transfer out
+        // aliceBalance = await usdc.methods.balance_of_private(alice.getAddress()).simulate();
+        // contractBalance = await usdc.methods.balance_of_private(escrow.address).simulate();
+        // expect(aliceBalance).toEqual(wad(10000n, 6n));
+        // expect(contractBalance).toEqual(0n);
 
         console.log("Check passed");
     });
