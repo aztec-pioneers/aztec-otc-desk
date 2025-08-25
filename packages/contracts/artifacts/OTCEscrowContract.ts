@@ -151,6 +151,12 @@ MakerNote: {
     /** deposit_tokens(maker_secret: field, _nonce: field) */
     deposit_tokens: ((maker_secret: FieldLike, _nonce: FieldLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
 
+    /** fill_order(_nonce: field) */
+    fill_order: ((_nonce: FieldLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
+
+    /** finalize_order(maker_secret: field) */
+    finalize_order: ((maker_secret: FieldLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
+
     /** get_definition() */
     get_definition: (() => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
 
@@ -165,9 +171,6 @@ MakerNote: {
 
     /** sync_private_state() */
     sync_private_state: (() => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
-
-    /** transfer_out_offered_token() */
-    transfer_out_offered_token: (() => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
   };
 
   

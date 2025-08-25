@@ -1,15 +1,26 @@
 services:
   ethereum:
-    image: "ghcr.io/foundry-rs/foundry:latest"
+    image: aztecprotocol/foundry:25f24e677a6a32a62512ad4f561995589ac2c7dc
+    entrypoint: >
+      sh -c '
+      if [ -n "$$FORK_BLOCK_NUMBER" ] && [ -n "$$FORK_URL" ]; then
+        exec anvil --silent -p "$$ANVIL_PORT" --host 0.0.0.0 --chain-id 31337 --fork-url "$$FORK_URL" --fork-block-number "$$FORK_BLOCK_NUMBER"
+      else
+        exec anvil --silent -p "$$ANVIL_PORT" --host 0.0.0.0 --chain-id 31337
+      fi'
     ports:
-      - 8545:8545
-    command: "anvil --host 0.0.0.0"
-  aztec:
-    image: "aztecprotocol/aztec:latest"
-    entrypoint: ["node", "--no-warnings", "/usr/src/yarn-project/aztec/dest/bin/index.js"]
-    command: "start --sandbox"
+      - "${ANVIL_PORT:-8545}:${ANVIL_PORT:-8545}"
     environment:
-      LOG_LEVEL: # Loaded from the user shell if explicitly set
+      FORK_URL:
+      FORK_BLOCK_NUMBER:
+      ANVIL_PORT: ${ANVIL_PORT:-8545}
+
+  aztec:
+    image: "aztecprotocol/aztec"
+    ports:
+      - "${PXE_PORT:-8080}:${PXE_PORT:-8080}"
+    environment:
+      LOG_LEVEL: '${LOG_LEVEL:-info; warn: sequencer; verbose: simulator:avm:debug_log}'
       HOST_WORKDIR: "${PWD}" # Loaded from the user shell to show log files absolute path in host
       ETHEREUM_HOST: ${ETHEREUM_HOST:-http://ethereum}:${ANVIL_PORT:-8545}
       L1_CHAIN_ID: 31337
@@ -25,22 +36,4 @@ services:
       - ./log:/usr/src/yarn-project/aztec/log:rw
     depends_on:
       - ethereum
-    healthcheck:
-      test: ["CMD", "curl", "-fsS", "http://aztec:8080/status"]
-      interval: 1s
-      timeout: 1s
-      retries: 10
-  alternative-pxe:
-    image: "aztecprotocol/aztec:latest"
-    ports:
-      - "${PXE_PORT:-8081}:${PXE_PORT:-8081}"
-    environment:
-      LOG_LEVEL: '${LOG_LEVEL:-info; verbose: simulator:avm:debug_log}'
-      HOST_WORKDIR: "${PWD}"
-      VERSION: latest
-    volumes:
-      - ./pxe/log:/usr/src/yarn-project/aztec/log:rw
-    # depends_on:
-    #   aztec:
-    #     condition: service_healthy
-    command: "start --port 8081 --pxe --pxe.nodeUrl=http://aztec:8080"
+    command: "start --sandbox"

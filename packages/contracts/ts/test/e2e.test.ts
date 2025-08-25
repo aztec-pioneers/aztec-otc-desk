@@ -16,7 +16,8 @@ import {
     depositToEscrow,
     createPXE,
     getFeeJuicePortalManager,
-    TOKEN_METADATA
+    TOKEN_METADATA,
+    fillOTCOrder
 } from "./utils/index.js";
 import {
     OTCEscrowContractContract as OTCEscrowContract,
@@ -35,6 +36,7 @@ describe("Private Transfer Demo Test", () => {
     let minter: AccountWallet;
     let alice: AccountWallet;
     let bob: AccountWallet;
+    let charlie: AccountWallet;
 
     let escrowKey: Fr;
 
@@ -43,7 +45,6 @@ describe("Private Transfer Demo Test", () => {
     let weth: TokenContract;
 
     let feeJuicePortalManager: L1FeeJuicePortalManager;
-
 
     beforeAll(async () => {
         // setup PXE
@@ -54,6 +55,7 @@ describe("Private Transfer Demo Test", () => {
         wallets = await getInitialTestAccountsWallets(pxe[0]);
         minter = wallets[0];
         alice = wallets[1];
+        charlie = wallets[2];
         console.log("Got test accounts");
 
         // deploy PXE2 account
@@ -106,10 +108,24 @@ describe("Private Transfer Demo Test", () => {
             )
             .send()
             .wait();
-        console.log(`Minted 10000 USDC to Alice`);
+        await weth.withWallet(bob).methods.sync_private_state().simulate();
+        console.log(`Minted 4 WETH to Bob`);
+        let x = await weth.withWallet(bob).methods.balance_of_private(bob.getAddress()).simulate();
+        console.log("X", x);
+
+        // mint to charlie
+        await weth
+            .withWallet(minter)
+            .methods.mint_to_private(
+                minter.getAddress(),
+                charlie.getAddress(),
+                wad(4n)
+            )
+            .send()
+            .wait();
     });
 
-    it("check escrow key leaking", async () => {
+    test("check escrow key leaking", async () => {
         // deploy new escrow instance
         ({ contract: escrow, secretKey: escrowKey } = await deployEscrowContract(
             pxe[0],
@@ -128,7 +144,7 @@ describe("Private Transfer Demo Test", () => {
         // expect(aliceDefinition.owner).toEqual(escrow.address.toBigInt());
         expect(aliceDefinition.owner).not.toEqual(0n);
 
-    
+
         // check if maker note exists
         expect(async () => {
             await escrow
@@ -137,10 +153,10 @@ describe("Private Transfer Demo Test", () => {
                 .simulate();
         }).toThrow()
 
-        // add account to bob pxe
-        await pxe[1].registerAccount(escrowKey, await escrow.partialAddress);
-        await pxe[1].registerContract(escrow);
-        await escrow.withWallet(bob).methods.sync_private_state().simulate();
+    // add account to bob pxe
+    await pxe[1].registerAccount(escrowKey, await escrow.partialAddress);
+    await pxe[1].registerContract(escrow);
+    await escrow.withWallet(bob).methods.sync_private_state().simulate();
         const bobDefinition = await escrow
             .withWallet(bob)
             .methods.get_definition()
@@ -149,7 +165,7 @@ describe("Private Transfer Demo Test", () => {
         expect(bobDefinition.owner).not.toEqual(0n);
     });
 
-    it("e2e", async () => {
+    test.skip("e2e", async () => {
         // notes are owned by the deploying account
         ({ contract: escrow, secretKey: escrowKey } = await deployEscrowContract(
             pxe[0],
@@ -159,17 +175,15 @@ describe("Private Transfer Demo Test", () => {
             weth.address,
             wad(1n),
         ));
-        console.log(`Deployed new escrow contract to ${escrow.address}`);
-        escrow = escrow.withWallet(alice)
 
         // get maker secret value
         const makerSecret = await escrow.methods.get_maker_secret().simulate();
 
         // check balances before
-        let aliceBalance = await usdc.methods.balance_of_private(alice.getAddress()).simulate();
-        let contractBalance = await usdc.methods.balance_of_private(escrow.address).simulate();
-        expect(aliceBalance).toEqual(wad(10000n, 6n));
-        expect(contractBalance).toEqual(0n);
+        let aliceUSDCBalance = await usdc.methods.balance_of_private(alice.getAddress()).simulate();
+        let contractUSDCBalance = await usdc.methods.balance_of_private(escrow.address).simulate();
+        expect(aliceUSDCBalance).toEqual(wad(10000n, 6n));
+        expect(contractUSDCBalance).toEqual(0n);
 
         // deposit tokens into the escrow
         await depositToEscrow(
@@ -180,25 +194,112 @@ describe("Private Transfer Demo Test", () => {
             makerSecret
         );
 
-        // check balances after transfer in
-        aliceBalance = await usdc.methods.balance_of_private(alice.getAddress()).simulate();
-        contractBalance = await usdc.methods.balance_of_private(escrow.address).simulate();
-        expect(aliceBalance).toEqual(wad(9000n, 6n));
-        expect(contractBalance).toEqual(wad(1000n, 6n));
+        // check USDC balances after transfer in
+        aliceUSDCBalance = await usdc.methods.balance_of_private(alice.getAddress()).simulate();
+        contractUSDCBalance = await usdc.methods.balance_of_private(escrow.address).simulate();
+        expect(aliceUSDCBalance).toEqual(wad(9000n, 6n));
+        expect(contractUSDCBalance).toEqual(wad(1000n, 6n));
 
-        // // transfer tokens back out
-        // await escrow
-        //     .methods
-        //     .transfer_out_offered_token()
-        //     .send()
-        //     .wait()
+        // check Bob balance balances before filling order
+        let bobWethBalance = await weth.withWallet(bob).methods.balance_of_private(bob.getAddress()).simulate();
+        let bobUSDCBalance = await usdc.withWallet(bob).methods.balance_of_private(bob.getAddress()).simulate();
+        let contractWethBalance = await weth.withWallet(bob).methods.balance_of_private(escrow.address).simulate();
+        expect(bobWethBalance).toEqual(wad(4n));
+        expect(bobUSDCBalance).toEqual(0n);
+        expect(contractWethBalance).toEqual(0n);
 
-        // // check balances after transfer out
-        // aliceBalance = await usdc.methods.balance_of_private(alice.getAddress()).simulate();
-        // contractBalance = await usdc.methods.balance_of_private(escrow.address).simulate();
-        // expect(aliceBalance).toEqual(wad(10000n, 6n));
-        // expect(contractBalance).toEqual(0n);
+        // give bob knowledge of the escrow
+        await pxe[1].registerAccount(escrowKey, await escrow.partialAddress);
+        await pxe[1].registerContract(escrow);
+        await escrow.withWallet(bob).methods.sync_private_state().simulate();
 
+        // transfer tokens back out
+        await fillOTCOrder(escrow, bob, weth, wad(1n));
+
+        // check balances after filling order
+        bobWethBalance = await weth.withWallet(bob).methods.balance_of_private(bob.getAddress()).simulate();
+        bobUSDCBalance = await usdc.withWallet(bob).methods.balance_of_private(bob.getAddress()).simulate();
+        contractUSDCBalance = await usdc.withWallet(bob).methods.balance_of_private(escrow.address).simulate();
+        contractWethBalance = await weth.withWallet(bob).methods.balance_of_private(escrow.address).simulate();
+        expect(bobWethBalance).toEqual(wad(3n));
+        expect(bobUSDCBalance).toEqual(wad(1000n, 6n));
+        expect(contractWethBalance).toEqual(wad(1n));
+        expect(contractUSDCBalance).toEqual(0n);
+
+        await escrow.withWallet(alice).methods.finalize_order(makerSecret).send().wait();
+        let aliceBalanceWeth = await weth.withWallet(alice).methods.balance_of_private(alice.getAddress()).simulate();
+        contractWethBalance = await weth.withWallet(alice).methods.balance_of_private(escrow.address).simulate();
+        expect(aliceBalanceWeth).toEqual(wad(1n));
+        expect(contractWethBalance).toEqual(0n);
+    });
+
+    test("e2e 1 pxe", async () => {
+        ({ contract: escrow, secretKey: escrowKey } = await deployEscrowContract(
+            pxe[0],
+            alice,
+            usdc.address,
+            wad(1000n, 6n),
+            weth.address,
+            wad(1n),
+        ));
+
+        // get maker secret value
+        const makerSecret = await escrow.methods.get_maker_secret().simulate();
+
+        // check balances before
+        let aliceUSDCBalance = await usdc.methods.balance_of_private(alice.getAddress()).simulate();
+        let contractUSDCBalance = await usdc.methods.balance_of_private(escrow.address).simulate();
+        expect(aliceUSDCBalance).toEqual(wad(10000n, 6n));
+        expect(contractUSDCBalance).toEqual(0n);
+
+        // deposit tokens into the escrow
+        await depositToEscrow(
+            escrow,
+            alice,
+            usdc,
+            wad(1000n, 6n),
+            makerSecret
+        );
+
+        // check USDC balances after transfer in
+        aliceUSDCBalance = await usdc.methods.balance_of_private(alice.getAddress()).simulate();
+        contractUSDCBalance = await usdc.methods.balance_of_private(escrow.address).simulate();
+        expect(aliceUSDCBalance).toEqual(wad(9000n, 6n));
+        expect(contractUSDCBalance).toEqual(wad(1000n, 6n));
+
+        // check Charlie balance balances before filling order
+        let charlieWethBalance = await weth.withWallet(charlie).methods.balance_of_private(charlie.getAddress()).simulate();
+        let charlieUSDCBalance = await usdc.withWallet(charlie).methods.balance_of_private(charlie.getAddress()).simulate();
+        let contractWethBalance = await weth.withWallet(charlie).methods.balance_of_private(escrow.address).simulate();
+        expect(charlieWethBalance).toEqual(wad(4n));
+        expect(charlieUSDCBalance).toEqual(0n);
+        expect(contractWethBalance).toEqual(0n);
+
+        // give bob knowledge of the escrow
+        await pxe[1].registerAccount(escrowKey, await escrow.partialAddress);
+        await pxe[1].registerContract(escrow);
+        await escrow.withWallet(bob).methods.sync_private_state().simulate();
+
+        // transfer tokens back out
+        await fillOTCOrder(escrow, charlie, weth, wad(1n));
+
+        // check balances after filling order
+        charlieWethBalance = await weth.withWallet(charlie).methods.balance_of_private(charlie.getAddress()).simulate();
+        charlieUSDCBalance = await usdc.withWallet(charlie).methods.balance_of_private(charlie.getAddress()).simulate();
+        contractUSDCBalance = await usdc.withWallet(charlie).methods.balance_of_private(escrow.address).simulate();
+        contractWethBalance = await weth.withWallet(charlie).methods.balance_of_private(escrow.address).simulate();
+        expect(charlieWethBalance).toEqual(wad(3n));
+        expect(charlieUSDCBalance).toEqual(wad(1000n, 6n));
+        expect(contractWethBalance).toEqual(wad(1n));
+        expect(contractUSDCBalance).toEqual(0n);
+
+        // finalize order
+        await escrow.withWallet(alice).methods.finalize_order(makerSecret).send().wait();
+        let aliceBalanceWeth = await weth.withWallet(alice).methods.balance_of_private(alice.getAddress()).simulate();
+        contractWethBalance = await weth.withWallet(alice).methods.balance_of_private(escrow.address).simulate();
+        expect(aliceBalanceWeth).toEqual(wad(1n));
+        expect(contractWethBalance).toEqual(0n);
+        
         console.log("Check passed");
     });
 

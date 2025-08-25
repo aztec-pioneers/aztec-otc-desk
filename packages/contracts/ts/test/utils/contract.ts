@@ -136,3 +136,37 @@ export async function depositToEscrow(
         .send()
         .wait()
 }
+
+/**
+ * Deposit tokens into the escrow contract so that the taker can fill the order
+ * @param escrow - the escrow contract to deposit into
+ * @param caller - the taker who is buying tokens / filling the order
+ * @param token - the contract instance of the token being bought by the maker (sold by the taker)
+ * @param amount - the amount of tokens to transfer in
+ */
+export async function fillOTCOrder(
+    escrow: OTCEscrowContract,
+    caller: AccountWallet,
+    token: TokenContract,
+    amount: bigint,
+) {
+    escrow = escrow.withWallet(caller);
+    
+    const nonce = Fr.random();
+    const authwit = await caller.createAuthWit({
+        caller: escrow.address,
+        action: token.withWallet(caller).methods.transfer_private_to_private(
+            caller.getAddress(),
+            escrow.address,
+            amount,
+            nonce,
+        ),
+    });
+    /// send transfer_in with authwit
+    await escrow
+        .methods
+        .fill_order(nonce)
+        .with({ authWitnesses: [authwit] })
+        .send()
+        .wait()
+}
