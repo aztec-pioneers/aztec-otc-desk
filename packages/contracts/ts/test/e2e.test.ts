@@ -165,7 +165,7 @@ describe("Private Transfer Demo Test", () => {
         expect(bobDefinition.owner).not.toEqual(0n);
     });
 
-    test("e2e", async () => {
+    test.skip("e2e", async () => {
         // notes are owned by the deploying account
         ({ contract: escrow, secretKey: escrowKey } = await deployEscrowContract(
             pxe[0],
@@ -233,7 +233,7 @@ describe("Private Transfer Demo Test", () => {
         // expect(contractWethBalance).toEqual(0n);
     });
 
-    test.skip("e2e 1 pxe", async () => {
+    test("e2e 1 pxe", async () => {
         ({ contract: escrow, secretKey: escrowKey } = await deployEscrowContract(
             pxe[0],
             alice,

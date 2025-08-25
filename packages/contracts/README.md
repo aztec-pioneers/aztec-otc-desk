@@ -10,7 +10,7 @@ bun run build
 To run tests:
 
 ```bash
-# In terminal 1 
+# In terminal 1
 bun run sandbox
 
 # In terminal 2
