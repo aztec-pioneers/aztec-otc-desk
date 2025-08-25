@@ -70,14 +70,14 @@ export class DemoContractContract extends ContractBase {
   /**
    * Creates a tx to deploy a new instance of this contract.
    */
-  public static deploy(wallet: Wallet, token_address: AztecAddressLike, token_amount: (bigint | number)) {
+  public static deploy(wallet: Wallet, offer_token_address: AztecAddressLike, offer_token_amount: (bigint | number), ask_token_address: AztecAddressLike, ask_token_amount: (bigint | number)) {
     return new DeployMethod<DemoContractContract>(PublicKeys.default(), wallet, DemoContractContractArtifact, DemoContractContract.at, Array.from(arguments).slice(1));
   }
 
   /**
    * Creates a tx to deploy a new instance of this contract using the specified public keys hash to derive the address.
    */
-  public static deployWithPublicKeys(publicKeys: PublicKeys, wallet: Wallet, token_address: AztecAddressLike, token_amount: (bigint | number)) {
+  public static deployWithPublicKeys(publicKeys: PublicKeys, wallet: Wallet, offer_token_address: AztecAddressLike, offer_token_amount: (bigint | number), ask_token_address: AztecAddressLike, ask_token_amount: (bigint | number)) {
     return new DeployMethod<DemoContractContract>(publicKeys, wallet, DemoContractContractArtifact, DemoContractContract.at, Array.from(arguments).slice(2));
   }
 
@@ -115,38 +115,44 @@ export class DemoContractContract extends ContractBase {
   }
   
 
-  public static get storage(): ContractStorageLayout<'definition'> {
+  public static get storage(): ContractStorageLayout<'definition' | 'maker_secret'> {
       return {
         definition: {
       slot: new Fr(1n),
+    },
+maker_secret: {
+      slot: new Fr(2n),
     }
-      } as ContractStorageLayout<'definition'>;
+      } as ContractStorageLayout<'definition' | 'maker_secret'>;
     }
     
 
-  public static get notes(): ContractNotes<'UintNote' | 'DefinitionNote'> {
+  public static get notes(): ContractNotes<'UintNote' | 'DefinitionNote' | 'MakerNote'> {
     return {
       UintNote: {
           id: new NoteSelector(0),
         },
 DefinitionNote: {
           id: new NoteSelector(1),
+        },
+MakerNote: {
+          id: new NoteSelector(2),
         }
-    } as ContractNotes<'UintNote' | 'DefinitionNote'>;
+    } as ContractNotes<'UintNote' | 'DefinitionNote' | 'MakerNote'>;
   }
   
 
   /** Type-safe wrappers for the public methods exposed by the contract. */
   public declare methods: {
     
-    /** constructor_self_owned(token_address: struct, token_amount: integer) */
-    constructor_self_owned: ((token_address: AztecAddressLike, token_amount: (bigint | number)) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
-
-    /** constructor_sender_owned(token_address: struct, token_amount: integer) */
-    constructor_sender_owned: ((token_address: AztecAddressLike, token_amount: (bigint | number)) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
+    /** constructor(offer_token_address: struct, offer_token_amount: integer, ask_token_address: struct, ask_token_amount: integer) */
+    constructor: ((offer_token_address: AztecAddressLike, offer_token_amount: (bigint | number), ask_token_address: AztecAddressLike, ask_token_amount: (bigint | number)) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
 
     /** get_definition() */
     get_definition: (() => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
+
+    /** get_maker_secret() */
+    get_maker_secret: (() => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
 
     /** process_message(message_ciphertext: struct, message_context: struct) */
     process_message: ((message_ciphertext: FieldLike[], message_context: { tx_hash: FieldLike, unique_note_hashes_in_tx: FieldLike[], first_nullifier_in_tx: FieldLike, recipient: AztecAddressLike }) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
@@ -157,11 +163,11 @@ DefinitionNote: {
     /** sync_private_state() */
     sync_private_state: (() => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
 
-    /** transfer_in(_nonce: field) */
-    transfer_in: ((_nonce: FieldLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
+    /** transfer_in_offered_token(_nonce: field) */
+    transfer_in_offered_token: ((_nonce: FieldLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
 
-    /** transfer_out() */
-    transfer_out: (() => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
+    /** transfer_out_offered_token() */
+    transfer_out_offered_token: (() => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
   };
 
   

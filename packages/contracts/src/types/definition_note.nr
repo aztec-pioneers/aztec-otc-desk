@@ -9,20 +9,29 @@ use aztec::{
 #[derive(Eq, Serialize, Deserialize)]
 pub struct DefinitionNote {
     owner: AztecAddress,
-    token_address: AztecAddress,
-    token_amount: u128,
+    maker_commitment: Field,
+    offer_token_address: AztecAddress,
+    offer_token_amount: u128,
+    ask_token_address: AztecAddress,
+    ask_token_amount: u128,
 }
 
 impl DefinitionNote {
     pub fn new(
         owner: AztecAddress,
-        token_address: AztecAddress,
-        token_amount: u128,
+        maker_commitment: Field,
+        offer_token_address: AztecAddress,
+        offer_token_amount: u128,
+        ask_token_address: AztecAddress,
+        ask_token_amount: u128,
     ) -> Self {
         DefinitionNote {
             owner,
-            token_address,
-            token_amount,
+            maker_commitment,
+            offer_token_address,
+            offer_token_amount,
+            ask_token_address,
+            ask_token_amount,
         }
     }
 }

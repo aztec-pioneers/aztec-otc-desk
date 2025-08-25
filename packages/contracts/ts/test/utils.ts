@@ -44,9 +44,10 @@ export const wad = (n: bigint = 1n, decimals: bigint = 18n) =>
 export async function deployDemoContract(
   pxe: PXE,
   deployer: AccountWallet,
-  tokenAddress: AztecAddress,
-  tokenAmount: bigint,
-  constructor_type: "self_owned" | "sender_owned" = "self_owned",
+  offerTokenAddress: AztecAddress,
+  offerTokenAmount: bigint,
+  askTokenAddress: AztecAddress,
+  askTokenAmount: bigint,
   deployOptions?: DeployOptions,
 ): Promise<{ contract: DemoContract, secretKey: Fr }> {
 
@@ -59,8 +60,7 @@ export async function deployDemoContract(
     contractPublicKeys,
     deployer,
     DemoContractArtifact,
-    [tokenAddress, tokenAmount],
-    `constructor_${constructor_type}`
+    [offerTokenAddress, offerTokenAmount, askTokenAddress, askTokenAmount],
   );
 
   // add contract decryption keys to PXE
