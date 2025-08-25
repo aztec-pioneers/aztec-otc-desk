@@ -2,7 +2,7 @@ use aztec::macros::aztec;
 pub mod types;
 
 #[aztec]
-pub contract DemoContract {
+pub contract OTCEscrowContract {
     // aztec library imports
     use aztec::{
         macros::{
@@ -93,14 +93,26 @@ pub contract DemoContract {
     }
 
     #[private]
-    fn transfer_out_offered_token() {
+    fn fill_order(_nonce: Field) {
         let definition = storage.definition.get_note();
         let self_address = context.this_address();
         let caller = context.msg_sender();
-        Token::at(definition.offer_token_address)
+
+        // transfer ask tokens in
+        Token::at(definition.ask_token_address)
             .transfer_private_to_private(
                 self_address,
                 caller,
+                definition.ask_token_amount,
+                _nonce
+            )
+            .call(&mut context);
+
+        // transfer offer tokens out
+        Token::at(definition.offer_token_address)
+            .transfer_private_to_private(
+                caller,
+                self_address,
                 definition.offer_token_amount,
                 0
             )

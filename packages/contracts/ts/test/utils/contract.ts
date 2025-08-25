@@ -1,6 +1,4 @@
 import {
-    waitForPXE,
-    createPXEClient,
     AccountWallet,
     Contract,
     AztecAddress,
@@ -11,37 +9,30 @@ import {
 } from "@aztec/aztec.js";
 import { computePartialAddress } from "@aztec/stdlib/contract";
 import {
-    DemoContractContract as DemoContract,
-    DemoContractContractArtifact as DemoContractArtifact
-} from "../../artifacts/DemoContract.js";
+    OTCEscrowContractContract as OTCEscrowContract,
+    OTCEscrowContractContractArtifact as OTCEscrowContractArtifact
+} from "../../../artifacts/OTCEscrowContract.js";
 import {
     TokenContract,
     TokenContractArtifact
-} from "../../artifacts/Token.js";
-
-
-export const createPXE = async (id: number = 0) => {
-    const { BASE_PXE_URL = `http://localhost` } = process.env;
-    const url = `${BASE_PXE_URL}:${8080 + id}`;
-    const pxe = createPXEClient(url);
-    await waitForPXE(pxe);
-    return pxe;
-};
-
-export const setupSandbox = async () => {
-    return createPXE();
-};
-
-export const wad = (n: bigint = 1n, decimals: bigint = 18n) =>
-    n * 10n ** decimals;
+} from "../../../artifacts/Token.js";
 
 /**
- * Deploys the Counter contract.
- * @param deployer - The wallet to deploy the contract with.
- * @param owner - The address of the owner of the contract.
- * @returns A deployed contract instance.
+ * Deploys a new instance of the OTC Escrow Contract
+ * @dev ensures contract is built with known encryption keys and adds to deployer PXE
+ * 
+ * @param pxe - the PXE of the deploying account
+ * @param deployer - the account deploying the OTC Escrow Contract (the maker)
+ * @param offerTokenAddress - the address of the token being offered / sold by the maker
+ * @param offerTokenAmount - quantity of offerToken the maker wants to sell
+ * @param askTokenAddress - the address of the token being asked for/ bought by the maker
+ * @param askTokenAmount - quantity of askToken the maker wants to buy
+ * @param deployOptions - Aztec contract deployment options (optional)
+ * @returns
+ *          contract - the deployed OTC Escrow Contract
+ *          secretKey - the master key for the contract
  */
-export async function deployDemoContract(
+export async function deployEscrowContract(
     pxe: PXE,
     deployer: AccountWallet,
     offerTokenAddress: AztecAddress,
@@ -49,7 +40,7 @@ export async function deployDemoContract(
     askTokenAddress: AztecAddress,
     askTokenAmount: bigint,
     deployOptions?: DeployOptions,
-): Promise<{ contract: DemoContract, secretKey: Fr }> {
+): Promise<{ contract: OTCEscrowContract, secretKey: Fr }> {
 
     // get keys for contract
     const contractSecretKey = Fr.random();
@@ -59,7 +50,7 @@ export async function deployDemoContract(
     const contractDeployment = await Contract.deployWithPublicKeys(
         contractPublicKeys,
         deployer,
-        DemoContractArtifact,
+        OTCEscrowContractArtifact,
         [offerTokenAddress, offerTokenAmount, askTokenAddress, askTokenAmount],
     );
 
@@ -73,11 +64,18 @@ export async function deployDemoContract(
     const contract = await contractDeployment.send(deployOptions).deployed();
 
     return {
-        contract: contract as DemoContract,
+        contract: contract as OTCEscrowContract,
         secretKey: contractSecretKey,
     };
 }
 
+/**
+ * Deploys a new instance of Defi-Wonderland's Fungible Token Contract
+ * @param tokenMetadata - the name, symbol, and decimals of the token
+ * @param deployer - the account deploying the token contract (gets minter rights)
+ * @param deployOptions - Aztec contract deployment options (optional)
+ * @returns - the deployed Token Contract
+ */
 export async function deployTokenContractWithMinter(
     tokenMetadata: { name: string; symbol: string; decimals: number },
     deployer: AccountWallet,
@@ -100,16 +98,25 @@ export async function deployTokenContractWithMinter(
     return contract as TokenContract;
 }
 
+/**
+ * Deposit tokens into the escrow contract so that the taker can fill the order
+ * @param escrow - the escrow contract to deposit into
+ * @param caller - the maker who is selling tokens
+ * @param token - the contract instance of the token being sold by the maker
+ * @param amount - the amount of tokens to transfer in
+ * @param makerSecret - the secret used to privately authorize maker actions
+ *                      if not supplied, will retrieve from storage
+ */
 export async function depositToEscrow(
-    escrow: DemoContract,
+    escrow: OTCEscrowContract,
     caller: AccountWallet,
     token: TokenContract,
     amount: bigint,
-    secret?: Fr
+    makerSecret?: Fr
 ) {
     escrow = escrow.withWallet(caller);
-    if (secret === undefined) {
-        secret = await escrow.methods.get_maker_secret().simulate();
+    if (makerSecret === undefined) {
+        makerSecret = await escrow.methods.get_maker_secret().simulate();
     }
     const nonce = Fr.random();
     const authwit = await caller.createAuthWit({
@@ -124,7 +131,7 @@ export async function depositToEscrow(
     /// send transfer_in with authwit
     await escrow
         .methods
-        .deposit_tokens(secret!, nonce)
+        .deposit_tokens(makerSecret!, nonce)
         .with({ authWitnesses: [authwit] })
         .send()
         .wait()
