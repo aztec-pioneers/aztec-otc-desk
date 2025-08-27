@@ -26,10 +26,10 @@ import {
  * 
  * @param pxe - the PXE of the deploying account
  * @param deployer - the account deploying the OTC Escrow Contract (the maker)
- * @param offerTokenAddress - the address of the token being offered / sold by the maker
- * @param offerTokenAmount - quantity of offerToken the maker wants to sell
- * @param askTokenAddress - the address of the token being asked for/ bought by the maker
- * @param askTokenAmount - quantity of askToken the maker wants to buy
+ * @param sellTokenAddress - the address of the token being selled / sold by the maker
+ * @param sellTokenAmount - quantity of sellToken the maker wants to sell
+ * @param buyTokenAddress - the address of the token being buyed for/ bought by the maker
+ * @param buyTokenAmount - quantity of buyToken the maker wants to buy
  * @param deployOptions - Aztec contract deployment options (optional)
  * @returns
  *          contract - the deployed OTC Escrow Contract
