@@ -38,6 +38,10 @@ import OTCEscrowContractContractArtifactJson from '../target/otc_escrow-OTCEscro
 export const OTCEscrowContractContractArtifact = loadContractArtifact(OTCEscrowContractContractArtifactJson as NoirCompiledContract);
 
 
+      export type MakerPartialNote = {
+        commitment: FieldLike
+      }
+    
 
 /**
  * Type-safe interface for contract OTCEscrowContract;
@@ -151,8 +155,8 @@ MakerNote: {
     /** deposit_tokens(maker_secret: field, _nonce: field) */
     deposit_tokens: ((maker_secret: FieldLike, _nonce: FieldLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
 
-    /** fill_order(_nonce: field) */
-    fill_order: ((_nonce: FieldLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
+    /** fill_order(_nonce: field, commitment: field) */
+    fill_order: ((_nonce: FieldLike, commitment: FieldLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
 
     /** finalize_order(maker_secret: field) */
     finalize_order: ((maker_secret: FieldLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
@@ -173,5 +177,26 @@ MakerNote: {
     sync_private_state: (() => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
   };
 
+  
+    public static get events(): { MakerPartialNote: {abiType: AbiType, eventSelector: EventSelector, fieldNames: string[] } } {
+    return {
+      MakerPartialNote: {
+        abiType: {
+    "kind": "struct",
+    "fields": [
+        {
+            "name": "commitment",
+            "type": {
+                "kind": "field"
+            }
+        }
+    ],
+    "path": "OTCEscrowContract::MakerPartialNote"
+},
+        eventSelector: EventSelector.fromString("0x26c23a29"),
+        fieldNames: ["commitment"],
+      }
+    };
+  }
   
 }
