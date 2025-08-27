@@ -127,7 +127,6 @@ describe("Private Transfer Demo Test", () => {
             )
             .send()
             .wait();
-        console.log("SETUP COMPLETE")
     });
 
     test("check escrow key leaking", async () => {
