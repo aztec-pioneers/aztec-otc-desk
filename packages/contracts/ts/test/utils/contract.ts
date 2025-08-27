@@ -7,6 +7,7 @@ import {
     PXE,
     DeployOptions,
     FieldLike,
+    TxHash,
 } from "@aztec/aztec.js";
 import { computePartialAddress } from "@aztec/stdlib/contract";
 import {
@@ -37,10 +38,10 @@ import {
 export async function deployEscrowContract(
     pxe: PXE,
     deployer: AccountWallet,
-    offerTokenAddress: AztecAddress,
-    offerTokenAmount: bigint,
-    askTokenAddress: AztecAddress,
-    askTokenAmount: bigint,
+    sellTokenAddress: AztecAddress,
+    sellTokenAmount: bigint,
+    buyTokenAddress: AztecAddress,
+    buyTokenAmount: bigint,
     deployOptions?: DeployOptions,
 ): Promise<{ contract: OTCEscrowContract, secretKey: Fr }> {
 
@@ -53,7 +54,7 @@ export async function deployEscrowContract(
         contractPublicKeys,
         deployer,
         OTCEscrowContractArtifact,
-        [offerTokenAddress, offerTokenAmount, askTokenAddress, askTokenAmount],
+        [sellTokenAddress, sellTokenAmount, buyTokenAddress, buyTokenAmount],
     );
 
     // add contract decryption keys to PXE
@@ -111,38 +112,31 @@ export async function deployTokenContractWithMinter(
  *                      if not supplied, will retrieve from storage
  */
 export async function depositToEscrow(
-    pxe: PXE,
     escrow: OTCEscrowContract,
     caller: AccountWallet,
-    token: TokenContract,
-    amount: bigint,
-    makerSecret?: Fr
-): Promise<Fr> {
+    sellToken: TokenContract,
+    sellTokenAmount: bigint,
+): Promise<TxHash> {
     escrow = escrow.withWallet(caller);
-    if (makerSecret === undefined) {
-        makerSecret = await escrow.methods.get_maker_secret().simulate();
-    }
     const nonce = Fr.random();
     const authwit = await caller.createAuthWit({
         caller: escrow.address,
-        action: token.methods.transfer_private_to_private(
+        action: sellToken.methods.transfer_private_to_private(
             caller.getAddress(),
             escrow.address,
-            amount,
+            sellTokenAmount,
             nonce,
         ),
     });
 
     /// send transfer_in with authwit
-    await escrow
+    const receipt = await escrow
         .methods
-        .deposit_tokens(makerSecret!, nonce)
+        .deposit_tokens(nonce)
         .with({ authWitnesses: [authwit] })
         .send()
         .wait();
-
-    // get partial note
-    return await getOTCPartialNote(pxe, escrow.address);
+    return receipt.txHash
 }
 
 /**
@@ -157,8 +151,7 @@ export async function fillOTCOrder(
     caller: AccountWallet,
     token: TokenContract,
     amount: bigint,
-    commitment: bigint,
-) {
+): Promise<TxHash> {
     escrow = escrow.withWallet(caller);
 
     const nonce = Fr.random();
@@ -171,30 +164,13 @@ export async function fillOTCOrder(
             nonce,
         ),
     });
+    
     /// send transfer_in with authwit
-    await escrow
+    const receipt = await escrow
         .methods
-        .fill_order(nonce, commitment)
+        .fill_order(nonce)
         .with({ authWitnesses: [authwit] })
         .send()
-        .wait()
-}
-
-export async function getOTCPartialNote(
-    pxe: PXE,
-    contractAddress: AztecAddress
-): Promise<bigint> {
-    const blockNum = await pxe.getBlockNumber();
-    const log = await pxe.getPrivateEvents<MakerPartialNote>(
-        contractAddress,
-        OTCEscrowContract.events.MakerPartialNote,
-        blockNum - 20,
-        21,
-        [contractAddress]
-    );
-    if (log.length === 0) {
-        throw new Error("No MakerPartialNote events found");
-    }
-    // should only be one MakerPartialNote per contract
-    return log[0].commitment as bigint;
+        .wait();
+    return receipt.txHash;
 }

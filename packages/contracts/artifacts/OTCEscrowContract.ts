@@ -74,14 +74,14 @@ export class OTCEscrowContractContract extends ContractBase {
   /**
    * Creates a tx to deploy a new instance of this contract.
    */
-  public static deploy(wallet: Wallet, ) {
+  public static deploy(wallet: Wallet, sell_token_address: AztecAddressLike, sell_token_amount: (bigint | number), buy_token_address: AztecAddressLike, buy_token_amount: (bigint | number)) {
     return new DeployMethod<OTCEscrowContractContract>(PublicKeys.default(), wallet, OTCEscrowContractContractArtifact, OTCEscrowContractContract.at, Array.from(arguments).slice(1));
   }
 
   /**
    * Creates a tx to deploy a new instance of this contract using the specified public keys hash to derive the address.
    */
-  public static deployWithPublicKeys(publicKeys: PublicKeys, wallet: Wallet, ) {
+  public static deployWithPublicKeys(publicKeys: PublicKeys, wallet: Wallet, sell_token_address: AztecAddressLike, sell_token_amount: (bigint | number), buy_token_address: AztecAddressLike, buy_token_amount: (bigint | number)) {
     return new DeployMethod<OTCEscrowContractContract>(publicKeys, wallet, OTCEscrowContractContractArtifact, OTCEscrowContractContract.at, Array.from(arguments).slice(2));
   }
 
@@ -143,11 +143,11 @@ DefinitionNote: {
   /** Type-safe wrappers for the public methods exposed by the contract. */
   public declare methods: {
     
-    /** constructor() */
-    constructor: (() => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
+    /** constructor(sell_token_address: struct, sell_token_amount: integer, buy_token_address: struct, buy_token_amount: integer) */
+    constructor: ((sell_token_address: AztecAddressLike, sell_token_amount: (bigint | number), buy_token_address: AztecAddressLike, buy_token_amount: (bigint | number)) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
 
-    /** deposit_tokens(sell_token_address: struct, sell_token_amount: integer, buy_token_address: struct, buy_token_amount: integer, _nonce: field) */
-    deposit_tokens: ((sell_token_address: AztecAddressLike, sell_token_amount: (bigint | number), buy_token_address: AztecAddressLike, buy_token_amount: (bigint | number), _nonce: FieldLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
+    /** deposit_tokens(_nonce: field) */
+    deposit_tokens: ((_nonce: FieldLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
 
     /** fill_order(_nonce: field) */
     fill_order: ((_nonce: FieldLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;

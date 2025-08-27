@@ -33,9 +33,38 @@ pub contract OTCEscrowContract {
     #[private]
     #[initializer]
     fn constructor(
+        sell_token_address: AztecAddress,
+        sell_token_amount: u128,
+        buy_token_address: AztecAddress,
+        buy_token_amount: u128,
+    ) {
+
+        let self_address = context.this_address();
+        let caller = context.msg_sender();
+
+        // create partial note
+        let partial_note = Token::at(buy_token_address)
+            .initialize_transfer_commitment(
+                self_address,
+                caller,
+                self_address
+            ).call(&mut context);
+
+        // Create definition note
+        let definition = DefinitionNote::new(
+            self_address,
+            partial_note,
+            sell_token_address,
+            sell_token_amount,
+            buy_token_address,
+            buy_token_amount
+        );
         
-    ) {       
-        
+        storage.definition.initialize(definition).emit(encode_and_encrypt_note(
+            &mut context,
+            self_address,
+            self_address
+        ));
     }
     
     /**
@@ -45,52 +74,21 @@ pub contract OTCEscrowContract {
      * @return - the commitment for the partial note
      */
     #[private]
-    fn deposit_tokens(
-        sell_token_address: AztecAddress,
-        sell_token_amount: u128,
-        buy_token_address: AztecAddress,
-        buy_token_amount: u128,
-        _nonce: Field
-    ) -> Field {
+    fn deposit_tokens(_nonce: Field) {
 
+        let definition = storage.definition.get_note();
         let self_address = context.this_address();
         let caller = context.msg_sender();
 
         // transfer tokens in
-        Token::at(sell_token_address)
+        Token::at(definition.sell_token_address)
             .transfer_private_to_private(
                 caller,
                 self_address,
-                sell_token_amount,
+                definition.sell_token_amount,
                 _nonce
             )
-            .call(&mut context);
-
-        // create partial note for seller to receive buy tokens to
-        let partial_note = Token::at(buy_token_address)
-            .initialize_transfer_commitment(
-                self_address,
-                caller,
-                self_address
-            ).call(&mut context);
-
-        // Create definition note
-        let self_address = context.this_address();
-        let definition = DefinitionNote::new(
-            self_address,
-            partial_note,
-            sell_token_address,
-            sell_token_amount,
-            buy_token_address,
-            buy_token_amount
-        );
-        storage.definition.initialize(definition).emit(encode_and_encrypt_note(
-            &mut context,
-            self_address,
-            self_address
-        ));
-
-        partial_note
+            .call(&mut context);    
     }
 
     /**
