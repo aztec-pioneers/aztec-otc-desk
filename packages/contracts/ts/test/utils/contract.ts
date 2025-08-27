@@ -174,3 +174,15 @@ export async function fillOTCOrder(
         .wait();
     return receipt.txHash;
 }
+
+export async function expectBalancePrivate(
+    token: TokenContract,
+    address: AztecAddress,
+    expectedBalance: bigint
+): Promise<boolean> {
+    const empiricalBalance = await token
+        .methods
+        .balance_of_private(address)
+        .simulate();
+    return empiricalBalance === expectedBalance;
+}
