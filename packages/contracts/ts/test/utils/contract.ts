@@ -118,6 +118,7 @@ export async function depositToEscrow(
     sellTokenAmount: bigint,
 ): Promise<TxHash> {
     escrow = escrow.withWallet(caller);
+    // create authwit
     const nonce = Fr.random();
     const authwit = await caller.createAuthWit({
         caller: escrow.address,
@@ -129,7 +130,7 @@ export async function depositToEscrow(
         ),
     });
 
-    /// send transfer_in with authwit
+    // send transfer_in with authwit
     const receipt = await escrow
         .methods
         .deposit_tokens(nonce)
@@ -154,6 +155,7 @@ export async function fillOTCOrder(
 ): Promise<TxHash> {
     escrow = escrow.withWallet(caller);
 
+    // create authwit
     const nonce = Fr.random();
     const authwit = await caller.createAuthWit({
         caller: escrow.address,
@@ -165,7 +167,7 @@ export async function fillOTCOrder(
         ),
     });
     
-    /// send transfer_in with authwit
+    // send transfer_in with authwit
     const receipt = await escrow
         .methods
         .fill_order(nonce)
@@ -175,6 +177,13 @@ export async function fillOTCOrder(
     return receipt.txHash;
 }
 
+/**
+ * Checks that a private balance of a token for a specific address matches expectations
+ * @param token - the token balance to query
+ * @param address - the address of the token holder
+ * @param expectedBalance - the balance expected to be returned
+ * @returns - true if balance matches expectations, and false otherwise
+ */
 export async function expectBalancePrivate(
     token: TokenContract,
     address: AztecAddress,

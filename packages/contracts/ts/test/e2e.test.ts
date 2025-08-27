@@ -130,7 +130,7 @@ describe("Private Transfer Demo Test", () => {
         console.log("SETUP COMPLETE")
     });
 
-    test.skip("check escrow key leaking", async () => {
+    test("check escrow key leaking", async () => {
         // deploy new escrow instance
         ({ contract: escrow, secretKey: escrowMasterKey } = await deployEscrowContract(
             sellerPXE,
