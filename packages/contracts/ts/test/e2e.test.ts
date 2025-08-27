@@ -1,17 +1,13 @@
 import {
     AccountWallet,
-    CompleteAddress,
     PXE,
-    AccountWalletWithSecretKey,
     Fr,
     L1FeeJuicePortalManager,
     FeeJuicePaymentMethodWithClaim,
-    BatchCall,
 } from "@aztec/aztec.js";
 import { getInitialTestAccountsWallets } from "@aztec/accounts/testing";
 import {
     deployEscrowContract,
-    setupSandbox,
     deployTokenContractWithMinter,
     wad,
     depositToEscrow,
@@ -22,7 +18,6 @@ import {
     expectBalancePrivate,
 } from "./utils/index.js";
 import {
-    MakerPartialNote,
     OTCEscrowContractContract as OTCEscrowContract,
 } from "../../artifacts/OTCEscrowContract.js";
 
@@ -47,6 +42,11 @@ describe("Private Transfer Demo Test", () => {
     let weth: TokenContract;
 
     let feeJuicePortalManager: L1FeeJuicePortalManager;
+
+    const sellTokenAmount = wad(1000n, 6n);
+    const buyTokenAmount = wad(1n);
+    const sellerUSDCInitialBalance = wad(10000n, 6n);
+    const buyerWETHInitialBalance = wad(4n);
 
     beforeAll(async () => {
         // setup PXE connections
@@ -174,23 +174,7 @@ describe("Private Transfer Demo Test", () => {
     });
 
     test("e2e", async () => {
-        // expected amounts
-        /// swap amounts
-        const sellTokenAmount = wad(1000n, 6n);
-        const buyTokenAmount = wad(1n);
-        /// seller balances
-        const sellerUSDCInitialBalance = wad(10000n, 6n);
-        const sellerWETHInitialBalance = 0n
-        const sellerUSDCBalanceAfterDeposit = sellerUSDCInitialBalance - sellTokenAmount;
-        const sellerWETHBalanceAfterFill = sellerWETHInitialBalance + buyTokenAmount;
-        /// buyer balances
-        const buyerUSDCInitialBalance = 0n;
-        const buyerWETHInitialBalance = wad(4n);
-        const buyerUSDCBalanceAfterFill = buyerUSDCInitialBalance + sellTokenAmount;
-        const buyerWETHBalanceAfterFill = buyerWETHInitialBalance - buyTokenAmount;
-
-        // notes are owned by the deploying account
-
+        // deploy new escrow instance
         ({ contract: escrow, secretKey: escrowMasterKey } = await deployEscrowContract(
             sellerPXE,
             seller,
