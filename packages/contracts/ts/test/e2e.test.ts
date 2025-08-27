@@ -136,9 +136,9 @@ describe("Private Transfer Demo Test", () => {
             sellerPXE,
             seller,
             usdc.address,
-            wad(1000n, 6n),
+            buyTokenAmount,
             weth.address,
-            wad(1n),
+            sellTokenAmount,
         ));
 
         // Check seller Escrow
@@ -218,7 +218,7 @@ describe("Private Transfer Demo Test", () => {
         await escrow.withWallet(buyer).methods.sync_private_state().simulate();
 
         // transfer tokens back out
-        await fillOTCOrder(escrow, buyer, weth, wad(1n));
+        await fillOTCOrder(escrow, buyer, weth, sellTokenAmount);
 
         // check balances after filling order
         expect(
