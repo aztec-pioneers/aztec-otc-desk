@@ -84,8 +84,9 @@ pub contract OTCEscrowContract {
 
         // check maker commitment
         let definition = storage.definition.get_note();
-        let commitment = compute_maker_commitment(caller, maker_secret);
-        definition.check_commitment(commitment);
+        let preimage = [maker_address.to_field(), maker_secret];
+        let maker_commitment = Poseidon2::hash(preimage, 2);
+        definition.check_commitment(maker_commitment);
 
         // transfer tokens in
         Token::at(definition.offer_token_address)
@@ -156,32 +157,6 @@ pub contract OTCEscrowContract {
             .call(&mut context);
     }
 
-    /**
-     * Finalize the OTC order by claiming the offered tokens as the maker
-     *
-     * @param maker_secret - the secret value used to bind the market maker
-     */
-    #[private]
-    fn finalize_order(maker_secret: Field) {
-        let self_address = context.this_address();
-        let caller = context.msg_sender();
-
-        // check maker commitment
-        let definition = storage.definition.get_note();
-        let commitment = compute_maker_commitment(caller, maker_secret);
-        definition.check_commitment(commitment);
-
-        // transfer asked tokens out
-        Token::at(definition.ask_token_address)
-            .transfer_private_to_private(
-                self_address,
-                caller,
-                definition.ask_token_amount,
-                0
-            )
-            .call(&mut context);
-    }
-
     #[utility]
     pub unconstrained fn get_definition() -> DefinitionNote {
         storage.definition.view_note()
@@ -194,7 +169,6 @@ pub contract OTCEscrowContract {
 
     #[contract_library_method]
     pub fn compute_maker_commitment(maker_address: AztecAddress, maker_secret: Field) -> Field {
-        let preimage = [maker_address.to_field(), maker_secret];
-        Poseidon2::hash(preimage, 2)
+        
     }
 }
