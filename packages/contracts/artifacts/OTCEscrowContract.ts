@@ -38,25 +38,25 @@ import OTCEscrowContractContractArtifactJson from '../target/otc_escrow-OTCEscro
 export const OTCEscrowContractContractArtifact = loadContractArtifact(OTCEscrowContractContractArtifactJson as NoirCompiledContract);
 
 
-export type MakerPartialNote = {
-  commitment: FieldLike
-}
-
+      export type MakerPartialNote = {
+        commitment: FieldLike
+      }
+    
 
 /**
  * Type-safe interface for contract OTCEscrowContract;
  */
 export class OTCEscrowContractContract extends ContractBase {
-
+  
   private constructor(
     instance: ContractInstanceWithAddress,
     wallet: Wallet,
   ) {
     super(instance, OTCEscrowContractContractArtifact, wallet);
   }
+  
 
-
-
+  
   /**
    * Creates a contract instance.
    * @param address - The deployed contract's address.
@@ -70,18 +70,18 @@ export class OTCEscrowContractContract extends ContractBase {
     return Contract.at(address, OTCEscrowContractContract.artifact, wallet) as Promise<OTCEscrowContractContract>;
   }
 
-
+  
   /**
    * Creates a tx to deploy a new instance of this contract.
    */
-  public static deploy(wallet: Wallet, offer_token_address: AztecAddressLike, offer_token_amount: (bigint | number), ask_token_address: AztecAddressLike, ask_token_amount: (bigint | number)) {
+  public static deploy(wallet: Wallet, ) {
     return new DeployMethod<OTCEscrowContractContract>(PublicKeys.default(), wallet, OTCEscrowContractContractArtifact, OTCEscrowContractContract.at, Array.from(arguments).slice(1));
   }
 
   /**
    * Creates a tx to deploy a new instance of this contract using the specified public keys hash to derive the address.
    */
-  public static deployWithPublicKeys(publicKeys: PublicKeys, wallet: Wallet, offer_token_address: AztecAddressLike, offer_token_amount: (bigint | number), ask_token_address: AztecAddressLike, ask_token_amount: (bigint | number)) {
+  public static deployWithPublicKeys(publicKeys: PublicKeys, wallet: Wallet, ) {
     return new DeployMethod<OTCEscrowContractContract>(publicKeys, wallet, OTCEscrowContractContractArtifact, OTCEscrowContractContract.at, Array.from(arguments).slice(2));
   }
 
@@ -101,9 +101,9 @@ export class OTCEscrowContractContract extends ContractBase {
       opts.method ?? 'constructor',
     );
   }
+  
 
-
-
+  
   /**
    * Returns this contract's artifact.
    */
@@ -117,55 +117,43 @@ export class OTCEscrowContractContract extends ContractBase {
   public static get artifactForPublic(): ContractArtifact {
     return loadContractArtifactForPublic(OTCEscrowContractContractArtifactJson as NoirCompiledContract);
   }
+  
 
+  public static get storage(): ContractStorageLayout<'definition'> {
+      return {
+        definition: {
+      slot: new Fr(1n),
+    }
+      } as ContractStorageLayout<'definition'>;
+    }
+    
 
-  public static get storage(): ContractStorageLayout<'definition' | 'maker_secret'> {
-    return {
-      definition: {
-        slot: new Fr(1n),
-      },
-      maker_secret: {
-        slot: new Fr(2n),
-      }
-    } as ContractStorageLayout<'definition' | 'maker_secret'>;
-  }
-
-
-  public static get notes(): ContractNotes<'UintNote' | 'DefinitionNote' | 'MakerNote'> {
+  public static get notes(): ContractNotes<'UintNote' | 'DefinitionNote'> {
     return {
       UintNote: {
-        id: new NoteSelector(0),
-      },
-      DefinitionNote: {
-        id: new NoteSelector(1),
-      },
-      MakerNote: {
-        id: new NoteSelector(2),
-      }
-    } as ContractNotes<'UintNote' | 'DefinitionNote' | 'MakerNote'>;
+          id: new NoteSelector(0),
+        },
+DefinitionNote: {
+          id: new NoteSelector(1),
+        }
+    } as ContractNotes<'UintNote' | 'DefinitionNote'>;
   }
-
+  
 
   /** Type-safe wrappers for the public methods exposed by the contract. */
   public declare methods: {
+    
+    /** constructor() */
+    constructor: (() => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
 
-    /** constructor(offer_token_address: struct, offer_token_amount: integer, ask_token_address: struct, ask_token_amount: integer) */
-    constructor: ((offer_token_address: AztecAddressLike, offer_token_amount: (bigint | number), ask_token_address: AztecAddressLike, ask_token_amount: (bigint | number)) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
+    /** deposit_tokens(sell_token_address: struct, sell_token_amount: integer, buy_token_address: struct, buy_token_amount: integer, _nonce: field) */
+    deposit_tokens: ((sell_token_address: AztecAddressLike, sell_token_amount: (bigint | number), buy_token_address: AztecAddressLike, buy_token_amount: (bigint | number), _nonce: FieldLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
 
-    /** deposit_tokens(maker_secret: field, _nonce: field) */
-    deposit_tokens: ((maker_secret: FieldLike, _nonce: FieldLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
-
-    /** fill_order(_nonce: field, commitment: field) */
-    fill_order: ((_nonce: FieldLike, commitment: FieldLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
-
-    /** finalize_order(maker_secret: field) */
-    finalize_order: ((maker_secret: FieldLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
+    /** fill_order(_nonce: field) */
+    fill_order: ((_nonce: FieldLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
 
     /** get_definition() */
     get_definition: (() => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
-
-    /** get_maker_secret() */
-    get_maker_secret: (() => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
 
     /** process_message(message_ciphertext: struct, message_context: struct) */
     process_message: ((message_ciphertext: FieldLike[], message_context: { tx_hash: FieldLike, unique_note_hashes_in_tx: FieldLike[], first_nullifier_in_tx: FieldLike, recipient: AztecAddressLike }) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
@@ -177,26 +165,26 @@ export class OTCEscrowContractContract extends ContractBase {
     sync_private_state: (() => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
   };
 
-
-  public static get events(): { MakerPartialNote: { abiType: AbiType, eventSelector: EventSelector, fieldNames: string[] } } {
+  
+    public static get events(): { MakerPartialNote: {abiType: AbiType, eventSelector: EventSelector, fieldNames: string[] } } {
     return {
       MakerPartialNote: {
         abiType: {
-          "kind": "struct",
-          "fields": [
-            {
-              "name": "commitment",
-              "type": {
+    "kind": "struct",
+    "fields": [
+        {
+            "name": "commitment",
+            "type": {
                 "kind": "field"
-              }
             }
-          ],
-          "path": "OTCEscrowContract::MakerPartialNote"
-        },
+        }
+    ],
+    "path": "OTCEscrowContract::MakerPartialNote"
+},
         eventSelector: EventSelector.fromString("0x26c23a29"),
         fieldNames: ["commitment"],
       }
     };
   }
-
+  
 }
