@@ -6,24 +6,17 @@ pub contract OTCEscrowContract {
     // aztec library imports
     use aztec::{
         macros::{
-            events::event,
             functions::{initializer, private, utility},
             storage::storage
         },
         prelude::{AztecAddress, PrivateImmutable, PrivateMutable},
         messages::logs::note::encode_and_encrypt_note,
         protocol_types::traits::ToField,
-        event::event_interface::{emit_event_in_private_log, PrivateLogContent},
     };
     use crate::types::definition_note::DefinitionNote;
 
     use poseidon::poseidon2::Poseidon2;
     use token_contract::Token;
-    
-    #[event]
-    struct MakerPartialNote {
-        commitment: Field
-    }
 
     #[storage]
     struct Storage<Context> {

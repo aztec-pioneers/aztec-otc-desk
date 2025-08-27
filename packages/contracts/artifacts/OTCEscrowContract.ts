@@ -38,10 +38,6 @@ import OTCEscrowContractContractArtifactJson from '../target/otc_escrow-OTCEscro
 export const OTCEscrowContractContractArtifact = loadContractArtifact(OTCEscrowContractContractArtifactJson as NoirCompiledContract);
 
 
-      export type MakerPartialNote = {
-        commitment: FieldLike
-      }
-    
 
 /**
  * Type-safe interface for contract OTCEscrowContract;
@@ -165,26 +161,5 @@ DefinitionNote: {
     sync_private_state: (() => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
   };
 
-  
-    public static get events(): { MakerPartialNote: {abiType: AbiType, eventSelector: EventSelector, fieldNames: string[] } } {
-    return {
-      MakerPartialNote: {
-        abiType: {
-    "kind": "struct",
-    "fields": [
-        {
-            "name": "commitment",
-            "type": {
-                "kind": "field"
-            }
-        }
-    ],
-    "path": "OTCEscrowContract::MakerPartialNote"
-},
-        eventSelector: EventSelector.fromString("0x26c23a29"),
-        fieldNames: ["commitment"],
-      }
-    };
-  }
   
 }
