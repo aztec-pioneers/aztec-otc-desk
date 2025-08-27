@@ -38,25 +38,25 @@ import OTCEscrowContractContractArtifactJson from '../target/otc_escrow-OTCEscro
 export const OTCEscrowContractContractArtifact = loadContractArtifact(OTCEscrowContractContractArtifactJson as NoirCompiledContract);
 
 
-      export type MakerPartialNote = {
-        commitment: FieldLike
-      }
-    
+export type MakerPartialNote = {
+  commitment: FieldLike
+}
+
 
 /**
  * Type-safe interface for contract OTCEscrowContract;
  */
 export class OTCEscrowContractContract extends ContractBase {
-  
+
   private constructor(
     instance: ContractInstanceWithAddress,
     wallet: Wallet,
   ) {
     super(instance, OTCEscrowContractContractArtifact, wallet);
   }
-  
 
-  
+
+
   /**
    * Creates a contract instance.
    * @param address - The deployed contract's address.
@@ -70,7 +70,7 @@ export class OTCEscrowContractContract extends ContractBase {
     return Contract.at(address, OTCEscrowContractContract.artifact, wallet) as Promise<OTCEscrowContractContract>;
   }
 
-  
+
   /**
    * Creates a tx to deploy a new instance of this contract.
    */
@@ -101,9 +101,9 @@ export class OTCEscrowContractContract extends ContractBase {
       opts.method ?? 'constructor',
     );
   }
-  
 
-  
+
+
   /**
    * Returns this contract's artifact.
    */
@@ -117,38 +117,38 @@ export class OTCEscrowContractContract extends ContractBase {
   public static get artifactForPublic(): ContractArtifact {
     return loadContractArtifactForPublic(OTCEscrowContractContractArtifactJson as NoirCompiledContract);
   }
-  
+
 
   public static get storage(): ContractStorageLayout<'definition' | 'maker_secret'> {
-      return {
-        definition: {
-      slot: new Fr(1n),
-    },
-maker_secret: {
-      slot: new Fr(2n),
-    }
-      } as ContractStorageLayout<'definition' | 'maker_secret'>;
-    }
-    
+    return {
+      definition: {
+        slot: new Fr(1n),
+      },
+      maker_secret: {
+        slot: new Fr(2n),
+      }
+    } as ContractStorageLayout<'definition' | 'maker_secret'>;
+  }
+
 
   public static get notes(): ContractNotes<'UintNote' | 'DefinitionNote' | 'MakerNote'> {
     return {
       UintNote: {
-          id: new NoteSelector(0),
-        },
-DefinitionNote: {
-          id: new NoteSelector(1),
-        },
-MakerNote: {
-          id: new NoteSelector(2),
-        }
+        id: new NoteSelector(0),
+      },
+      DefinitionNote: {
+        id: new NoteSelector(1),
+      },
+      MakerNote: {
+        id: new NoteSelector(2),
+      }
     } as ContractNotes<'UintNote' | 'DefinitionNote' | 'MakerNote'>;
   }
-  
+
 
   /** Type-safe wrappers for the public methods exposed by the contract. */
   public declare methods: {
-    
+
     /** constructor(offer_token_address: struct, offer_token_amount: integer, ask_token_address: struct, ask_token_amount: integer) */
     constructor: ((offer_token_address: AztecAddressLike, offer_token_amount: (bigint | number), ask_token_address: AztecAddressLike, ask_token_amount: (bigint | number)) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
 
@@ -177,26 +177,26 @@ MakerNote: {
     sync_private_state: (() => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
   };
 
-  
-    public static get events(): { MakerPartialNote: {abiType: AbiType, eventSelector: EventSelector, fieldNames: string[] } } {
+
+  public static get events(): { MakerPartialNote: { abiType: AbiType, eventSelector: EventSelector, fieldNames: string[] } } {
     return {
       MakerPartialNote: {
         abiType: {
-    "kind": "struct",
-    "fields": [
-        {
-            "name": "commitment",
-            "type": {
+          "kind": "struct",
+          "fields": [
+            {
+              "name": "commitment",
+              "type": {
                 "kind": "field"
+              }
             }
-        }
-    ],
-    "path": "OTCEscrowContract::MakerPartialNote"
-},
+          ],
+          "path": "OTCEscrowContract::MakerPartialNote"
+        },
         eventSelector: EventSelector.fromString("0x26c23a29"),
         fieldNames: ["commitment"],
       }
     };
   }
-  
+
 }

@@ -141,9 +141,8 @@ export async function depositToEscrow(
         .send()
         .wait();
 
-    const partialNote = await getOTCPartialNote(pxe, escrow.address);
-    console.log("Partial Note from Maker: ", partialNote)
-    return partialNote
+    // get partial note
+    return await getOTCPartialNote(pxe, escrow.address);
 }
 
 /**
@@ -184,7 +183,7 @@ export async function fillOTCOrder(
 export async function getOTCPartialNote(
     pxe: PXE,
     contractAddress: AztecAddress
-): Promise<Fr> {
+): Promise<bigint> {
     const blockNum = await pxe.getBlockNumber();
     const log = await pxe.getPrivateEvents<MakerPartialNote>(
         contractAddress,
@@ -197,5 +196,5 @@ export async function getOTCPartialNote(
         throw new Error("No MakerPartialNote events found");
     }
     // should only be one MakerPartialNote per contract
-    return log[0].commitment as Fr;
+    return log[0].commitment as bigint;
 }

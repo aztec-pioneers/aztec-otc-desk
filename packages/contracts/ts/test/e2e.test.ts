@@ -6,6 +6,7 @@ import {
     Fr,
     L1FeeJuicePortalManager,
     FeeJuicePaymentMethodWithClaim,
+    BatchCall,
 } from "@aztec/aztec.js";
 import { getInitialTestAccountsWallets } from "@aztec/accounts/testing";
 import {
@@ -202,23 +203,19 @@ describe("Private Transfer Demo Test", () => {
             makerSecret
         );
 
-
-
-        // await pxe[0].getPrivateEvents(escrow.address, escrow.artifact)
-
-        // // check USDC balances after transfer in
-        // aliceUSDCBalance = await usdc.methods.balance_of_private(alice.getAddress()).simulate();
-        // contractUSDCBalance = await usdc.methods.balance_of_private(escrow.address).simulate();
-        // expect(aliceUSDCBalance).toEqual(wad(9000n, 6n));
-        // expect(contractUSDCBalance).toEqual(wad(1000n, 6n));
+        // check USDC balances after transfer in
+        aliceUSDCBalance = await usdc.methods.balance_of_private(alice.getAddress()).simulate();
+        contractUSDCBalance = await usdc.methods.balance_of_private(escrow.address).simulate();
+        expect(aliceUSDCBalance).toEqual(wad(9000n, 6n));
+        expect(contractUSDCBalance).toEqual(wad(1000n, 6n));
 
         // // check Bob balance balances before filling order
         let bobWethBalance = await weth.withWallet(bob).methods.balance_of_private(bob.getAddress()).simulate();
         let bobUSDCBalance = await usdc.withWallet(bob).methods.balance_of_private(bob.getAddress()).simulate();
-        // let contractWethBalance = await weth.withWallet(bob).methods.balance_of_private(escrow.address).simulate();
-        // expect(bobWethBalance).toEqual(wad(4n));
-        // expect(bobUSDCBalance).toEqual(0n);
-        // expect(contractWethBalance).toEqual(0n);
+        let contractWethBalance = await weth.withWallet(bob).methods.balance_of_private(escrow.address).simulate();
+        expect(bobWethBalance).toEqual(wad(4n));
+        expect(bobUSDCBalance).toEqual(0n);
+        expect(contractWethBalance).toEqual(0n);
 
         // give bob knowledge of the escrow
         await pxe[1].registerAccount(escrowKey, await escrow.partialAddress);
@@ -227,35 +224,20 @@ describe("Private Transfer Demo Test", () => {
 
         // const blockNum = await pxe[1].getBlockNumber();
         const partialNote = await getOTCPartialNote(pxe[1], escrow.address);
-        console.log("Partial Note from Bob: ", partialNote);
 
-        // // transfer tokens back out
-        // console.log("attempting to fill order")
-        // await fillOTCOrder(escrow, bob, weth, wad(1n), commitment);
-        // console.log("order filled")
+        // transfer tokens back out
+        console.log("attempting to fill order")
+        await fillOTCOrder(escrow, bob, weth, wad(1n), partialNote);
+        console.log("order filled")
 
-        // // // check balances after filling order
-        // bobWethBalance = await weth.withWallet(bob).methods.balance_of_private(bob.getAddress()).simulate();
-        // bobUSDCBalance = await usdc.withWallet(bob).methods.balance_of_private(bob.getAddress()).simulate();
-        // contractUSDCBalance = await usdc.withWallet(bob).methods.balance_of_private(escrow.address).simulate();
-        // let aliceBalanceWeth = await weth.withWallet(alice).methods.balance_of_private(alice.getAddress()).simulate();
-        // console.log("bob weth balance: ", bobWethBalance);
-        // console.log("bob usdc balance: ", bobUSDCBalance);
-        // console.log("contract usdc balance: ", contractUSDCBalance);
-        // console.log("alice weth balance: ", aliceBalanceWeth);
-        // contractWethBalance = await weth.withWallet(bob).methods.balance_of_private(escrow.address).simulate();
-        // expect(bobWethBalance).toEqual(wad(3n));
-        // expect(bobUSDCBalance).toEqual(wad(1000n, 6n));
-        // expect(contractWethBalance).toEqual(wad(1n));
-        // expect(contractUSDCBalance).toEqual(0n);
-
-        // await escrow.withWallet(alice).methods.finalize_order(makerSecret).send().wait();
-        // let aliceBalanceWeth = await weth.withWallet(alice).methods.balance_of_private(alice.getAddress()).simulate();
-        // contractWethBalance = await weth.withWallet(alice).methods.balance_of_private(escrow.address).simulate();
-        // expect(aliceBalanceWeth).toEqual(wad(1n));
-        // expect(contractWethBalance).toEqual(0n);
+        // check balances after filling order
+        bobWethBalance = await weth.withWallet(bob).methods.balance_of_private(bob.getAddress()).simulate();
+        bobUSDCBalance = await usdc.withWallet(bob).methods.balance_of_private(bob.getAddress()).simulate();
+        contractUSDCBalance = await usdc.withWallet(bob).methods.balance_of_private(escrow.address).simulate();
+        let aliceBalanceWeth = await weth.withWallet(alice).methods.balance_of_private(alice.getAddress()).simulate();
+        expect(bobWethBalance).toEqual(wad(3n));
+        expect(bobUSDCBalance).toEqual(wad(1000n, 6n));
+        expect(contractUSDCBalance).toEqual(0n);
+        expect(aliceBalanceWeth).toEqual(wad(1n));
     });
-
-
-
 });
