@@ -6,13 +6,14 @@ pub contract OTCEscrowContract {
     // aztec library imports
     use aztec::{
         macros::{
+            events::event,
             functions::{initializer, private, utility},
             storage::storage
         },
         prelude::{AztecAddress, PrivateImmutable, PrivateMutable},
         messages::logs::note::encode_and_encrypt_note,
         protocol_types::traits::ToField,
-
+        event::event_interface::{emit_event_in_private_log, PrivateLogContent},
     };
     use crate::types::{
         definition_note::DefinitionNote,
@@ -22,6 +23,10 @@ pub contract OTCEscrowContract {
     use poseidon::poseidon2::Poseidon2;
     use token_contract::Token;
     
+    #[event]
+    struct MakerPartialNote {
+        commitment: Field
+    }
 
     #[storage]
     struct Storage<Context> {
@@ -69,17 +74,19 @@ pub contract OTCEscrowContract {
      * @param maker_secret - the secret value used to bind the market maker
      *                       retrieve with `get_maker_secret` to avoid extra work
      * @param _nonce - authwit nonce used in `transfer_private_to_private`
+     * @return - the commitment for the partial note
      */
     #[private]
-    fn deposit_tokens(maker_secret: Field, _nonce: Field) {
+    fn deposit_tokens(maker_secret: Field, _nonce: Field) -> Field {
 
         let self_address = context.this_address();
         let caller = context.msg_sender();
 
         // check maker commitment
         let definition = storage.definition.get_note();
-        let commitment = compute_maker_commitment(caller, maker_secret);
-        definition.check_commitment(commitment);
+        let preimage = [maker_address.to_field(), maker_secret];
+        let maker_commitment = Poseidon2::hash(preimage, 2);
+        definition.check_commitment(maker_commitment);
 
         // transfer tokens in
         Token::at(definition.offer_token_address)
@@ -87,9 +94,26 @@ pub contract OTCEscrowContract {
                 caller,
                 self_address,
                 definition.offer_token_amount,
-                _nonce,
+                _nonce
             )
             .call(&mut context);
+
+        let transfer_commitment = Token::at(definition.ask_token_address)
+            .initialize_transfer_commitment(
+                self_address,
+                caller,
+                self_address
+            ).call(&mut context);
+
+        emit_event_in_private_log(
+            MakerPartialNote { commitment: transfer_commitment },
+            &mut context,
+            self_address,
+            self_address,
+            PrivateLogContent.NO_CONSTRAINTS,
+        );
+
+        transfer_commitment
     }
 
     /**
@@ -98,7 +122,7 @@ pub contract OTCEscrowContract {
      * @param _nonce - authwit nonce used in `transfer_private_to_private`
      */
     #[private]
-    fn fill_order(_nonce: Field) {
+    fn fill_order(_nonce: Field, commitment: Field) {
         let definition = storage.definition.get_note();
         let self_address = context.this_address();
         let caller = context.msg_sender();
@@ -113,38 +137,21 @@ pub contract OTCEscrowContract {
             )
             .call(&mut context);
 
+        Token::at(definition.ask_token_address)
+            .transfer_private_to_commitment(
+                self_address,
+                commitment,
+                definition.ask_token_amount,
+                0
+            )
+            .call(&mut context);
+
         // transfer offer tokens out
         Token::at(definition.offer_token_address)
             .transfer_private_to_private(
                 self_address,
                 caller,
                 definition.offer_token_amount,
-                0
-            )
-            .call(&mut context);
-    }
-
-    /**
-     * Finalize the OTC order by claiming the offered tokens as the maker
-     *
-     * @param maker_secret - the secret value used to bind the market maker
-     */
-    #[private]
-    fn finalize_order(maker_secret: Field) {
-        let self_address = context.this_address();
-        let caller = context.msg_sender();
-
-        // check maker commitment
-        let definition = storage.definition.get_note();
-        let commitment = compute_maker_commitment(caller, maker_secret);
-        definition.check_commitment(commitment);
-
-        // transfer asked tokens out
-        Token::at(definition.ask_token_address)
-            .transfer_private_to_private(
-                self_address,
-                caller,
-                definition.ask_token_amount,
                 0
             )
             .call(&mut context);
@@ -162,7 +169,6 @@ pub contract OTCEscrowContract {
 
     #[contract_library_method]
     pub fn compute_maker_commitment(maker_address: AztecAddress, maker_secret: Field) -> Field {
-        let preimage = [maker_address.to_field(), maker_secret];
-        Poseidon2::hash(preimage, 2)
+        
     }
 }
