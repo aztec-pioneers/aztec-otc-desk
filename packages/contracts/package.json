@@ -15,6 +15,7 @@
   },
   "scripts": {
     "test": "bun test",
+    "test:nr": "aztec test",
     "deploy-token": "bun run ./scripts/deploy_token.ts",
     "compile": "aztec-nargo compile",
     "codegen": "aztec codegen target --outdir artifacts",
