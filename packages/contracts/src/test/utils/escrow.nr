@@ -1,15 +1,20 @@
 use aztec::{
-    oracle::execution::get_contract_address,
+    oracle::{
+        random::random,
+        execution::get_contract_address,
+    },
     prelude::AztecAddress,
     protocol_types::contract_instance::ContractInstance,
     test::helpers::{
         test_environment::TestEnvironment,
-        cheatcodes
+        cheatcodes,
+        authwit as authwit_cheatcodes
     }
 };
 use crate::{
     OTCEscrowContract,
-    types::definition_note::DefinitionNote
+    types::definition_note::DefinitionNote,
+    test::utils::token::{private_transfer_authwit, mint_to_private}
 };
 
 pub unconstrained fn get_escrow_definition(
@@ -26,4 +31,58 @@ pub unconstrained fn get_escrow_definition(
     cheatcodes::set_contract_address(current_contract_address);
 
     definition
+}
+
+pub unconstrained fn deposit_to_escrow(
+    env: &mut TestEnvironment,
+    seller_address: AztecAddress,
+    escrow_address: AztecAddress,
+    sell_token_address: AztecAddress,
+    sell_token_amount: u128,
+) {
+    // add transfer authwit
+    let nonce = unsafe { random() };
+    private_transfer_authwit(
+        sell_token_address,
+        escrow_address,
+        seller_address,
+        sell_token_amount,
+        nonce
+    );
+
+    // call deposit
+    env.impersonate(seller_address);
+    OTCEscrowContract::at(escrow_address)
+        .deposit_tokens(nonce)
+        .call(&mut env.private());
+    
+    // advance block
+    env.advance_block_by(1);
+}
+
+pub unconstrained fn fulfill_otc_escrow(
+    env: &mut TestEnvironment,
+    escrow_address: AztecAddress,
+    buyer: AztecAddress,
+    seller: AztecAddress,
+    amount: u128
+) {
+    // add transfer authwit
+    let nonce = unsafe { random() };
+    private_transfer_authwit(
+        escrow_address,
+        buyer,
+        seller,
+        amount,
+        nonce
+    );
+
+    // call fulfill
+    env.impersonate(buyer);
+    OTCEscrowContract::at(escrow_address)
+        .fulfill(nonce)
+        .call(&mut env.private());
+
+    // advance block
+    env.advance_block_by(1);
 }

@@ -34,12 +34,13 @@ pub struct TestAccounts {
     seller: AztecAddress,
     buyer: AztecAddress,
     external: AztecAddress,
+    escrow_secret: Field
 }
 
 pub struct TestContracts {
     usdc: AztecAddress,
     weth: AztecAddress,
-    escrow: AztecAddress
+    escrow: AztecAddress,
 }
 
 /**
@@ -54,15 +55,16 @@ pub struct TestContracts {
 pub unconstrained fn setup(mint: bool) -> (
     &mut TestEnvironment,
     TestAccounts,
-    TestContracts
+    TestContracts,
 ) {
     // setup accounts
-    let (env, accounts) = setup_accounts::<4>(false);
-    let test_accounts = TestAccounts {
+    let (env, accounts) = setup_accounts::<4>(true);
+    let mut test_accounts = TestAccounts {
         minter: accounts[0],
         seller: accounts[1],
         buyer: accounts[2],
-        external: accounts[3]
+        external: accounts[3],
+        escrow_secret: 0
     };
 
     // deploy contracts
@@ -80,7 +82,7 @@ pub unconstrained fn setup(mint: bool) -> (
         WETH_SYMBOL,
         WETH_DECIMALS
     );
-    let escrow = deploy_escrow_contract(
+    let (escrow, escrow_secret) = deploy_escrow_contract(
         env,
         test_accounts.seller,
         usdc,
@@ -99,7 +101,7 @@ pub unconstrained fn setup(mint: bool) -> (
         );
         mint_to_private(
             env,
-            usdc,
+            weth,
             test_accounts.minter,
             test_accounts.buyer,
             WETH_ESCROW_AMOUNT
@@ -107,6 +109,7 @@ pub unconstrained fn setup(mint: bool) -> (
     }
     // named contract struct 
     let test_contracts = TestContracts { usdc, weth, escrow };
+    test_accounts.escrow_secret = escrow_secret;
 
     (env, test_accounts, test_contracts)
 }
@@ -147,7 +150,7 @@ pub unconstrained fn deploy_token_contract(
             AztecAddress::zero()
         );
     let contract_instance = env
-        .deploy("./@token_contract", "Token")
+        .deploy("../../deps/aztec-standards/@token_contract", "Token")
         .with_public_void_initializer(owner, initializer_call_iface);
     env.advance_block_by(1);
 
@@ -161,10 +164,13 @@ pub unconstrained fn deploy_escrow_contract(
     sell_token_amount: u128,
     buy_token_address: AztecAddress,
     buy_token_amount: u128
-) -> AztecAddress {
+) -> (AztecAddress, Field) {
     // setup keys for escrow account
     let escrow_secret = unsafe { random() };
     let escrow_contract_account = cheatcodes::add_account(escrow_secret);
+    
+    // do i even have to do this
+    env.impersonate(owner);
 
     // deploy escrow contract
     let initializer_call_iface = OTCEscrowContract::interface()
@@ -179,5 +185,5 @@ pub unconstrained fn deploy_escrow_contract(
         .with_private_initializer(owner, initializer_call_iface);
     env.advance_block_by(1);
 
-    contract_instance.to_address()
+    (contract_instance.to_address(), escrow_secret)
 }

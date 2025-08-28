@@ -11,6 +11,7 @@ pub contract OTCEscrowContract {
             functions::{initializer, private, utility},
             storage::storage
         },
+        oracle::debug_log::{debug_log, debug_log_format},
         prelude::{AztecAddress, PrivateImmutable, PrivateMutable},
         messages::logs::note::encode_and_encrypt_note,
         protocol_types::traits::ToField,
@@ -33,7 +34,6 @@ pub contract OTCEscrowContract {
         buy_token_address: AztecAddress,
         buy_token_amount: u128,
     ) {
-
         let self_address = context.this_address();
         let caller = context.msg_sender();
 
@@ -74,6 +74,15 @@ pub contract OTCEscrowContract {
         let definition = storage.definition.get_note();
         let self_address = context.this_address();
         let caller = context.msg_sender();
+
+        debug_log_format("Definition In Circuit:\nOwner: {0}\nSell Token Address: {1}\nSell Token Amount: {2}\nBuy Token Address: {3}\nBuy Token Amount: {4}\nPartial Note: {5}", [
+            definition.owner.to_field(),
+            definition.sell_token_address.to_field(),
+            definition.sell_token_amount.to_field(),
+            definition.buy_token_address.to_field(),
+            definition.buy_token_amount.to_field(),
+            definition.partial_note.to_field()
+        ]);
 
         // transfer tokens in
         Token::at(definition.sell_token_address)
