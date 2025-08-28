@@ -60,27 +60,27 @@ pub unconstrained fn deposit_to_escrow(
     env.advance_block_by(1);
 }
 
-pub unconstrained fn fulfill_otc_escrow(
+pub unconstrained fn fill_otc_order(
     env: &mut TestEnvironment,
+    buyer_address: AztecAddress,
     escrow_address: AztecAddress,
-    buyer: AztecAddress,
-    seller: AztecAddress,
-    amount: u128
+    buy_token_address: AztecAddress,
+    buy_token_amount: u128
 ) {
     // add transfer authwit
     let nonce = unsafe { random() };
     private_transfer_authwit(
+        buy_token_address,
         escrow_address,
-        buyer,
-        seller,
-        amount,
+        buyer_address,
+        buy_token_amount,
         nonce
     );
 
     // call fulfill
-    env.impersonate(buyer);
+    env.impersonate(buyer_address);
     OTCEscrowContract::at(escrow_address)
-        .fulfill(nonce)
+        .fill_order(nonce)
         .call(&mut env.private());
 
     // advance block
