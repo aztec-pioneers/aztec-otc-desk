@@ -166,10 +166,6 @@ pub unconstrained fn deploy_escrow_contract(
     buy_token_address: AztecAddress,
     buy_token_amount: u128
 ) -> (AztecAddress, Field) {
-
-    let note_randomness = 111111;
-    // let _ = OracleMock::mock("getRandomField").returns(note_randomness);
-
     // setup keys for escrow account
     let escrow_secret = unsafe { random() };
     let escrow_contract_account = cheatcodes::add_account(escrow_secret);

@@ -40,12 +40,11 @@ unconstrained fn full_otc_order_success() {
         "Validity nullifier should exist",
     );
 
-
     // check usdc balance of seller and contract before deposit
     expect_private_balance(contracts.usdc, accounts.seller, USDC_ESCROW_AMOUNT);
     expect_private_balance(contracts.usdc, contracts.escrow, 0);
 
-    // // deposit to escrow
+    // deposit to escrow
     deposit_to_escrow(
         env,
         accounts.seller,
@@ -54,11 +53,11 @@ unconstrained fn full_otc_order_success() {
         USDC_ESCROW_AMOUNT
     );
 
-    // // check usdc balance of seller and contract after deposit
-    // expect_private_balance(contracts.usdc, accounts.seller, 0);
-    // expect_private_balance(contracts.usdc, contracts.escrow, USDC_ESCROW_AMOUNT);
+    // check usdc balance of seller and contract after deposit
+    expect_private_balance(contracts.usdc, accounts.seller, 0);
+    expect_private_balance(contracts.usdc, contracts.escrow, USDC_ESCROW_AMOUNT);
 
-    // // fill the otc order
+    // fill the otc order
     fill_otc_order(
         env,
         accounts.buyer,
@@ -67,7 +66,9 @@ unconstrained fn full_otc_order_success() {
         WETH_ESCROW_AMOUNT
     );
 
-    // // check balances after otc order is complete
+    // check balances after otc order is complete
+    // why does uncommenting this cause
+    // "Assertion failed: A partial note's completion log did not result in any notes being found - this should never happen"
     // expect_private_balance(contracts.usdc, accounts.buyer, USDC_ESCROW_AMOUNT);
     // expect_private_balance(contracts.usdc, contracts.escrow, 0);
     // expect_private_balance(contracts.weth, accounts.seller, WETH_ESCROW_AMOUNT);
