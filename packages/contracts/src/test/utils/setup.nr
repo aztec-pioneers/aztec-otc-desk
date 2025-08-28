@@ -5,8 +5,12 @@ use crate::{
 use token_contract::Token;
 use aztec::{
     prelude::AztecAddress,
+    oracle::random::random,
     protocol_types::contract_instance::ContractInstance,
-    test::helpers::test_environment::TestEnvironment,
+    test::helpers::{
+        test_environment::TestEnvironment,
+        cheatcodes
+    }
 };
 
 // Token metadata
@@ -134,7 +138,7 @@ pub unconstrained fn deploy_token_contract(
     symbol: str<31>,
     decimals: u8
 ) -> AztecAddress {
-    let initializer_call_interface = Token::interface()
+    let initializer_call_iface = Token::interface()
         .constructor_with_minter(
             name,
             symbol,
@@ -144,7 +148,7 @@ pub unconstrained fn deploy_token_contract(
         );
     let contract_instance = env
         .deploy("./@token_contract", "Token")
-        .with_public_void_initializer(owner, initializer_call_interface);
+        .with_public_void_initializer(owner, initializer_call_iface);
     env.advance_block_by(1);
 
     contract_instance.to_address()
@@ -158,16 +162,24 @@ pub unconstrained fn deploy_escrow_contract(
     buy_token_address: AztecAddress,
     buy_token_amount: u128
 ) -> AztecAddress {
-    let initializer_call_interface = OTCEscrowContract::interface()
+    // setup keys for escrow account
+    let escrow_secret = unsafe { random() };
+    let escrow_contract_account = cheatcodes::add_account(escrow_secret);
+    let initializer_call_iface = OTCEscrowContract::interface()
         .constructor(
             sell_token_address,
             sell_token_amount,
             buy_token_address,
             buy_token_amount
         );
+    
+    // let contract_instance = env
+    //     .deploy_self_with("./@otc_escrow", "OTCEscrowContract")
+    //     .with_private_initializer(owner, initializer_call_interface);
+
     let contract_instance = env
-        .deploy("./@otc_escrow", "OTCEscrowContract")
-        .with_public_void_initializer(owner, initializer_call_interface);
+        .deploy_self_with_public_keys("OTCEscrowContract", escrow_secret)
+        .with_private_initializer(owner, initializer_call_iface);
     env.advance_block_by(1);
 
     contract_instance.to_address()
