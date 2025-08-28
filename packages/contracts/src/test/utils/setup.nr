@@ -165,6 +165,8 @@ pub unconstrained fn deploy_escrow_contract(
     // setup keys for escrow account
     let escrow_secret = unsafe { random() };
     let escrow_contract_account = cheatcodes::add_account(escrow_secret);
+
+    // deploy escrow contract
     let initializer_call_iface = OTCEscrowContract::interface()
         .constructor(
             sell_token_address,
@@ -172,11 +174,6 @@ pub unconstrained fn deploy_escrow_contract(
             buy_token_address,
             buy_token_amount
         );
-    
-    // let contract_instance = env
-    //     .deploy_self_with("./@otc_escrow", "OTCEscrowContract")
-    //     .with_private_initializer(owner, initializer_call_interface);
-
     let contract_instance = env
         .deploy_self_with_public_keys("OTCEscrowContract", escrow_secret)
         .with_private_initializer(owner, initializer_call_iface);

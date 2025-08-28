@@ -15,16 +15,16 @@ unconstrained fn full_escrow_success() {
     let (env, accounts, contracts) = setup(true);
     
     // check the definition
-    // debug_log("Getting escrow definition");
-    // let definition = get_escrow_definition(contracts.escrow);
-    // debug_log_format("Got escrow definition:\nowner: {1}", [definition.owner.to_field()]);
-    // assert_eq(definition.owner, contracts.escrow, "Definition owner mismatch!");
-    // assert_eq(definition.sell_token_address, contracts.usdc, "Definition sell token address mismatch!");
-    // assert_eq(definition.sell_token_amount, USDC_ESCROW_AMOUNT, "Definition sell token amount mismatch!");
-    // assert_eq(definition.buy_token_address, contracts.weth, "Definition buy token address mismatch!");
-    // assert_eq(definition.buy_token_amount, WETH_ESCROW_AMOUNT, "Definition buy token amount mismatch!");
-    // assert(definition.partial_note != 0, "Definition partial note is zero!");
-    assert(1 == 1);
+    debug_log("Getting escrow definition");
+    let definition = get_escrow_definition(contracts.escrow);
+    debug_log_format("Got escrow definition:\nowner: {1}", [definition.owner.to_field()]);
+    assert_eq(definition.owner, contracts.escrow, "Definition owner mismatch!");
+    assert_eq(definition.sell_token_address, contracts.usdc, "Definition sell token address mismatch!");
+    assert_eq(definition.sell_token_amount, USDC_ESCROW_AMOUNT, "Definition sell token amount mismatch!");
+    assert_eq(definition.buy_token_address, contracts.weth, "Definition buy token address mismatch!");
+    assert_eq(definition.buy_token_amount, WETH_ESCROW_AMOUNT, "Definition buy token amount mismatch!");
+    assert(definition.partial_note != 0, "Definition partial note is zero!");
+    // assert(1 == 1);
     // deposit to escrow
 }
 
