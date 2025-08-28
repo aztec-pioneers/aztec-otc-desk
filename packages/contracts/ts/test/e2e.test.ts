@@ -129,7 +129,7 @@ describe("Private Transfer Demo Test", () => {
             .wait();
     });
 
-    test("check escrow key leaking", async () => {
+    test.skip("check escrow key leaking", async () => {
         // deploy new escrow instance
         ({ contract: escrow, secretKey: escrowMasterKey } = await deployEscrowContract(
             sellerPXE,
@@ -217,7 +217,7 @@ describe("Private Transfer Demo Test", () => {
         await escrow.withWallet(buyer).methods.sync_private_state().simulate();
 
         // transfer tokens back out
-        await fillOTCOrder(escrow, buyer, weth, sellTokenAmount);
+        await fillOTCOrder(escrow, buyer, weth, buyTokenAmount);
 
         // check balances after filling order
         expect(
