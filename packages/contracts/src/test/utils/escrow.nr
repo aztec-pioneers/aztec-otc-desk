@@ -39,9 +39,10 @@ pub unconstrained fn deposit_to_escrow(
     escrow_address: AztecAddress,
     sell_token_address: AztecAddress,
     sell_token_amount: u128,
+    malicious_authwit: bool
 ) {
     // add transfer authwit
-    let nonce = unsafe { random() };
+    let mut nonce = unsafe { random() };
     private_transfer_authwit(
         sell_token_address,
         escrow_address,
@@ -49,6 +50,11 @@ pub unconstrained fn deposit_to_escrow(
         sell_token_amount,
         nonce
     );
+    
+    if malicious_authwit {
+        // increment nonce to make authwit invalid
+        nonce = nonce + 1;
+    }
 
     // call deposit
     env.impersonate(seller_address);
