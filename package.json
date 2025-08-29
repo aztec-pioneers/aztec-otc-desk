@@ -19,10 +19,6 @@
   },
   "scripts": {
     "build-token": "sh scripts/token.sh",
-<<<<<<< HEAD
-    "rebuild-token": "sh scripts/token.sh -r",
-=======
->>>>>>> main
     "postinstall": "bun run build-token"
   }
 }
