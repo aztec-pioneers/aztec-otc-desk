@@ -51,8 +51,8 @@ pub unconstrained fn deposit_to_escrow(
         nonce
     );
     
+    // increment nonce to make authwit invalid
     if malicious_authwit {
-        // increment nonce to make authwit invalid
         nonce = nonce + 1;
     }
 
@@ -71,10 +71,11 @@ pub unconstrained fn fill_otc_order(
     buyer_address: AztecAddress,
     escrow_address: AztecAddress,
     buy_token_address: AztecAddress,
-    buy_token_amount: u128
+    buy_token_amount: u128,
+    malicious_authwit: bool
 ) {
     // add transfer authwit
-    let nonce = unsafe { random() };
+    let mut nonce = unsafe { random() };
     private_transfer_authwit(
         buy_token_address,
         escrow_address,
@@ -82,6 +83,11 @@ pub unconstrained fn fill_otc_order(
         buy_token_amount,
         nonce
     );
+
+    // increment nonce to make authwit invalid
+    if malicious_authwit {
+        nonce = nonce + 1;
+    }
 
     // call fulfill
     env.impersonate(buyer_address);

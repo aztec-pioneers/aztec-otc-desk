@@ -18,7 +18,6 @@ pub contract OTCEscrowContract {
     };
     use crate::types::definition_note::DefinitionNote;
 
-    use poseidon::poseidon2::Poseidon2;
     use token_contract::Token;
 
     #[storage]
@@ -75,15 +74,6 @@ pub contract OTCEscrowContract {
         let self_address = context.this_address();
         let caller = context.msg_sender();
 
-        debug_log_format("Definition In Circuit:\nOwner: {0}\nSell Token Address: {1}\nSell Token Amount: {2}\nBuy Token Address: {3}\nBuy Token Amount: {4}\nPartial Note: {5}", [
-            definition.owner.to_field(),
-            definition.sell_token_address.to_field(),
-            definition.sell_token_amount.to_field(),
-            definition.buy_token_address.to_field(),
-            definition.buy_token_amount.to_field(),
-            definition.partial_note.to_field()
-        ]);
-
         // transfer tokens in
         Token::at(definition.sell_token_address)
             .transfer_private_to_private(
@@ -92,7 +82,11 @@ pub contract OTCEscrowContract {
                 definition.sell_token_amount,
                 _nonce
             )
-            .call(&mut context);    
+            .call(&mut context);
+
+        // emit nullifier to prevent multiple deposits
+        let deposit_nullifier = definition.get_nullifier();
+        context.push_nullifier(deposit_nullifier);
     }
 
     /**

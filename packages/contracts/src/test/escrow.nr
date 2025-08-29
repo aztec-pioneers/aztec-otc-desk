@@ -20,7 +20,7 @@ use aztec::{
 use uint_note::uint_note::PartialUintNote;
 
 // Basic e2e escrow test
-// #[test]
+#[test]
 unconstrained fn full_otc_order_success() {
     // get test environment
     let (env, accounts, contracts) = setup(true);
@@ -67,7 +67,8 @@ unconstrained fn full_otc_order_success() {
         accounts.buyer,
         contracts.escrow,
         contracts.weth,
-        WETH_ESCROW_AMOUNT
+        WETH_ESCROW_AMOUNT,
+        false // no malicious authwit
     );
 
     // check balances after otc order is complete
@@ -78,14 +79,13 @@ unconstrained fn full_otc_order_success() {
     // expect_private_balance(contracts.weth, accounts.seller, WETH_ESCROW_AMOUNT);
 }
 
-// test try deposit not enough money
-// #[test(should_fail_with = "Assertion failed: Balance too low")]
+// ensure cannot deposit without sufficient balance
+#[test(should_fail_with = "Assertion failed: Balance too low")]
 unconstrained fn otc_deposit_insufficient_balance_fail() {
     // get test environment
-    debug_log("Setting up accounts");
     let (env, accounts, contracts) = setup(false);
 
-    // deposit to escrow
+    // try to deposit to escrow with insufficient balance
     deposit_to_escrow(
         env,
         accounts.buyer,
@@ -96,13 +96,13 @@ unconstrained fn otc_deposit_insufficient_balance_fail() {
     );
 }
 
-#[test]
+// ensure cannot deposit with incorrect authwit
+#[test(should_fail_with = "Unknown auth witness for message hash")]
 unconstrained fn otc_deposit_incorrect_authwit_fail() {
     // get test environment
-    debug_log("Setting up accounts");
     let (env, accounts, contracts) = setup(true);
 
-    // deposit to escrow
+    // try to deposit to escrow with malicious authwit
     deposit_to_escrow(
         env,
         accounts.buyer,
@@ -113,9 +113,175 @@ unconstrained fn otc_deposit_incorrect_authwit_fail() {
     );
 }
 
-// test multiple deposit?
-// test with wrong authwit?
-// test try withdraw not enough money
-// test try withdraw twice (should fail on transfer commitment)
-// test can't fill before deposit (shouldn't have tokens in)
-// test can fill own order
+// ensure cannot deposit twice
+#[test(should_fail_with = "Rejecting tx for emitting duplicate nullifiers")]
+unconstrained fn otc_deposit_twice_fail() {
+    // get test environment
+    let (env, accounts, contracts) = setup(true);
+
+    // deposit once successfully
+    deposit_to_escrow(
+        env,
+        accounts.seller,
+        contracts.escrow,
+        contracts.usdc,
+        USDC_ESCROW_AMOUNT,
+        false // malicious authwit
+    );
+
+    // mint extra tokens to seller so they have enough to deposit twice
+    mint_to_private(
+        env,
+        contracts.usdc,
+        accounts.minter,
+        accounts.seller,
+        USDC_ESCROW_AMOUNT
+    );
+
+    // try to deposit a second time
+    deposit_to_escrow(
+        env,
+        accounts.seller,
+        contracts.escrow,
+        contracts.usdc,
+        USDC_ESCROW_AMOUNT,
+        false // malicious authwit
+    );
+}
+
+// ensure cannot fill order without sufficient balance
+#[test(should_fail_with = "Assertion failed: Balance too low")]
+unconstrained fn otc_fill_insufficient_balance_fail() {
+    // get test environment
+    let (env, accounts, contracts) = setup(false);
+
+    // mint so alice can deposit
+    mint_to_private(
+        env,
+        contracts.usdc,
+        accounts.minter,
+        accounts.seller,
+        USDC_ESCROW_AMOUNT
+    );
+
+    // deposit to escrow
+    deposit_to_escrow(
+        env,
+        accounts.buyer,
+        contracts.escrow,
+        contracts.usdc,
+        USDC_ESCROW_AMOUNT,
+        false // no malicious authwit
+    );
+
+    // try to fill order without tokens
+    fill_otc_order(
+        env,
+        accounts.buyer,
+        contracts.escrow,
+        contracts.weth,
+        WETH_ESCROW_AMOUNT,
+        false // no malicious authwit
+    );
+}
+
+// ensure cannot fill order with incorrect authwit
+// can't set exact fail message because don't know authwit hash
+#[test(should_fail_with = "Unknown auth witness for message hash")]
+unconstrained fn otc_fill_incorrect_authwit_fail() {
+    // get test environment
+    let (env, accounts, contracts) = setup(true);
+
+    // deposit to escrow
+    deposit_to_escrow(
+        env,
+        accounts.seller,
+        contracts.escrow,
+        contracts.usdc,
+        USDC_ESCROW_AMOUNT,
+        false // no malicious authwit
+    );
+
+    // try filling order with malicious authwit
+    fill_otc_order(
+        env,
+        accounts.buyer,
+        contracts.escrow,
+        contracts.weth,
+        WETH_ESCROW_AMOUNT,
+        true // malicious authwit
+    );
+}
+
+// ensure cannot fill order before deposit
+#[test(should_fail_with = "Assertion failed: Balance too low")]
+unconstrained fn otc_fill_before_deposit_fail() {
+    // get test environment
+    let (env, accounts, contracts) = setup(true);
+
+    // try to fill order before deposit
+    fill_otc_order(
+        env,
+        accounts.buyer,
+        contracts.escrow,
+        contracts.weth,
+        WETH_ESCROW_AMOUNT,
+        false // no malicious authwit
+    );
+}
+
+// try to fill order twice
+// NOTE: pretty sure this is the wrong error stemming from broken last part in first test
+#[test(should_fail_with = "A partial note's completion log did not result in any notes being found")]
+unconstrained fn otc_multiple_fill_fail() {
+    // get test environment
+    let (env, accounts, contracts) = setup(true);
+
+    // deposit to escrow
+    deposit_to_escrow(
+        env,
+        accounts.seller,
+        contracts.escrow,
+        contracts.usdc,
+        USDC_ESCROW_AMOUNT,
+        false // no malicious authwit
+    );
+
+    // first fill (should pass)
+    fill_otc_order(
+        env,
+        accounts.buyer,
+        contracts.escrow,
+        contracts.weth,
+        WETH_ESCROW_AMOUNT,
+        false // no malicious authwit
+    );
+
+    // mint more tokens to Bob to fill order
+    mint_to_private(
+        env,
+        contracts.weth,
+        accounts.minter,
+        accounts.buyer,
+        WETH_ESCROW_AMOUNT
+    );
+
+    // mint more tokens to the escrow so it has some to send back out
+    mint_to_private(
+        env,
+        contracts.usdc,
+        accounts.minter,
+        contracts.escrow,
+        USDC_ESCROW_AMOUNT
+    );
+
+    // second fill (should throw)
+    fill_otc_order(
+        env,
+        accounts.buyer,
+        contracts.escrow,
+        contracts.weth,
+        WETH_ESCROW_AMOUNT,
+        false // no malicious authwit
+    );
+}
