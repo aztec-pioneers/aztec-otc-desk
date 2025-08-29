@@ -14,7 +14,7 @@
     "typescript": "catalog:"
   },
   "scripts": {
-    "test": "bun test",
+    "test": "bun run test:nr && bun test",
     "test:nr": "LOG_LEVEL=debug aztec test",
     "deploy-token": "bun run ./scripts/deploy_token.ts",
     "compile": "aztec-nargo compile",
