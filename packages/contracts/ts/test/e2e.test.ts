@@ -49,9 +49,12 @@ describe("Private Transfer Demo Test", () => {
     const buyerWETHInitialBalance = wad(4n);
 
     beforeAll(async () => {
+        console.log("trying connect")
         // setup PXE connections
         sellerPXE = await createPXE();
+        console.log("1")
         buyerPXE = await createPXE(1);
+        console.log(2)
 
         // get PXE 1 accounts
         const wallets = await getInitialTestAccountsWallets(sellerPXE);
@@ -83,40 +86,21 @@ describe("Private Transfer Demo Test", () => {
         const claimAndPay = new FeeJuicePaymentMethodWithClaim(buyer, claim);
         await buyerAccount.deploy({ fee: { paymentMethod: claimAndPay } }).wait();
         await sellerPXE.registerSender(buyer.getAddress());
+        await buyerPXE.registerSender(minter.getAddress());
         await buyerPXE.registerSender(seller.getAddress());
         await buyerPXE.registerContract(usdc);
         await buyerPXE.registerContract(weth);
 
         // mint tokens
-        // FOR SOME REASON MINTING TOKENS TO buyer DOESN"T WORK?
-        // BUT MINTING TO seller THEN SENDING FROM buyer WORKS? OK THEN
-        // await weth
-        //     .withWallet(minter)
-        //     .methods.mint_to_private(
-        //         minter.getAddress(),
-        //         buyer.getAddress(),
-        //         wad(4n, 18n)
-        //     )
-        //     .send()
-        //     .wait();
-
         await weth
             .withWallet(minter)
             .methods.mint_to_private(
                 minter.getAddress(),
-                seller.getAddress(),
-                wad(4n)
+                buyer.getAddress(),
+                wad(4n, 18n)
             )
             .send()
             .wait();
-
-        await weth.withWallet(seller)
-            .methods.transfer_private_to_private(
-                seller.getAddress(),
-                buyer.getAddress(),
-                wad(4n),
-                0
-            ).send().wait();
 
         await usdc
             .withWallet(minter)
