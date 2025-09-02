@@ -27,6 +27,8 @@ export const getOTCAccounts = async (pxe: PXE): Promise<{
         // if testnet, get accounts from env (should run setup_accounts.ts first)
         seller = await getAccountFromEnv("seller", pxe);
         buyer = await getAccountFromEnv("buyer", pxe);
+        await pxe.registerSender(seller.getAddress());
+        await pxe.registerSender(buyer.getAddress());
     }
     return { seller, buyer };
 }

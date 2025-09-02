@@ -230,6 +230,7 @@ export const getEscrowContract = async (
         artifact: OTCEscrowContractArtifact
     });
     await pxe.registerAccount(escrowSecretKey, escrowPartialAddress);
+    await pxe.registerSender(escrowAddress);
     const escrow = await OTCEscrowContract.at(escrowAddress, caller);
     await escrow.methods.sync_private_state().simulate();
     return escrow;

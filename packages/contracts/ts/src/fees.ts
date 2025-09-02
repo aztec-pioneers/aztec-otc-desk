@@ -1,4 +1,5 @@
 import {
+    AztecAddress,
   type ContractInstanceWithAddress,
   Fr,
   L1FeeJuicePortalManager,
@@ -12,7 +13,8 @@ import type { LogFn } from '@aztec/foundation/log';
 import { SponsoredFPCContract } from '@aztec/noir-contracts.js/SponsoredFPC';
 
 import { SPONSORED_FPC_SALT } from '@aztec/constants';
-import { createEthereumChain, createExtendedL1Client } from '@aztec/ethereum';
+import { createEthereumChain, createExtendedL1Client, FeeJuiceContract } from '@aztec/ethereum';
+import { deriveStorageSlotInMap } from '@aztec/stdlib/hash';
 
 export async function getSponsoredFPCInstance(): Promise<ContractInstanceWithAddress> {
   return await getContractInstanceFromDeployParams(SponsoredFPCContract.artifact, {
@@ -65,3 +67,12 @@ export async function getFeeJuicePortalManager(
   );
 }
 
+export async function getFeeJuicePublicBalance(
+    pxe: PXE,
+    owner: AztecAddress
+): Promise<bigint> {
+    const { protocolContractAddresses} = await pxe.getPXEInfo();
+    const feeJuiceAddress = protocolContractAddresses.feeJuice;
+    const slot = await deriveStorageSlotInMap(new Fr(1), owner);
+    return (await pxe.getPublicStorageAt(feeJuiceAddress, slot)).toBigInt();
+}
