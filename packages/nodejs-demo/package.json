@@ -1,0 +1,23 @@
+{
+  "name": "nodejs-demo",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "devDependencies": {
+      "@types/bun": "catalog:",
+      "@types/jest": "catalog:",
+      "@aztec/aztec.js": "catalog:",
+      "@aztec/accounts": "catalog:",
+      "@aztec/ethereum": "catalog:",
+      "@aztec/stdlib": "catalog:",
+      "@aztec/noir-contracts.js": "catalog:"
+  },
+  "peerDependencies": {
+    "typescript": "catalog:"
+  },
+  "scripts": {
+    "deploy": "bun run scripts/deploy.ts",
+    "order:create": "bun run scripts/create_order.ts",
+    "order:fill": "bun run scripts/buy_order.ts"
+  }
+}

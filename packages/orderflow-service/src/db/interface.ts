@@ -37,6 +37,15 @@ export interface IDatabase {
   getAllOrders(): Order[];
 
   /**
+   * Removes an order once it has been fulfilled
+   * @NOTE: needs authentication mechanism - probably checking for existence of nullifier
+   * @NOTE: should be able to either use escrow address or order id to close
+   * 
+   * @param orderId - the order ID to delete
+   */
+  closeOrder(orderId: string): boolean;
+
+  /**
    * Get orders by sell token address
    */
   getOrdersBySellToken(sellTokenAddress: string): Order[];

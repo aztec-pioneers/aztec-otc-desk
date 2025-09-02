@@ -14,7 +14,11 @@ const main = async () => {
   database.initialize();
   
   // Create handlers with database dependency injection
-  const { handleCreateOrder, handleGetOrder } = createOrderHandlers(database);
+  const {
+    handleCreateOrder,
+    handleGetOrder,
+    handleCloseOrder
+  } = createOrderHandlers(database);
   
   const server = Bun.serve({
     port: 3000,
@@ -22,6 +26,19 @@ const main = async () => {
       const url = new URL(req.url);
       
       // POST /order endpoint
+
+      if (url.pathname === "/order") {
+        switch (req.method) {
+          case "POST":
+            return handleCreateOrder(req);
+          case "GET":
+            return handleGetOrder(req);
+          case "DELETE":
+            return handleCloseOrder(req);
+          default:
+            return new Response("Method Not Allowed", { status: 405 });
+        }
+      }
       if (req.method === "POST" && url.pathname === "/order") {
         return handleCreateOrder(req);
       }
@@ -30,7 +47,12 @@ const main = async () => {
       if (req.method === "GET" && url.pathname === "/order") {
         return handleGetOrder(req);
       }
-      
+
+      // healthcheck endpoint
+      if (req.method === "GET" && url.pathname === "/health") {
+        return new Response("OK", { status: 200 });
+      }
+
       // Handle 404
       return new Response("Not Found", { status: 404 });
     },
