@@ -1,11 +1,11 @@
 import { getSchnorrAccount, SchnorrAccountContractArtifact } from "@aztec/accounts/schnorr";
-import { wad } from "../../../contracts/ts/test/utils/index.js";
+import { wad, isTestnet } from "@aztec-otc-desk/contracts";
 import { AccountWalletWithSecretKey, Fr, type PXE } from "@aztec/aztec.js";
 import accounts from "../data/accounts.json";
 import { deriveSigningKey } from "@aztec/stdlib/keys";
 import { getInitialTestAccountsWallets } from "@aztec/accounts/testing";
 
-export const ethMintAmount = wad(1n);
+export const wethMintAmount = wad(1n);
 export const usdcMintAmount = wad(5000n);
 
 export const getOTCAccounts = async (pxe: PXE): Promise<{
@@ -49,12 +49,7 @@ export const getAccountFromEnv = async (
         artifact: SchnorrAccountContractArtifact
     });
     return accountManager.getWallet();
-};
-
-export const isTestnet = async (pxe: PXE): Promise<boolean> => {
-    const chainId = (await pxe.getNodeInfo()).l1ChainId;
-    return chainId === 11155111; // Sepolia testnet
 }
 
-export * from "./api";
-export * from "./types";
+export * from "./api.js";
+export * from "./types.js";

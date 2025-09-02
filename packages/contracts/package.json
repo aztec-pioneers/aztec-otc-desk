@@ -10,6 +10,11 @@
       "@aztec/noir-contracts.js": "catalog:",
       "jest": "catalog:"
   },
+  "main": "./ts/src/index.ts",
+  "types": "./ts/src/index.ts",
+  "exports": {
+    ".": "./ts/src/index.ts"
+  },
   "peerDependencies": {
     "typescript": "catalog:"
   },
@@ -19,7 +24,7 @@
     "deploy-token": "bun run ./scripts/deploy_token.ts",
     "compile": "aztec-nargo compile",
     "codegen": "aztec codegen target --outdir artifacts",
-    "build": "yarn compile && yarn codegen -f",
+    "build": "yarn compile && yarn codegen -f && ./scripts/add_artifacts.sh",
     "sandbox": "aztec start --sandbox",
     "pxe:local": "LOG_LEVEL=info aztec start --pxe --pxe.nodeUrl http://localhost:8080 --pxe.proverEnabled false",
     "pxe:local:1": "bun run pxe --port 8081 --p2p.p2pPort 40401",

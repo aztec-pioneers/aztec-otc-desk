@@ -6,6 +6,8 @@ import {
     FeeJuicePaymentMethodWithClaim,
 } from "@aztec/aztec.js";
 import { getInitialTestAccountsWallets } from "@aztec/accounts/testing";
+import { getSchnorrAccount } from "@aztec/accounts/schnorr";
+import { deriveSigningKey } from "@aztec/stdlib/keys";
 import {
     deployEscrowContract,
     deployTokenContractWithMinter,
@@ -16,16 +18,9 @@ import {
     TOKEN_METADATA,
     fillOTCOrder,
     expectBalancePrivate,
-} from "./utils/index.js";
-import {
-    OTCEscrowContractContract as OTCEscrowContract,
-} from "../../artifacts/OTCEscrowContract.js";
-
-import {
-    TokenContract,
-} from "../../artifacts/Token.js";
-import { getSchnorrAccount } from "@aztec/accounts/schnorr";
-import { deriveSigningKey } from "@aztec/stdlib/keys";
+    OTCEscrowContract,
+    TokenContract
+} from "../src";
 
 describe("Private Transfer Demo Test", () => {
     let sellerPXE: PXE;
@@ -52,9 +47,7 @@ describe("Private Transfer Demo Test", () => {
         console.log("trying connect")
         // setup PXE connections
         sellerPXE = await createPXE();
-        console.log("1")
         buyerPXE = await createPXE(1);
-        console.log(2)
 
         // get PXE 1 accounts
         const wallets = await getInitialTestAccountsWallets(sellerPXE);

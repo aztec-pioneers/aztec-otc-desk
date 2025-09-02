@@ -1,10 +1,4 @@
 import "dotenv/config";
-import type { Order } from "../../../orderflow-service/src/types/api";
-import {
-    eth as ethDeployment,
-    usdc as usdcDeployment
-} from "../data/deployments.json"
-import type { OrderAPIResponse } from "./types";
 import {
     AccountWalletWithSecretKey,
     AztecAddress,
@@ -12,11 +6,14 @@ import {
     Fr,
     type PXE
 } from "@aztec/aztec.js";
-import {
-    OTCEscrowContractContract as OTCEscrowContract,
-} from "../../../contracts/artifacts/OTCEscrowContract";
 import { ContractInstanceWithAddressSchema } from "@aztec/stdlib/contract";
-import { getEscrowContract } from "./contracts";
+import { OTCEscrowContract, getEscrowContract } from "@aztec-otc-desk/contracts";
+import type { Order } from "../../../orderflow-service/src/types/api";
+import {
+    weth as wethDeployment,
+    usdc as usdcDeployment
+} from "../data/deployments.json"
+import type { OrderAPIResponse } from "./types";
 
 const { API_URL } = process.env;
 
@@ -36,7 +33,7 @@ export const getOrders = async (): Promise<Order[]> => {
     try {
         const fullURL = `${API_URL}/order`
             + `?buy_token_address=${usdcDeployment.address}`
-            + `&sell_token_address=${ethDeployment.address}`;
+            + `&sell_token_address=${wethDeployment.address}`;
         const res = await fetch(fullURL, { method: "GET" });
         if (!res.ok) {
             throw new Error("Failed to fetch orders");

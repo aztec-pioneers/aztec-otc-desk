@@ -1,11 +1,14 @@
-import {createPXE, deployTokenContractWithMinter, TOKEN_METADATA, wad} from "../../contracts/ts/test/utils/index"
-import {getInitialTestAccounts, getInitialTestAccountsWallets} from "@aztec/accounts/testing"
-import {writeFileSync} from "node:fs"
-import { ethMintAmount, getAccountFromEnv, getOTCAccounts, isTestnet, usdcMintAmount } from "./utils";
-import type { AccountWalletWithSecretKey } from "@aztec/aztec.js";
+import "dotenv/config";
+import {
+    createPXE,
+    deployTokenContractWithMinter,
+    TOKEN_METADATA,
+} from "@aztec-otc-desk/contracts"
+import { writeFileSync } from "node:fs"
+import { getOTCAccounts } from "./utils";
 
 // Deploys WETH and USDC token contracts
-const main = async ( ) => {
+const main = async () => {
     const pxe = await createPXE();
 
     // get accounts
@@ -22,7 +25,7 @@ const main = async ( ) => {
 
     // write deployment to fs
     const deployments = {
-        eth: { address: weth.address, },
+        weth: { address: weth.address, },
         usdc: { address: usdc.address }
     };
     const filepath = `${__dirname}/data/deployments.json`;

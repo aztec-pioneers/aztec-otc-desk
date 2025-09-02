@@ -1,8 +1,14 @@
-import { createPXE, fillOTCOrder } from "../../contracts/ts/test/utils";
-import { eth as ethDeployment, usdc as usdcDeployment } from "./data/deployments.json"
+import "dotenv/config";
+import { createPXE, fillOTCOrder, getTokenContract } from "@aztec-otc-desk/contracts";
+import { weth as ethDeployment, usdc as usdcDeployment } from "./data/deployments.json"
 import { AztecAddress } from "@aztec/aztec.js";
-import { closeOrder, escrowInstanceFromOrder, ethMintAmount, getOrders, getOTCAccounts, usdcMintAmount } from "./utils";
-import { getTokenContract } from "./utils/contracts";
+import {
+    closeOrder,
+    escrowInstanceFromOrder,
+    getOrders,
+    getOTCAccounts,
+    usdcMintAmount
+} from "./utils";
 
 const main = async () => {
     // fetch orders

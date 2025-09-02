@@ -1,8 +1,27 @@
-import { createPXE, deployEscrowContract, depositToEscrow } from "../../contracts/ts/test/utils";
-import { eth as ethDeployment, usdc as usdcDeployment } from "./data/deployments.json"
-import { TokenContract } from "../../contracts/artifacts/Token"
+import "dotenv/config";
+import {
+    createPXE,
+    deployEscrowContract,
+    depositToEscrow,
+    getTokenContract,
+    TokenContract
+} from "@aztec-otc-desk/contracts";
 import { AztecAddress } from "@aztec/aztec.js";
-import { createOrder, ethMintAmount, getOTCAccounts, usdcMintAmount } from "./utils";
+import {
+    weth as wethDeployment,
+    usdc as usdcDeployment
+} from "./data/deployments.json"
+import {
+    createOrder,
+    wethMintAmount,
+    getOTCAccounts,
+    usdcMintAmount
+} from "./utils";
+
+const { L1_RPC_URL } = process.env;
+if (!L1_RPC_URL) {
+    throw new Error("L1_RPC_URL is not defined");
+}
 
 const main = async () => {
 
@@ -11,12 +30,13 @@ const main = async () => {
     // get accounts
     const { seller } = await getOTCAccounts(pxe);
 
-    const eth = await TokenContract.at(AztecAddress.fromString(ethDeployment.address), seller);
+    const wethAddress = AztecAddress.fromString(wethDeployment.address);
+    const weth = await getTokenContract(pxe, seller, wethAddress, L1_RPC_URL);
 
     const { contract: escrowContract, secretKey } = await deployEscrowContract(pxe,
         seller,
-        eth.address,
-        ethMintAmount,
+        weth.address,
+        wethMintAmount,
         AztecAddress.fromString(usdcDeployment.address),
         usdcMintAmount,
     );
@@ -25,7 +45,7 @@ const main = async () => {
     console.log("Escrow contract secret key: ", secretKey);
 
     console.log("Depositing eth to escrow");
-    const receipt = await depositToEscrow(escrowContract, seller, eth, ethMintAmount);
+    const receipt = await depositToEscrow(escrowContract, seller, weth, wethMintAmount);
     console.log("Eth deposited to escrow, transaction hash: ", receipt.hash);
 
     // update api to add order
@@ -34,8 +54,8 @@ const main = async () => {
         escrowContract.instance,
         secretKey,
         (await escrowContract.partialAddress),
-        eth.address,
-        ethMintAmount,
+        weth.address,
+        wethMintAmount,
         AztecAddress.fromString(usdcDeployment.address),
         usdcMintAmount
     )

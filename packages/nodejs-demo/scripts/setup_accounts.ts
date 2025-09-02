@@ -16,7 +16,7 @@ import {
     createPXE,
     wad,
     getFeeJuicePortalManager
-} from "../../contracts/ts/test/utils/index"
+} from "@aztec-otc-desk/contracts"
 
 
 const {
