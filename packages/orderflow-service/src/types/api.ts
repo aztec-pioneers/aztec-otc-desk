@@ -4,6 +4,9 @@
 export interface Order {
   orderId: string;
   escrowAddress: string;
+  contractInstance: string;
+  secretKey: string;
+  partialAddress: string;
   sellTokenAddress: string;
   sellTokenAmount: BigInt;
   buyTokenAddress: string;
@@ -16,6 +19,9 @@ export interface Order {
 export interface CreateOrderRequest {
   escrowAddress: string;
   sellTokenAddress: string;
+  contractInstance: string;
+  secretKey: string;
+  partialAddress: string;
   sellTokenAmount: BigInt;
   buyTokenAddress: string;
   buyTokenAmount: BigInt;
@@ -27,6 +33,8 @@ export interface CreateOrderRequest {
 export interface SerializedOrder {
   orderId: string;
   escrowAddress: string;
+  contractInstance: string;
+  secretKey: string;
   sellTokenAddress: string;
   sellTokenAmount: string; // BigInt serialized to string
   buyTokenAddress: string;

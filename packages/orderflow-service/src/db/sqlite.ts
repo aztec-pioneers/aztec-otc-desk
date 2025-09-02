@@ -21,6 +21,9 @@ export class SQLiteDatabase implements IDatabase {
       CREATE TABLE IF NOT EXISTS orders (
         orderId TEXT PRIMARY KEY,
         escrowAddress TEXT NOT NULL UNIQUE,
+        contractInstance TEXT NOT NULL,
+        secretKey TEXT NOT NULL,
+        partialAddress TEXT NOT NULL,
         sellTokenAddress TEXT NOT NULL,
         sellTokenAmount TEXT NOT NULL,
         buyTokenAddress TEXT NOT NULL,
@@ -49,14 +52,17 @@ export class SQLiteDatabase implements IDatabase {
     }
     
     const stmt = this.db.prepare(`
-      INSERT INTO orders (orderId, escrowAddress, sellTokenAddress, sellTokenAmount, buyTokenAddress, buyTokenAmount)
-      VALUES (?, ?, ?, ?, ?, ?)
+      INSERT INTO orders (orderId, escrowAddress, contractInstance, secretKey, partialAddress, sellTokenAddress, sellTokenAmount, buyTokenAddress, buyTokenAmount)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
     
     try {
       stmt.run(
         order.orderId,
         order.escrowAddress,
+        order.contractInstance,
+        order.secretKey,
+        order.partialAddress,
         order.sellTokenAddress,
         order.sellTokenAmount.toString(), // Convert BigInt to string for storage
         order.buyTokenAddress,
@@ -104,6 +110,19 @@ export class SQLiteDatabase implements IDatabase {
     const rows = stmt.all() as any[];
     
     return rows.map(row => this.mapRowToOrder(row));
+  }
+
+  /**
+   * Removes an order once it has been fulfilled
+   * @NOTE: needs authentication mechanism - probably checking for existence of nullifier
+   * @NOTE: should be able to either use escrow address or order id to close
+   * 
+   * @param orderId - the order ID to delete
+   */
+  closeOrder(orderId: string): boolean {
+    const stmt = this.db.prepare("DELETE FROM orders WHERE orderId = ?");
+    const result = stmt.run(orderId);
+    return result.changes > 0;
   }
 
   /**
@@ -174,6 +193,9 @@ export class SQLiteDatabase implements IDatabase {
     return {
       orderId: row.orderId,
       escrowAddress: row.escrowAddress,
+      contractInstance: row.contractInstance,
+      secretKey: row.secretKey,
+      partialAddress: row.partialAddress,
       sellTokenAddress: row.sellTokenAddress,
       sellTokenAmount: BigInt(row.sellTokenAmount), // Convert string back to BigInt
       buyTokenAddress: row.buyTokenAddress,

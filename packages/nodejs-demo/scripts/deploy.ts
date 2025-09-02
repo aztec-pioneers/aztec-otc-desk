@@ -23,7 +23,6 @@ const main = async ( ) => {
         throw new Error("Buyer not found");
     }
 
-
     console.log("Deploying eth token contract");
     const eth = await deployTokenContractWithMinter(TOKEN_METADATA.weth, minter);
     console.log("Eth token contract deployed, address: ", eth.address);
@@ -34,7 +33,7 @@ const main = async ( ) => {
 
 
     console.log("Minting eth to seller");
-    await eth.withWallet(minter).methods.mint_to_private(minter.getAddress(), seller.getAddress(), ethMintAmount).send().wait();
+    await eth.withWallet(minter).methods.mint_to_private(minter.getAddress(), seller.getAddress(), ethMintAmount * 10n).send().wait();
     console.log("Eth minted to seller");
 
     console.log("Checking eth balance of seller");
@@ -42,34 +41,16 @@ const main = async ( ) => {
     console.log("Eth balance of seller: ", balance);
 
     console.log("Minting usdc to buyer");
-    await usdc.withWallet(minter).methods.mint_to_private(minter.getAddress(), buyer.getAddress(), usdcMintAmount).send().wait();
+    await usdc.withWallet(minter).methods.mint_to_private(minter.getAddress(), buyer.getAddress(), usdcMintAmount * 10n).send().wait();
     console.log("Usdc minted to buyer");
-
-    // console.log("Minting usdc to seller");
-    // await usdc.withWallet(minter).methods.mint_to_private(minter.getAddress(), seller.getAddress(), usdcMintAmount).send().wait();
-    // console.log("Usdc minted to seller");
-
-    // console.log("Checking usdc balance of seller");
-    // const usdcBalanceSeller = await usdc.methods.balance_of_private(seller.getAddress()).simulate();
-    // console.log("Usdc balance of seller: ", usdcBalanceSeller);
-    
-    
-    // console.log("Transferring usdc to buyer");
-    // usdc.withWallet(minter).methods.transfer_private_to_private(minter.getAddress(), buyer.getAddress(), usdcMintAmount, 0).send().wait();
-    // console.log("Usdc transferred to buyer");
-
 
     console.log("Checking usdc balance of buyer");
     const usdcBalance = await usdc.methods.balance_of_private(buyer.getAddress()).simulate();
     console.log("Usdc balance of buyer: ", usdcBalance);
 
     const deployments = {
-        eth: {
-            address: eth.address,
-        },
-        usdc: {
-            address: usdc.address,
-        }
+        eth: { address: eth.address, },
+        usdc: { address: usdc.address }
     };
 
     writeFileSync("deployments.json", JSON.stringify(deployments, null, 2));

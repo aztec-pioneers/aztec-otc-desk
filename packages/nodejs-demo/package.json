@@ -14,5 +14,10 @@
   },
   "peerDependencies": {
     "typescript": "catalog:"
+  },
+  "scripts": {
+    "deploy": "bun run scripts/deploy.ts",
+    "order:create": "bun run scripts/create_order.ts",
+    "order:fill": "bun run scripts/buy_order.ts"
   }
 }
