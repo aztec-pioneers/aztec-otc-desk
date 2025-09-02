@@ -21,7 +21,9 @@
     "codegen": "aztec codegen target --outdir artifacts",
     "build": "yarn compile && yarn codegen -f",
     "sandbox": "aztec start --sandbox",
-    "pxe": "LOG_LEVEL=info aztec start --pxe --pxe.nodeUrl http://localhost:8080 --pxe.proverEnabled false",
-    "pxe:1": "bun run pxe --port 8081 --p2p.p2pPort 40401"
+    "pxe:local": "LOG_LEVEL=info aztec start --pxe --pxe.nodeUrl http://localhost:8080 --pxe.proverEnabled false",
+    "pxe:local:1": "bun run pxe --port 8081 --p2p.p2pPort 40401",
+    "pxe:testnet": "aztec start --pxe --pxe.nodeUrl=https://aztec-alpha-testnet-fullnode.zkv.xyz --l1-rpc-urls=https://eth-sepolia.public.blastapi.io --l1-chain-id 11155111",
+    "pxe:testnet:1": "bun run pxe:testnet --port 8081 --p2p.p2pPort 40401"
   }
 }

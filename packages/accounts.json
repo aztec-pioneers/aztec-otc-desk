@@ -1,0 +1,10 @@
+{
+  "seller": {
+    "secretKey": "0x1d3418254d4cc8f04691e17885eb4f45a50d7dd8f4330e940dabfdd19c1dd16d",
+    "salt": "0x2c2471eec90e583e746edc70a286567e3d53fd1acb6385d0db3fb48d893d33df"
+  },
+  "buyer": {
+    "secretKey": "0x1d9f04bed99a027c1d83731ec9d9b21ab81fa04ed8d4ee7e6ddec78d42d23ce5",
+    "salt": "0x1016d6a4f554322ab84d2759f86051cc8e9b73b0e381bde46cb8bb20fd6986dd"
+  }
+}

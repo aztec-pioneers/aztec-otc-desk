@@ -46,22 +46,22 @@ export async function getSponsoredFeePaymentMethod(pxe: PXE) {
   return new SponsoredFeePaymentMethod(paymentContract)
 }
 
-export async function getFeeJuicePortalManager(pxe: PXE): Promise<L1FeeJuicePortalManager> {
+export async function getFeeJuicePortalManager(
+  pxe: PXE,
+  l1RpcUrls: string[] = ["http://localhost:8545"],
+  mnemonic: string = "test test test test test test test test test test test junk"
+): Promise<L1FeeJuicePortalManager> {
   const { l1ChainId } = await pxe.getNodeInfo();
-  const l1RpcUrls = ["http://localhost:8545"];
   const chain = createEthereumChain(l1RpcUrls, l1ChainId);
-  const mnemonicOrPrivateKey =
-    "test test test test test test test test test test test junk";
-  const logger = createLogger("no");
   const l1Client = createExtendedL1Client(
     chain.rpcUrls,
-    mnemonicOrPrivateKey,
+    mnemonic,
     chain.chainInfo
   );
   return await L1FeeJuicePortalManager.new(
     pxe,
     l1Client,
-    logger
+    createLogger("no")
   );
 }
 

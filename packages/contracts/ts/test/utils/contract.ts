@@ -11,7 +11,6 @@ import {
 } from "@aztec/aztec.js";
 import { computePartialAddress } from "@aztec/stdlib/contract";
 import {
-    MakerPartialNote,
     OTCEscrowContractContract as OTCEscrowContract,
     OTCEscrowContractContractArtifact as OTCEscrowContractArtifact
 } from "../../../artifacts/OTCEscrowContract.js";
@@ -64,7 +63,9 @@ export async function deployEscrowContract(
     await pxe.registerAccount(contractSecretKey, partialAddress);
 
     // deploy contract
-    const contract = await contractDeployment.send(deployOptions).deployed();
+    const contract = await contractDeployment
+        .send(deployOptions)
+        .deployed({ timeout: 3600 });
 
     return {
         contract: contract as OTCEscrowContract,
@@ -97,7 +98,7 @@ export async function deployTokenContractWithMinter(
         "constructor_with_minter",
     )
         .send(deployOptions)
-        .deployed();
+        .deployed({ timeout: 3600 });
     return contract as TokenContract;
 }
 
@@ -136,7 +137,7 @@ export async function depositToEscrow(
         .deposit_tokens(nonce)
         .with({ authWitnesses: [authwit] })
         .send()
-        .wait();
+        .wait({ timeout: 3600 });
     return receipt.txHash
 }
 
@@ -166,14 +167,14 @@ export async function fillOTCOrder(
             nonce,
         ),
     });
-    
+
     // send transfer_in with authwit
     const receipt = await escrow
         .methods
         .fill_order(nonce)
         .with({ authWitnesses: [authwit] })
         .send()
-        .wait();
+        .wait({ timeout: 3600 });
     return receipt.txHash;
 }
 

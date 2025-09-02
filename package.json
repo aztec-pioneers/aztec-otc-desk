@@ -20,5 +20,8 @@
   "scripts": {
     "build-token": "sh scripts/token.sh",
     "postinstall": "bun run build-token"
+  },
+  "dependencies": {
+    "dotenv": "^17.2.1"
   }
 }

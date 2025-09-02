@@ -10,12 +10,15 @@
       "@aztec/accounts": "catalog:",
       "@aztec/ethereum": "catalog:",
       "@aztec/stdlib": "catalog:",
-      "@aztec/noir-contracts.js": "catalog:"
+      "@aztec/noir-contracts.js": "catalog:",
+      "dotenv": "catalog:"
   },
   "peerDependencies": {
     "typescript": "catalog:"
   },
   "scripts": {
+    "x": "bun run scripts/x.ts",
+    "setup:accounts": "bun run scripts/setup_accounts.ts",
     "deploy": "bun run scripts/deploy.ts",
     "order:create": "bun run scripts/create_order.ts",
     "order:fill": "bun run scripts/buy_order.ts"
