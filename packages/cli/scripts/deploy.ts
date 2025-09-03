@@ -16,9 +16,9 @@ const main = async () => {
     const { seller } = await getOTCAccounts(pxe);
 
     // deploy token contracts
-    // console.log("Deploying Wrapped Ether token contract");
-    // const weth = await deployTokenContractWithMinter(TOKEN_METADATA.weth, seller);
-    // console.log("WETH token contract deployed, address: ", weth.address);
+    console.log("Deploying Wrapped Ether token contract");
+    const weth = await deployTokenContractWithMinter(TOKEN_METADATA.weth, seller);
+    console.log("WETH token contract deployed, address: ", weth.address);
 
     console.log("Deploying Circle USDC token contract");
     const usdc = await deployTokenContractWithMinter(TOKEN_METADATA.usdc, seller);

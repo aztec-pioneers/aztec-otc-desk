@@ -2,32 +2,6 @@
 
 import { copyFile, readFile, writeFile } from "fs/promises";
 import { dirname, join } from "path";
-import { spawn } from "bun";
-
-async function checkCommand(command: string): Promise<boolean> {
-  try {
-    const proc = spawn({
-      cmd: ["which", command],
-      stdout: "ignore",
-      stderr: "ignore",
-    });
-    const exitCode = await proc.exited;
-    return exitCode === 0;
-  } catch {
-    return false;
-  }
-}
-
-async function getSedCommand(): Promise<string> {
-  const hasGsed = await checkCommand("gsed");
-  if (hasGsed) {
-    console.log("Using gsed (macOS)");
-    return "gsed";
-  } else {
-    console.log("Using sed (Linux)");
-    return "sed";
-  }
-}
 
 async function copyFileWithLog(src: string, dest: string): Promise<void> {
   try {
@@ -54,12 +28,9 @@ async function main() {
     // Get the script directory equivalent (packages/contracts/scripts/../ = packages/contracts/)
     const scriptDir = dirname(import.meta.path);
     const contractsDir = join(scriptDir, "..");
-    
+
     console.log(`Working in contracts directory: ${contractsDir}`);
     process.chdir(contractsDir);
-
-    // Detect sed command for cross-platform compatibility
-    const sedCmd = await getSedCommand();
 
     console.log("Moving escrow artifacts...");
     // Move the escrow artifacts
@@ -90,10 +61,10 @@ async function main() {
       "../target/otc_escrow-OTCEscrowContract.json",
       "./OTCEscrowContract.json"
     );
-    
+
     await replaceInFile(
       "./ts/src/artifacts/token/Token.ts",
-      "../../../deps/aztec-standards/target/token_contract-Token.json",
+      "../target/token_contract-Token.json",
       "./Token.json"
     );
 
