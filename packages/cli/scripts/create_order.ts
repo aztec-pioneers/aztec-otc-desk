@@ -3,11 +3,7 @@ import {
     createPXE,
     deployEscrowContract,
     depositToEscrow,
-    getPriorityFeeOptions,
-    getSponsoredFeePaymentMethod,
     getTokenContract,
-    isTestnet,
-    TokenContract
 } from "@aztec-otc-desk/contracts";
 import { AztecAddress } from "@aztec/aztec.js";
 import {
