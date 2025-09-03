@@ -8,6 +8,7 @@ import {
     TxHash,
     AccountWallet,
     createAztecNodeClient,
+    SponsoredFeePaymentMethod,
 } from "@aztec/aztec.js";
 import { computePartialAddress, ContractInstanceWithAddress } from "@aztec/stdlib/contract";
 import {
@@ -16,6 +17,9 @@ import {
     TokenContract,
     TokenContractArtifact
 } from "./artifacts";
+import { GasSettings } from "@aztec/stdlib/gas";
+import { getSponsoredFPCAddress, getSponsoredFPCInstance } from "./fees";
+import { SponsoredFPCContract } from "@aztec/noir-contracts.js/SponsoredFPC";
 
 /**
  * Deploys a new instance of the OTC Escrow Contract
@@ -42,6 +46,11 @@ export async function deployEscrowContract(
     deployOptions?: DeployOptions,
 ): Promise<{ contract: OTCEscrowContract, secretKey: Fr }> {
 
+    // register sponsored fpc
+    const sponsoredFPC = await getSponsoredFPCInstance();
+    await pxe.registerContract({ instance: sponsoredFPC, artifact: SponsoredFPCContract.artifact });
+    const paymentMethod = new SponsoredFeePaymentMethod(sponsoredFPC.address);
+
     // get keys for contract
     const contractSecretKey = Fr.random();
     const contractPublicKeys = (await deriveKeys(contractSecretKey)).publicKeys;
@@ -59,12 +68,19 @@ export async function deployEscrowContract(
         await contractDeployment.getInstance(),
     );
     await pxe.registerAccount(contractSecretKey, partialAddress);
-
     // deploy contract
     const contract = await contractDeployment
-        .send(deployOptions)
+        .send({
+            ...deployOptions,
+            fee: {
+                baseFeePadding: 100,
+                gasSettings: GasSettings.default({
+                    maxFeesPerGas: (await deployer.getCurrentBaseFees()).mul(10n),
+                }),
+                paymentMethod
+            }
+        })
         .deployed({ timeout: 3600 });
-
     return {
         contract: contract as OTCEscrowContract,
         secretKey: contractSecretKey,
@@ -95,7 +111,15 @@ export async function deployTokenContractWithMinter(
         ],
         "constructor_with_minter",
     )
-        .send(deployOptions)
+        .send({
+            ...deployOptions,
+            fee: {
+                baseFeePadding: 100,
+                gasSettings: GasSettings.default({
+                    maxFeesPerGas: (await deployer.getCurrentBaseFees()).mul(10n),
+                })
+            }
+        })
         .deployed({ timeout: 3600 });
     return contract as TokenContract;
 }
@@ -116,6 +140,11 @@ export async function depositToEscrow(
     sellToken: TokenContract,
     sellTokenAmount: bigint,
 ): Promise<TxHash> {
+    // register sponsored fpc
+    const sponsoredFPC = await getSponsoredFPCInstance();
+    await caller.registerContract({ instance: sponsoredFPC, artifact: SponsoredFPCContract.artifact });
+    const paymentMethod = new SponsoredFeePaymentMethod(sponsoredFPC.address);
+    
     escrow = escrow.withWallet(caller);
     // create authwit
     const nonce = Fr.random();
@@ -133,8 +162,16 @@ export async function depositToEscrow(
     const receipt = await escrow
         .methods
         .deposit_tokens(nonce)
-        .with({ authWitnesses: [authwit] })
-        .send()
+        .with({ authWitnesses: [authwit], })
+        .send({
+            fee: {
+                baseFeePadding: 100,
+                gasSettings: GasSettings.default({
+                    maxFeesPerGas: (await caller.getCurrentBaseFees()).mul(10n),
+                }),
+                paymentMethod
+            }
+        })
         .wait({ timeout: 3600 });
     return receipt.txHash
 }
@@ -152,6 +189,11 @@ export async function fillOTCOrder(
     token: TokenContract,
     amount: bigint,
 ): Promise<TxHash> {
+    // register sponsored fpc
+    const sponsoredFPC = await getSponsoredFPCInstance();
+    await caller.registerContract({ instance: sponsoredFPC, artifact: SponsoredFPCContract.artifact });
+    const paymentMethod = new SponsoredFeePaymentMethod(sponsoredFPC.address);
+
     escrow = escrow.withWallet(caller);
 
     // create authwit
@@ -171,7 +213,15 @@ export async function fillOTCOrder(
         .methods
         .fill_order(nonce)
         .with({ authWitnesses: [authwit] })
-        .send()
+        .send({
+            fee: {
+                baseFeePadding: 100,
+                gasSettings: GasSettings.default({
+                    maxFeesPerGas: (await caller.getCurrentBaseFees()).mul(10n),
+                }),
+                paymentMethod
+            }
+        })
         .wait({ timeout: 3600 });
     return receipt.txHash;
 }
@@ -200,9 +250,9 @@ export const getTokenContract = async (
     pxe: PXE,
     caller: AccountWallet,
     tokenAddress: AztecAddress,
-    l1RpcUrl: string = "http://localhost:8545"
+    aztecRpcUrl: string = "http://localhost:8080"
 ): Promise<TokenContract> => {
-    const node = createAztecNodeClient(l1RpcUrl);
+    const node = createAztecNodeClient(aztecRpcUrl);
     const contractInstance = await node.getContract(tokenAddress);
     if (!contractInstance) {
         throw new Error(`No instance for token contract at ${tokenAddress.toString()} found!`);

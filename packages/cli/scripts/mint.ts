@@ -4,9 +4,9 @@ import { weth as wethDeployment, usdc as usdcDeployment } from "./data/deploymen
 import { AztecAddress } from "@aztec/aztec.js";
 import { createPXE, getTokenContract } from "@aztec-otc-desk/contracts";
 
-const { L1_RPC_URL } = process.env;
-if (!L1_RPC_URL) {
-    throw new Error("L1_RPC_URL is not defined");
+const { L2_NODE_URL } = process.env;
+if (!L2_NODE_URL) {
+    throw new Error("L2_NODE_URL is not defined");
 }
 
 // - Mints 1 Eth to Buyer of the OTC
@@ -19,7 +19,8 @@ const main = async () => {
 
     // get WETH token
     const wethAddress = AztecAddress.fromString(wethDeployment.address);
-    const weth = await getTokenContract(pxe, seller, wethAddress, L1_RPC_URL);
+    const weth = await getTokenContract(pxe, seller, wethAddress, L2_NODE_URL);
+
 
     // mint WETH
     console.log("Minting WETH to seller account");
@@ -32,7 +33,7 @@ const main = async () => {
 
     // get USDC token
     const usdcAddress = AztecAddress.fromString(usdcDeployment.address);
-    const usdc = await getTokenContract(pxe, seller, usdcAddress, L1_RPC_URL);
+    const usdc = await getTokenContract(pxe, seller, usdcAddress, L2_NODE_URL);
 
     console.log("Minting USDC to buyer account");
     await usdc

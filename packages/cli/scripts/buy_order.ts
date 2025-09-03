@@ -10,6 +10,11 @@ import {
     usdcMintAmount
 } from "./utils";
 
+const { L2_NODE_URL } = process.env;
+if (!L2_NODE_URL) {
+    throw new Error("L2_NODE_URL is not defined");
+}
+
 const main = async () => {
     // fetch orders
     const orders = await getOrders();
@@ -24,12 +29,12 @@ const main = async () => {
 
     // instantiate token contracts
     const wethAddress = AztecAddress.fromString(ethDeployment.address);
-    const weth = await getTokenContract(pxe, buyer, wethAddress);
+    const weth = await getTokenContract(pxe, buyer, wethAddress, L2_NODE_URL);
     await weth.methods.sync_private_state().simulate();
 
     // get USDC token
     const usdcAddress = AztecAddress.fromString(usdcDeployment.address);
-    const usdc = await getTokenContract(pxe, buyer, usdcAddress);
+    const usdc = await getTokenContract(pxe, buyer, usdcAddress, L2_NODE_URL);
     await usdc.methods.sync_private_state().simulate();
 
     // register escrow contract and account then get deployed instance
