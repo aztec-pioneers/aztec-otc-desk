@@ -4,6 +4,7 @@
     "": {
       "name": "aztec-otc-desk-monorepo",
       "dependencies": {
+        "@aztec/entrypoints": "^1.2.1",
         "dotenv": "^17.2.1",
       },
     },

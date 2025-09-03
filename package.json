@@ -22,6 +22,7 @@
     "build-token": "bun run scripts/token.ts"
   },
   "dependencies": {
+    "@aztec/entrypoints": "^1.2.1",
     "dotenv": "^17.2.1"
   }
 }

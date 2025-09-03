@@ -6,6 +6,7 @@
       "@aztec/aztec.js": "catalog:",
       "@aztec/accounts": "catalog:",
       "@aztec/ethereum": "catalog:",
+      "@aztec/entrypoints": "catalog:",
       "@aztec/stdlib": "catalog:",
       "@aztec/noir-contracts.js": "catalog:",
       "jest": "catalog:"

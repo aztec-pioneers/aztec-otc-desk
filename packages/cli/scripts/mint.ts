@@ -1,5 +1,5 @@
 import "dotenv/config";
-import { wethMintAmount, getOTCAccounts, usdcMintAmount } from "./utils";
+import { wethMintAmount, getOTCAccounts, usdcMintAmount, getFeeSendOptions } from "./utils";
 import { weth as wethDeployment, usdc as usdcDeployment } from "./data/deployments.json"
 import { AztecAddress } from "@aztec/aztec.js";
 import { createPXE, getTokenContract } from "@aztec-otc-desk/contracts";
@@ -21,6 +21,8 @@ const main = async () => {
     const wethAddress = AztecAddress.fromString(wethDeployment.address);
     const weth = await getTokenContract(pxe, seller, wethAddress, L2_NODE_URL);
 
+    // if testnet, send with high gas fee allowance and sponsored fpc
+    const sendOptions = await getFeeSendOptions(pxe, true);
 
     // mint WETH
     console.log("Minting WETH to seller account");
@@ -28,7 +30,8 @@ const main = async () => {
         .withWallet(seller)
         .methods
         .mint_to_private(seller.getAddress(), seller.getAddress(), wethMintAmount * 10n)
-        .send().wait({ timeout: 3600 });
+        .send(sendOptions)
+        .wait({ timeout: 3600 });
     console.log("10 WETH minted to seller");
 
     // get USDC token
@@ -40,7 +43,8 @@ const main = async () => {
         .withWallet(seller)
         .methods
         .mint_to_private(seller.getAddress(), buyer.getAddress(), usdcMintAmount * 10n)
-        .send().wait({ timeout: 3600 });
+        .send(sendOptions)
+        .wait({ timeout: 3600 });
     console.log("50,000 USDC minted to buyer");
 }
 

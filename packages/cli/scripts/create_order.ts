@@ -3,7 +3,10 @@ import {
     createPXE,
     deployEscrowContract,
     depositToEscrow,
+    getPriorityFeeOptions,
+    getSponsoredFeePaymentMethod,
     getTokenContract,
+    isTestnet,
     TokenContract
 } from "@aztec-otc-desk/contracts";
 import { AztecAddress } from "@aztec/aztec.js";
@@ -15,7 +18,8 @@ import {
     createOrder,
     wethMintAmount,
     getOTCAccounts,
-    usdcMintAmount
+    usdcMintAmount,
+    getFeeSendOptions
 } from "./utils";
 
 const { L2_NODE_URL } = process.env;
@@ -38,20 +42,30 @@ const main = async () => {
     const usdcAddress = AztecAddress.fromString(usdcDeployment.address);
     await getTokenContract(pxe, seller, usdcAddress, L2_NODE_URL);
 
+    // if testnet, send with high gas fee allowance and sponsored fpc
+    const sendOptions = await getFeeSendOptions(pxe, true);
 
+    // build deploy
     const { contract: escrowContract, secretKey } = await deployEscrowContract(pxe,
         seller,
         weth.address,
         wethMintAmount,
         AztecAddress.fromString(usdcDeployment.address),
         usdcMintAmount,
+        sendOptions
     );
 
     console.log("Escrow contract deployed, address: ", escrowContract.address);
     console.log("Escrow contract secret key: ", secretKey);
 
     console.log("Depositing weth to escrow");
-    const receipt = await depositToEscrow(escrowContract, seller, weth, wethMintAmount);
+    const receipt = await depositToEscrow(
+        escrowContract,
+        seller,
+        weth,
+        wethMintAmount,
+        sendOptions
+    );
     console.log("Eth deposited to escrow, transaction hash: ", receipt.hash);
 
     // update api to add order

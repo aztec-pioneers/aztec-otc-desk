@@ -4,10 +4,10 @@ import {
     AztecAddress,
     type ContractInstanceWithAddress,
     Fr,
-    type PXE
+    type PXE,
 } from "@aztec/aztec.js";
 import { ContractInstanceWithAddressSchema } from "@aztec/stdlib/contract";
-import { OTCEscrowContract, getEscrowContract } from "@aztec-otc-desk/contracts";
+import { OTCEscrowContract, getEscrowContract, isTestnet } from "@aztec-otc-desk/contracts";
 import type { Order } from "../../../orderflow-service/src/types/api";
 import {
     weth as wethDeployment,

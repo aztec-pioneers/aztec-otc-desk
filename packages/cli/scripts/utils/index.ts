@@ -1,12 +1,29 @@
 import { getSchnorrAccount, SchnorrAccountContractArtifact } from "@aztec/accounts/schnorr";
-import { wad, isTestnet } from "@aztec-otc-desk/contracts";
-import { AccountWalletWithSecretKey, Fr, type PXE } from "@aztec/aztec.js";
+import { wad, isTestnet, getPriorityFeeOptions, getSponsoredFeePaymentMethod } from "@aztec-otc-desk/contracts";
+import { AccountWalletWithSecretKey, Fr, type PXE, type SendMethodOptions } from "@aztec/aztec.js";
 import accounts from "../data/accounts.json";
 import { deriveSigningKey } from "@aztec/stdlib/keys";
 import { getInitialTestAccountsWallets } from "@aztec/accounts/testing";
 
 export const wethMintAmount = wad(1n);
 export const usdcMintAmount = wad(5000n);
+
+/**
+ * In high fee environments (testnet) get send options
+ * @param pxe - the PXE to execute with
+ * @param withFPC - if true, use sponsored FPC
+ * @returns send options optimized for testnet
+ */
+export const getFeeSendOptions = async (pxe: PXE, withFPC: boolean): Promise<SendMethodOptions> => {
+    let sendOptions: SendMethodOptions = {};
+    if (await isTestnet(pxe)) {
+        // const paymentMethod = await getSponsoredFeePaymentMethod(pxe);
+        let fee = await getPriorityFeeOptions(pxe, 100, 10n);
+        // fee = { ...fee, paymentMethod };
+        sendOptions = { fee };
+    }
+    return sendOptions;
+}
 
 export const getOTCAccounts = async (pxe: PXE): Promise<{
     seller: AccountWalletWithSecretKey,

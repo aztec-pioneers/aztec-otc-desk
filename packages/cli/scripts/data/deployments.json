@@ -1,8 +1,8 @@
 {
-    "weth": {
-        "address": ""
-    },
-    "usdc": {
-        "address": ""
-    }
+  "weth": {
+    "address": "0x07fe338436558dd7e76985ac50b85e313752d94fa1b9c6831cc5267e86475755"
+  },
+  "usdc": {
+    "address": "0x0de74fdbca86cea4c901819a42c49e57e65ed16b4c8bae4def83b533107b781b"
+  }
 }

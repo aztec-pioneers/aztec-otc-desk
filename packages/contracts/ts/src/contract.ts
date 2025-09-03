@@ -9,6 +9,7 @@ import {
     AccountWallet,
     createAztecNodeClient,
     SponsoredFeePaymentMethod,
+    SendMethodOptions,
 } from "@aztec/aztec.js";
 import { computePartialAddress, ContractInstanceWithAddress } from "@aztec/stdlib/contract";
 import {
@@ -45,12 +46,6 @@ export async function deployEscrowContract(
     buyTokenAmount: bigint,
     deployOptions?: DeployOptions,
 ): Promise<{ contract: OTCEscrowContract, secretKey: Fr }> {
-
-    // register sponsored fpc
-    const sponsoredFPC = await getSponsoredFPCInstance();
-    await pxe.registerContract({ instance: sponsoredFPC, artifact: SponsoredFPCContract.artifact });
-    const paymentMethod = new SponsoredFeePaymentMethod(sponsoredFPC.address);
-
     // get keys for contract
     const contractSecretKey = Fr.random();
     const contractPublicKeys = (await deriveKeys(contractSecretKey)).publicKeys;
@@ -70,16 +65,7 @@ export async function deployEscrowContract(
     await pxe.registerAccount(contractSecretKey, partialAddress);
     // deploy contract
     const contract = await contractDeployment
-        .send({
-            ...deployOptions,
-            fee: {
-                baseFeePadding: 100,
-                gasSettings: GasSettings.default({
-                    maxFeesPerGas: (await deployer.getCurrentBaseFees()).mul(10n),
-                }),
-                paymentMethod
-            }
-        })
+        .send(deployOptions)
         .deployed({ timeout: 3600 });
     return {
         contract: contract as OTCEscrowContract,
@@ -111,15 +97,7 @@ export async function deployTokenContractWithMinter(
         ],
         "constructor_with_minter",
     )
-        .send({
-            ...deployOptions,
-            fee: {
-                baseFeePadding: 100,
-                gasSettings: GasSettings.default({
-                    maxFeesPerGas: (await deployer.getCurrentBaseFees()).mul(10n),
-                })
-            }
-        })
+        .send(deployOptions)
         .deployed({ timeout: 3600 });
     return contract as TokenContract;
 }
@@ -139,12 +117,8 @@ export async function depositToEscrow(
     caller: AccountWallet,
     sellToken: TokenContract,
     sellTokenAmount: bigint,
+    sendOptions?: SendMethodOptions
 ): Promise<TxHash> {
-    // register sponsored fpc
-    const sponsoredFPC = await getSponsoredFPCInstance();
-    await caller.registerContract({ instance: sponsoredFPC, artifact: SponsoredFPCContract.artifact });
-    const paymentMethod = new SponsoredFeePaymentMethod(sponsoredFPC.address);
-    
     escrow = escrow.withWallet(caller);
     // create authwit
     const nonce = Fr.random();
@@ -163,15 +137,7 @@ export async function depositToEscrow(
         .methods
         .deposit_tokens(nonce)
         .with({ authWitnesses: [authwit], })
-        .send({
-            fee: {
-                baseFeePadding: 100,
-                gasSettings: GasSettings.default({
-                    maxFeesPerGas: (await caller.getCurrentBaseFees()).mul(10n),
-                }),
-                paymentMethod
-            }
-        })
+        .send(sendOptions)
         .wait({ timeout: 3600 });
     return receipt.txHash
 }
@@ -188,6 +154,7 @@ export async function fillOTCOrder(
     caller: AccountWallet,
     token: TokenContract,
     amount: bigint,
+    sendOptions?: SendMethodOptions
 ): Promise<TxHash> {
     // register sponsored fpc
     const sponsoredFPC = await getSponsoredFPCInstance();
@@ -213,15 +180,7 @@ export async function fillOTCOrder(
         .methods
         .fill_order(nonce)
         .with({ authWitnesses: [authwit] })
-        .send({
-            fee: {
-                baseFeePadding: 100,
-                gasSettings: GasSettings.default({
-                    maxFeesPerGas: (await caller.getCurrentBaseFees()).mul(10n),
-                }),
-                paymentMethod
-            }
-        })
+        .send(sendOptions)
         .wait({ timeout: 3600 });
     return receipt.txHash;
 }
