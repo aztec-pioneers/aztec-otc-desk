@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# if -r flag is provided, skip download of submodule and only recompile
+# if --skip-submodules flag is provided, skip download of submodule and only recompile
 SKIP_SUBMODULES=false
 for arg in "$@"; do
   case $arg in

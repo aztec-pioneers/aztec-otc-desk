@@ -59,7 +59,8 @@ pub unconstrained fn setup(mint: bool) -> (
     TestContracts,
 ) {
     // setup accounts
-    let (env, accounts) = setup_accounts::<4>(true);
+    let mut env = TestEnvironment::new();
+    let accounts = setup_accounts::<4>(&mut env);
     let mut test_accounts = TestAccounts {
         minter: accounts[0],
         seller: accounts[1],
@@ -70,21 +71,21 @@ pub unconstrained fn setup(mint: bool) -> (
 
     // deploy contracts
     let usdc = deploy_token_contract(
-        env,
+        &mut env,
         test_accounts.minter,
         USDC_NAME,
         USDC_SYMBOL,
         USDC_DECIMALS
     );
     let weth = deploy_token_contract(
-        env,
+        &mut env,
         test_accounts.minter,
         WETH_NAME,
         WETH_SYMBOL,
         WETH_DECIMALS
     );
     let (escrow, escrow_secret) = deploy_escrow_contract(
-        env,
+        &mut env,
         test_accounts.seller,
         usdc,
         USDC_ESCROW_AMOUNT,
@@ -94,14 +95,14 @@ pub unconstrained fn setup(mint: bool) -> (
     // mint to accounts
     if (mint) {
         mint_to_private(
-            env,
+            &mut env,
             usdc,
             test_accounts.minter,
             test_accounts.seller,
             USDC_ESCROW_AMOUNT
         );
         mint_to_private(
-            env,
+            &mut env,
             weth,
             test_accounts.minter,
             test_accounts.buyer,
@@ -112,23 +113,18 @@ pub unconstrained fn setup(mint: bool) -> (
     let test_contracts = TestContracts { usdc, weth, escrow };
     test_accounts.escrow_secret = escrow_secret;
 
-    (env, test_accounts, test_contracts)
+    (&mut env, test_accounts, test_contracts)
 }
 
-pub unconstrained fn setup_accounts<let NUM_ACCOUNTS: u32>() -> (
-    &mut TestEnvironment,
-    [AztecAddress; NUM_ACCOUNTS]
-) {
+pub unconstrained fn setup_accounts<let NUM_ACCOUNTS: u32>(
+    env: &mut TestEnvironment
+) -> [AztecAddress; NUM_ACCOUNTS] {
     // Setup env, generate keys
-    let mut env = TestEnvironment::new();
     let mut accounts = [AztecAddress::zero(); NUM_ACCOUNTS];
-    for i in 0..NUM_ACCOUNTS {
-        let index = (i + 1) as Field;
-        let mut account_address = AztecAddress::zero();
-        env.create_account_contract(index);
-        accounts[i] = account_address;
+    for i in 0..NUM_ACCOUNTS {        
+        accounts[i] = env.create_account_contract(i as Field);
     }
-    (&mut env, accounts)
+    accounts
 }
 
 pub unconstrained fn deploy_token_contract(
@@ -165,9 +161,6 @@ pub unconstrained fn deploy_escrow_contract(
     // setup keys for escrow account
     let escrow_secret = unsafe { random() };
     let escrow_contract_account = cheatcodes::add_account(escrow_secret);
-    
-    // do i even have to do this
-    env.impersonate(owner);
 
     // deploy escrow contract
     let initializer_call_interface = OTCEscrowContract::interface()
