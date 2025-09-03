@@ -11,10 +11,7 @@ use crate::test::utils::{
     }
 };
 use aztec::{
-    oracle::{
-        random::random,
-        debug_log::{debug_log, debug_log_format},
-    },
+    oracle::random::random,
     protocol_types::traits::ToField,
 };
 use uint_note::uint_note::PartialUintNote;
@@ -32,7 +29,6 @@ unconstrained fn full_otc_order_success() {
     assert_eq(definition.sell_token_amount, USDC_ESCROW_AMOUNT, "Definition sell token amount mismatch!");
     assert_eq(definition.buy_token_address, contracts.weth, "Definition buy token address mismatch!");
     assert_eq(definition.buy_token_amount, WETH_ESCROW_AMOUNT, "Definition buy token amount mismatch!");
-    debug_log_format("Partial Note commitment: {0}", [definition.partial_note]);
 
     // check the partial note commitment in the definition is valid
     let validity_commitment = PartialUintNote { 
