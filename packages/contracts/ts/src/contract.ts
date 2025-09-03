@@ -139,7 +139,7 @@ export async function depositToEscrow(
         .with({ authWitnesses: [authwit], })
         .send(sendOptions)
         .wait({ timeout: 3600 });
-    return receipt.txHash
+    return receipt.txHash;
 }
 
 /**
@@ -156,11 +156,6 @@ export async function fillOTCOrder(
     amount: bigint,
     sendOptions?: SendMethodOptions
 ): Promise<TxHash> {
-    // register sponsored fpc
-    const sponsoredFPC = await getSponsoredFPCInstance();
-    await caller.registerContract({ instance: sponsoredFPC, artifact: SponsoredFPCContract.artifact });
-    const paymentMethod = new SponsoredFeePaymentMethod(sponsoredFPC.address);
-
     escrow = escrow.withWallet(caller);
 
     // create authwit
