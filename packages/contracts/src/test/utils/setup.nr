@@ -138,7 +138,7 @@ pub unconstrained fn deploy_token_contract(
     symbol: str<31>,
     decimals: u8
 ) -> AztecAddress {
-    let initializer_call_iface = Token::interface()
+    let initializer_call_interface = Token::interface()
         .constructor_with_minter(
             name,
             symbol,
@@ -148,7 +148,7 @@ pub unconstrained fn deploy_token_contract(
         );
     let contract_instance = env
         .deploy("../../deps/aztec-standards/@token_contract", "Token")
-        .with_public_void_initializer(owner, initializer_call_iface);
+        .with_public_void_initializer(owner, initializer_call_interface);
     env.advance_block_by(1);
 
     contract_instance.to_address()
@@ -170,7 +170,7 @@ pub unconstrained fn deploy_escrow_contract(
     env.impersonate(owner);
 
     // deploy escrow contract
-    let initializer_call_iface = OTCEscrowContract::interface()
+    let initializer_call_interface = OTCEscrowContract::interface()
         .constructor(
             sell_token_address,
             sell_token_amount,
@@ -179,7 +179,7 @@ pub unconstrained fn deploy_escrow_contract(
         );
     let contract_instance = env
         .deploy_self_with_public_keys("OTCEscrowContract", escrow_secret)
-        .with_private_initializer(owner, initializer_call_iface);
+        .with_private_initializer(owner, initializer_call_interface);
     env.advance_block_by(1);
 
     (contract_instance.to_address(), escrow_secret)
