@@ -2,13 +2,13 @@
 
 # if -r flag is provided, skip download of submodule and only recompile
 SKIP_SUBMODULES=false
-while getopts "r" opt; do
-  case $opt in
-    r)
+for arg in "$@"; do
+  case $arg in
+    --skip-submodules)
       SKIP_SUBMODULES=true
       ;;
-    \?)
-      echo "Invalid option: -$OPTARG" >&2
+    *)
+      echo "Invalid option: $arg" >&2
       exit 1
       ;;
   esac
