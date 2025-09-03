@@ -19,7 +19,7 @@
     }
   },
   "scripts": {
-    "build-token": "sh scripts/token.sh"
+    "build-token": "bun run scripts/token.ts"
   },
   "dependencies": {
     "dotenv": "^17.2.1"
