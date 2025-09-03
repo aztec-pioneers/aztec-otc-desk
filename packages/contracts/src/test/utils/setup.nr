@@ -59,7 +59,8 @@ pub unconstrained fn setup(mint: bool) -> (
     TestContracts,
 ) {
     // setup accounts
-    let (env, accounts) = setup_accounts::<4>(true);
+    let mut env = TestEnvironment::new();
+    let accounts = setup_accounts::<4>(&mut env);
     let mut test_accounts = TestAccounts {
         minter: accounts[0],
         seller: accounts[1],
@@ -70,21 +71,21 @@ pub unconstrained fn setup(mint: bool) -> (
 
     // deploy contracts
     let usdc = deploy_token_contract(
-        env,
+        &mut env,
         test_accounts.minter,
         USDC_NAME,
         USDC_SYMBOL,
         USDC_DECIMALS
     );
     let weth = deploy_token_contract(
-        env,
+        &mut env,
         test_accounts.minter,
         WETH_NAME,
         WETH_SYMBOL,
         WETH_DECIMALS
     );
     let (escrow, escrow_secret) = deploy_escrow_contract(
-        env,
+        &mut env,
         test_accounts.seller,
         usdc,
         USDC_ESCROW_AMOUNT,
@@ -94,14 +95,14 @@ pub unconstrained fn setup(mint: bool) -> (
     // mint to accounts
     if (mint) {
         mint_to_private(
-            env,
+            &mut env,
             usdc,
             test_accounts.minter,
             test_accounts.seller,
             USDC_ESCROW_AMOUNT
         );
         mint_to_private(
-            env,
+            &mut env,
             weth,
             test_accounts.minter,
             test_accounts.buyer,
@@ -112,27 +113,18 @@ pub unconstrained fn setup(mint: bool) -> (
     let test_contracts = TestContracts { usdc, weth, escrow };
     test_accounts.escrow_secret = escrow_secret;
 
-    (env, test_accounts, test_contracts)
+    (&mut env, test_accounts, test_contracts)
 }
 
 pub unconstrained fn setup_accounts<let NUM_ACCOUNTS: u32>(
-    use_account_contracts: bool
-) -> (&mut TestEnvironment, [AztecAddress; NUM_ACCOUNTS]) {
+    env: &mut TestEnvironment
+) -> [AztecAddress; NUM_ACCOUNTS] {
     // Setup env, generate keys
-    let mut env = TestEnvironment::new();
-    let mut accounts: [AztecAddress; NUM_ACCOUNTS]
-        = [AztecAddress::zero(); NUM_ACCOUNTS];
-    for i in 0..NUM_ACCOUNTS {
-        let index = (i + 1) as Field;
-        let mut account_address = AztecAddress::zero();
-        if use_account_contracts {
-            account_address = env.create_account_contract(index);
-        } else {
-            account_address = env.create_account(index);
-        }
-        accounts[i] = account_address;
+    let mut accounts = [AztecAddress::zero(); NUM_ACCOUNTS];
+    for i in 0..NUM_ACCOUNTS {        
+        accounts[i] = env.create_account_contract(i as Field);
     }
-    (&mut env, accounts)
+    accounts
 }
 
 pub unconstrained fn deploy_token_contract(
@@ -142,7 +134,7 @@ pub unconstrained fn deploy_token_contract(
     symbol: str<31>,
     decimals: u8
 ) -> AztecAddress {
-    let initializer_call_iface = Token::interface()
+    let initializer_call_interface = Token::interface()
         .constructor_with_minter(
             name,
             symbol,
@@ -152,7 +144,7 @@ pub unconstrained fn deploy_token_contract(
         );
     let contract_instance = env
         .deploy("../../deps/aztec-standards/@token_contract", "Token")
-        .with_public_void_initializer(owner, initializer_call_iface);
+        .with_public_void_initializer(owner, initializer_call_interface);
     env.advance_block_by(1);
 
     contract_instance.to_address()
@@ -169,12 +161,9 @@ pub unconstrained fn deploy_escrow_contract(
     // setup keys for escrow account
     let escrow_secret = unsafe { random() };
     let escrow_contract_account = cheatcodes::add_account(escrow_secret);
-    
-    // do i even have to do this
-    env.impersonate(owner);
 
     // deploy escrow contract
-    let initializer_call_iface = OTCEscrowContract::interface()
+    let initializer_call_interface = OTCEscrowContract::interface()
         .constructor(
             sell_token_address,
             sell_token_amount,
@@ -183,7 +172,7 @@ pub unconstrained fn deploy_escrow_contract(
         );
     let contract_instance = env
         .deploy_self_with_public_keys("OTCEscrowContract", escrow_secret)
-        .with_private_initializer(owner, initializer_call_iface);
+        .with_private_initializer(owner, initializer_call_interface);
     env.advance_block_by(1);
 
     (contract_instance.to_address(), escrow_secret)

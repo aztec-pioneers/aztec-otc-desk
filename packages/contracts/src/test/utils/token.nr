@@ -62,12 +62,12 @@ pub unconstrained fn private_transfer_authwit(
     amount: u128,
     nonce: Field
 ) {
-    let call_iface = Token::at(token_address)
+    let call_interface = Token::at(token_address)
         .transfer_private_to_private(from, caller, amount, nonce);
     authwit_cheatcodes::add_private_authwit_from_call_interface(
         from,
         caller,
-        call_iface
+        call_interface
     );
 }
 

@@ -11,7 +11,6 @@ pub contract OTCEscrowContract {
             functions::{initializer, private, utility},
             storage::storage
         },
-        oracle::debug_log::{debug_log, debug_log_format},
         prelude::{AztecAddress, PrivateImmutable, PrivateMutable},
         messages::logs::note::encode_and_encrypt_note,
         protocol_types::traits::ToField,
