@@ -1,5 +1,7 @@
 use aztec::macros::aztec;
+
 pub mod types;
+pub mod test;
 
 #[aztec]
 pub contract OTCEscrowContract {
@@ -15,7 +17,6 @@ pub contract OTCEscrowContract {
     };
     use crate::types::definition_note::DefinitionNote;
 
-    use poseidon::poseidon2::Poseidon2;
     use token_contract::Token;
 
     #[storage]
@@ -31,7 +32,6 @@ pub contract OTCEscrowContract {
         buy_token_address: AztecAddress,
         buy_token_amount: u128,
     ) {
-
         let self_address = context.this_address();
         let caller = context.msg_sender();
 
@@ -81,7 +81,11 @@ pub contract OTCEscrowContract {
                 definition.sell_token_amount,
                 _nonce
             )
-            .call(&mut context);    
+            .call(&mut context);
+
+        // emit nullifier to prevent multiple deposits
+        let deposit_nullifier = definition.get_nullifier();
+        context.push_nullifier(deposit_nullifier);
     }
 
     /**
