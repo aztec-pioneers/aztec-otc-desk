@@ -1,5 +1,5 @@
 {
-  "name": "@aztec-otc-desk/orderflow-service",
+  "name": "@aztec-otc-desk/api",
   "version": "1.0.0",
   "description": "Order flow service for Aztec OTC Desk",
   "main": "src/index.ts",
