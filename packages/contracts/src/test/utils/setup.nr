@@ -115,21 +115,17 @@ pub unconstrained fn setup(mint: bool) -> (
     (env, test_accounts, test_contracts)
 }
 
-pub unconstrained fn setup_accounts<let NUM_ACCOUNTS: u32>(
-    use_account_contracts: bool
-) -> (&mut TestEnvironment, [AztecAddress; NUM_ACCOUNTS]) {
+pub unconstrained fn setup_accounts<let NUM_ACCOUNTS: u32>() -> (
+    &mut TestEnvironment,
+    [AztecAddress; NUM_ACCOUNTS]
+) {
     // Setup env, generate keys
     let mut env = TestEnvironment::new();
-    let mut accounts: [AztecAddress; NUM_ACCOUNTS]
-        = [AztecAddress::zero(); NUM_ACCOUNTS];
+    let mut accounts = [AztecAddress::zero(); NUM_ACCOUNTS];
     for i in 0..NUM_ACCOUNTS {
         let index = (i + 1) as Field;
         let mut account_address = AztecAddress::zero();
-        if use_account_contracts {
-            account_address = env.create_account_contract(index);
-        } else {
-            account_address = env.create_account(index);
-        }
+        env.create_account_contract(index);
         accounts[i] = account_address;
     }
     (&mut env, accounts)
