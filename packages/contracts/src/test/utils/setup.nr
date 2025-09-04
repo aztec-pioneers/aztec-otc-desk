@@ -15,7 +15,7 @@ use aztec::{
 use std::test::OracleMock;
 
 // Token metadata
-pub global USDC_NAME: str<31> = "Circle USD\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n";
+pub global USDC_NAME: str<31> = "USD Coin\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n";
 pub global USDC_SYMBOL: str<31> = "USDC\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n";
 pub global USDC_DECIMALS: u8 = 6;
 

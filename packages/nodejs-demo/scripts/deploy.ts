@@ -25,7 +25,7 @@ const main = async () => {
     const weth = await deployTokenContractWithMinter(TOKEN_METADATA.weth, seller, sendOptions);
     console.log("WETH token contract deployed, address: ", weth.address);
 
-    console.log("Deploying Circle USDC token contract");
+    console.log("Deploying USD Coin token contract");
     const usdc = await deployTokenContractWithMinter(TOKEN_METADATA.usdc, seller, sendOptions);
     console.log("USDC token contract deployed, address: ", usdc.address);
 
