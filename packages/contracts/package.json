@@ -29,7 +29,7 @@
     "build": "bun run compile && bun run codegen -f && bun run copy-artifacts",
     "sandbox": "aztec start --sandbox",
     "pxe:local": "LOG_LEVEL=info aztec start --pxe --pxe.nodeUrl http://localhost:8080 --pxe.proverEnabled false",
-    "pxe:local:1": "bun run pxe --port 8081 --p2p.p2pPort 40401",
+    "pxe:local:1": "bun run pxe:local --port 8081 --p2p.p2pPort 40401",
     "pxe:testnet": "aztec start --pxe --pxe.nodeUrl=https://aztec-alpha-testnet-fullnode.zkv.xyz --l1-rpc-urls=https://eth-sepolia.public.blastapi.io --l1-chain-id 11155111",
     "pxe:testnet:1": "bun run pxe:testnet --port 8081 --p2p.p2pPort 40401"
   }

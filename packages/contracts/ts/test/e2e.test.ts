@@ -6,8 +6,6 @@ import {
     FeeJuicePaymentMethodWithClaim,
 } from "@aztec/aztec.js";
 import { getInitialTestAccountsWallets } from "@aztec/accounts/testing";
-import { getSchnorrAccount } from "@aztec/accounts/schnorr";
-import { deriveSigningKey } from "@aztec/stdlib/keys";
 import {
     deployEscrowContract,
     deployTokenContractWithMinter,
