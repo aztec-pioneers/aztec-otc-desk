@@ -7,10 +7,10 @@ import {
     type PXE,
 } from "@aztec/aztec.js";
 import { ContractInstanceWithAddressSchema } from "@aztec/stdlib/contract";
-import { OTCEscrowContract, getEscrowContract, isTestnet } from "@aztec-otc-desk/contracts";
-import type { Order } from "../../../api/src/types/api";
+import { OTCEscrowContract, getEscrowContract } from "@aztec-otc-desk/contracts";
+import type { Order } from "../../../orderflow-service/src/types/api";
 import {
-    weth as wethDeployment,
+    eth as ethDeployment,
     usdc as usdcDeployment
 } from "../data/deployments.json"
 import type { OrderAPIResponse } from "./types";
@@ -33,7 +33,7 @@ export const getOrders = async (): Promise<Order[]> => {
     try {
         const fullURL = `${API_URL}/order`
             + `?buy_token_address=${usdcDeployment.address}`
-            + `&sell_token_address=${wethDeployment.address}`;
+            + `&sell_token_address=${ethDeployment.address}`;
         const res = await fetch(fullURL, { method: "GET" });
         if (!res.ok) {
             throw new Error("Failed to fetch orders");

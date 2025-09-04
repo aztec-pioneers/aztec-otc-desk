@@ -1,5 +1,5 @@
 use crate::test::utils::{
-    setup::{setup, USDC_ESCROW_AMOUNT, WETH_ESCROW_AMOUNT},
+    setup::{setup, USDC_ESCROW_AMOUNT, ETH_ESCROW_AMOUNT},
     escrow::{
         deposit_to_escrow,
         fill_otc_order,
@@ -27,15 +27,15 @@ unconstrained fn full_otc_order_success() {
     assert_eq(definition.owner, contracts.escrow, "Definition owner mismatch!");
     assert_eq(definition.sell_token_address, contracts.usdc, "Definition sell token address mismatch!");
     assert_eq(definition.sell_token_amount, USDC_ESCROW_AMOUNT, "Definition sell token amount mismatch!");
-    assert_eq(definition.buy_token_address, contracts.weth, "Definition buy token address mismatch!");
-    assert_eq(definition.buy_token_amount, WETH_ESCROW_AMOUNT, "Definition buy token amount mismatch!");
+    assert_eq(definition.buy_token_address, contracts.eth, "Definition buy token address mismatch!");
+    assert_eq(definition.buy_token_amount, ETH_ESCROW_AMOUNT, "Definition buy token amount mismatch!");
 
     // check the partial note commitment in the definition is valid
     let validity_commitment = PartialUintNote { 
         commitment: definition.partial_note 
     }.compute_validity_commitment(contracts.escrow);
     assert(
-        env.public().nullifier_exists(validity_commitment, contracts.weth),
+        env.public().nullifier_exists(validity_commitment, contracts.eth),
         "Validity nullifier should exist",
     );
 
@@ -62,8 +62,8 @@ unconstrained fn full_otc_order_success() {
         env,
         accounts.buyer,
         contracts.escrow,
-        contracts.weth,
-        WETH_ESCROW_AMOUNT,
+        contracts.eth,
+        ETH_ESCROW_AMOUNT,
         false // no malicious authwit
     );
 
@@ -72,7 +72,7 @@ unconstrained fn full_otc_order_success() {
     // "Assertion failed: A partial note's completion log did not result in any notes being found - this should never happen"
     // expect_private_balance(contracts.usdc, accounts.buyer, USDC_ESCROW_AMOUNT);
     // expect_private_balance(contracts.usdc, contracts.escrow, 0);
-    // expect_private_balance(contracts.weth, accounts.seller, WETH_ESCROW_AMOUNT);
+    // expect_private_balance(contracts.eth, accounts.seller, ETH_ESCROW_AMOUNT);
 }
 
 // ensure cannot deposit without sufficient balance
@@ -175,8 +175,8 @@ unconstrained fn otc_fill_insufficient_balance_fail() {
         env,
         accounts.buyer,
         contracts.escrow,
-        contracts.weth,
-        WETH_ESCROW_AMOUNT,
+        contracts.eth,
+        ETH_ESCROW_AMOUNT,
         false // no malicious authwit
     );
 }
@@ -203,8 +203,8 @@ unconstrained fn otc_fill_incorrect_authwit_fail() {
         env,
         accounts.buyer,
         contracts.escrow,
-        contracts.weth,
-        WETH_ESCROW_AMOUNT,
+        contracts.eth,
+        ETH_ESCROW_AMOUNT,
         true // malicious authwit
     );
 }
@@ -220,8 +220,8 @@ unconstrained fn otc_fill_before_deposit_fail() {
         env,
         accounts.buyer,
         contracts.escrow,
-        contracts.weth,
-        WETH_ESCROW_AMOUNT,
+        contracts.eth,
+        ETH_ESCROW_AMOUNT,
         false // no malicious authwit
     );
 }
@@ -248,18 +248,18 @@ unconstrained fn otc_multiple_fill_fail() {
         env,
         accounts.buyer,
         contracts.escrow,
-        contracts.weth,
-        WETH_ESCROW_AMOUNT,
+        contracts.eth,
+        ETH_ESCROW_AMOUNT,
         false // no malicious authwit
     );
 
     // mint more tokens to Bob to fill order
     mint_to_private(
         env,
-        contracts.weth,
+        contracts.eth,
         accounts.minter,
         accounts.buyer,
-        WETH_ESCROW_AMOUNT
+        ETH_ESCROW_AMOUNT
     );
 
     // mint more tokens to the escrow so it has some to send back out
@@ -276,8 +276,8 @@ unconstrained fn otc_multiple_fill_fail() {
         env,
         accounts.buyer,
         contracts.escrow,
-        contracts.weth,
-        WETH_ESCROW_AMOUNT,
+        contracts.eth,
+        ETH_ESCROW_AMOUNT,
         false // no malicious authwit
     );
 }

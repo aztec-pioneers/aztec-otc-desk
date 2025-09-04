@@ -1,5 +1,5 @@
 {
-  "weth": {
+  "eth": {
     "address": "0x07fe338436558dd7e76985ac50b85e313752d94fa1b9c6831cc5267e86475755"
   },
   "usdc": {

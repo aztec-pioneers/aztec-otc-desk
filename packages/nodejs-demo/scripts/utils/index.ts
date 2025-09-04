@@ -5,7 +5,7 @@ import accounts from "../data/accounts.json";
 import { deriveSigningKey } from "@aztec/stdlib/keys";
 import { getInitialTestAccountsWallets } from "@aztec/accounts/testing";
 
-export const wethMintAmount = wad(1n);
+export const ethMintAmount = wad(1n);
 export const usdcMintAmount = wad(5000n);
 
 /**

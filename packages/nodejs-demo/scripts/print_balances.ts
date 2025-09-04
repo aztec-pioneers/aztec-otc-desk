@@ -8,7 +8,7 @@ import {
     getSponsoredFPCAddress
 } from "@aztec-otc-desk/contracts"
 import { getOTCAccounts } from "./utils";
-import { weth as wethDeployment, usdc as usdcDeployment } from "./data/deployments.json"
+import { eth as ethDeployment, usdc as usdcDeployment } from "./data/deployments.json"
 
 
 
@@ -24,14 +24,14 @@ const main = async () => {
     const { seller, buyer } = await getOTCAccounts(pxe)
     
     // get tokens
-    const wethAddress = AztecAddress.fromString(wethDeployment.address);
-    const weth = await getTokenContract(pxe, seller, wethAddress, L2_NODE_URL);
+    const ethAddress = AztecAddress.fromString(ethDeployment.address);
+    const eth = await getTokenContract(pxe, seller, ethAddress, L2_NODE_URL);
 
     const usdcAddress = AztecAddress.fromString(usdcDeployment.address);
     const usdc = await getTokenContract(pxe, seller, usdcAddress, L2_NODE_URL);
 
     // check balances for seller
-    const sellerWETHBalance = await weth
+    const sellerethBalance = await eth
         .withWallet(seller)
         .methods
         .balance_of_private(seller.getAddress())
@@ -43,7 +43,7 @@ const main = async () => {
         .simulate();
     
     // check balances for buyer
-    await weth
+    await eth
         .withWallet(buyer)
         .methods
         .sync_private_state();
@@ -51,7 +51,7 @@ const main = async () => {
         .withWallet(buyer)
         .methods
         .sync_private_state();
-    const buyerWETHBalance = await weth
+    const buyerethBalance = await eth
         .withWallet(buyer)
         .methods
         .balance_of_private(buyer.getAddress())
@@ -70,9 +70,9 @@ const main = async () => {
         console.log(`FeeJuice balance for seller: ${feeJuiceBalanceSeller}`);
         console.log(`FeeJuice balance for buyer: ${feeJuiceBalanceBuyer}`);
     }
-    console.log(`WETH balance for seller: ${sellerWETHBalance}`);
+    console.log(`eth balance for seller: ${sellerethBalance}`);
     console.log(`USDC balance for seller: ${sellerUSDCBalance}`);
-    console.log(`WETH balance for buyer: ${buyerWETHBalance}`);
+    console.log(`eth balance for buyer: ${buyerethBalance}`);
     console.log(`USDC balance for buyer: ${buyerUSDCBalance}`);
 
     const fpcAddress = await getSponsoredFPCAddress();

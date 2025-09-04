@@ -1,6 +1,6 @@
 import "dotenv/config";
 import { createPXE, fillOTCOrder, getTokenContract } from "@aztec-otc-desk/contracts";
-import { weth as ethDeployment, usdc as usdcDeployment } from "./data/deployments.json"
+import { eth as ethDeployment, usdc as usdcDeployment } from "./data/deployments.json"
 import { AztecAddress } from "@aztec/aztec.js";
 import {
     closeOrder,
@@ -29,9 +29,9 @@ const main = async () => {
     const { buyer } = await getOTCAccounts(pxe);
 
     // instantiate token contracts
-    const wethAddress = AztecAddress.fromString(ethDeployment.address);
-    const weth = await getTokenContract(pxe, buyer, wethAddress, L2_NODE_URL);
-    await weth.methods.sync_private_state().simulate();
+    const ethAddress = AztecAddress.fromString(ethDeployment.address);
+    const eth = await getTokenContract(pxe, buyer, ethAddress, L2_NODE_URL);
+    await eth.methods.sync_private_state().simulate();
 
     // get USDC token
     const usdcAddress = AztecAddress.fromString(usdcDeployment.address);

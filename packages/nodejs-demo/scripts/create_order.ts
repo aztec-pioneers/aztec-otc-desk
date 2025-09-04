@@ -7,12 +7,12 @@ import {
 } from "@aztec-otc-desk/contracts";
 import { AztecAddress } from "@aztec/aztec.js";
 import {
-    weth as wethDeployment,
+    eth as ethDeployment,
     usdc as usdcDeployment
 } from "./data/deployments.json"
 import {
     createOrder,
-    wethMintAmount,
+    ethMintAmount,
     getOTCAccounts,
     usdcMintAmount,
     getFeeSendOptions
@@ -31,8 +31,8 @@ const main = async () => {
     const { seller } = await getOTCAccounts(pxe);
 
     // get tokens
-    const wethAddress = AztecAddress.fromString(wethDeployment.address);
-    const weth = await getTokenContract(pxe, seller, wethAddress, L2_NODE_URL);
+    const ethAddress = AztecAddress.fromString(ethDeployment.address);
+    const eth = await getTokenContract(pxe, seller, ethAddress, L2_NODE_URL);
     //// NOTE: need to get usdc token too to make sure PXE knows it exists
     ////       but we don't need to do anything with it
     const usdcAddress = AztecAddress.fromString(usdcDeployment.address);
@@ -44,8 +44,8 @@ const main = async () => {
     // build deploy
     const { contract: escrowContract, secretKey } = await deployEscrowContract(pxe,
         seller,
-        weth.address,
-        wethMintAmount,
+        eth.address,
+        ethMintAmount,
         AztecAddress.fromString(usdcDeployment.address),
         usdcMintAmount,
         sendOptions
@@ -54,12 +54,12 @@ const main = async () => {
     console.log("Escrow contract deployed, address: ", escrowContract.address);
     console.log("Escrow contract secret key: ", secretKey);
 
-    console.log("Depositing weth to escrow");
+    console.log("Depositing eth to escrow");
     const receipt = await depositToEscrow(
         escrowContract,
         seller,
-        weth,
-        wethMintAmount,
+        eth,
+        ethMintAmount,
         sendOptions
     );
     console.log("Eth deposited to escrow, transaction hash: ", receipt.hash);
@@ -70,8 +70,8 @@ const main = async () => {
         escrowContract.instance,
         secretKey,
         (await escrowContract.partialAddress),
-        weth.address,
-        wethMintAmount,
+        eth.address,
+        ethMintAmount,
         AztecAddress.fromString(usdcDeployment.address),
         usdcMintAmount
     )

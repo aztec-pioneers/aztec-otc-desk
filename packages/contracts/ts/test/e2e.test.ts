@@ -34,14 +34,14 @@ describe("Private Transfer Demo Test", () => {
 
     let escrow: OTCEscrowContract;
     let usdc: TokenContract;
-    let weth: TokenContract;
+    let eth: TokenContract;
 
     let feeJuicePortalManager: L1FeeJuicePortalManager;
 
     const sellTokenAmount = wad(1000n, 6n);
     const buyTokenAmount = wad(1n);
     const sellerUSDCInitialBalance = wad(10000n, 6n);
-    const buyerWETHInitialBalance = wad(4n);
+    const buyerETHInitialBalance = wad(4n);
 
     beforeAll(async () => {
         console.log("trying connect")
@@ -73,7 +73,7 @@ describe("Private Transfer Demo Test", () => {
 
         // deploy token contract
         usdc = await deployTokenContractWithMinter(TOKEN_METADATA.usdc, minter);
-        weth = await deployTokenContractWithMinter(TOKEN_METADATA.weth, minter);
+        eth = await deployTokenContractWithMinter(TOKEN_METADATA.eth, minter);
 
         // claim fee juice for buyer and deploy
         const claimAndPay = new FeeJuicePaymentMethodWithClaim(buyer, claim);
@@ -82,10 +82,10 @@ describe("Private Transfer Demo Test", () => {
         await buyerPXE.registerSender(minter.getAddress());
         await buyerPXE.registerSender(seller.getAddress());
         await buyerPXE.registerContract(usdc);
-        await buyerPXE.registerContract(weth);
+        await buyerPXE.registerContract(eth);
 
         // mint tokens
-        await weth
+        await eth
             .withWallet(minter)
             .methods.mint_to_private(
                 minter.getAddress(),
@@ -113,7 +113,7 @@ describe("Private Transfer Demo Test", () => {
             seller,
             usdc.address,
             buyTokenAmount,
-            weth.address,
+            eth.address,
             sellTokenAmount,
         ));
 
@@ -156,7 +156,7 @@ describe("Private Transfer Demo Test", () => {
             seller,
             usdc.address,
             sellTokenAmount,
-            weth.address,
+            eth.address,
             buyTokenAmount,
         ));
 
@@ -183,10 +183,10 @@ describe("Private Transfer Demo Test", () => {
 
         // check buyer balance balances before filling order
         usdc = usdc.withWallet(buyer);
-        weth = weth.withWallet(buyer);
-        expect(expectBalancePrivate(weth, seller.getAddress(), buyerWETHInitialBalance)).toBeTruthy();
+        eth = eth.withWallet(buyer);
+        expect(expectBalancePrivate(eth, seller.getAddress(), buyerETHInitialBalance)).toBeTruthy();
         expect(expectBalancePrivate(usdc, seller.getAddress(), 0n)).toBeTruthy();
-        expect(expectBalancePrivate(weth, escrow.address, 0n)).toBeTruthy();
+        expect(expectBalancePrivate(eth, escrow.address, 0n)).toBeTruthy();
 
         // give buyer knowledge of the escrow
         await buyerPXE.registerAccount(escrowMasterKey, await escrow.partialAddress);
@@ -194,14 +194,14 @@ describe("Private Transfer Demo Test", () => {
         await escrow.withWallet(buyer).methods.sync_private_state().simulate();
 
         // transfer tokens back out
-        await fillOTCOrder(escrow, buyer, weth, buyTokenAmount);
+        await fillOTCOrder(escrow, buyer, eth, buyTokenAmount);
 
         // check balances after filling order
         expect(
-            expectBalancePrivate(weth, buyer.getAddress(), buyerWETHInitialBalance - buyTokenAmount)
+            expectBalancePrivate(eth, buyer.getAddress(), buyerETHInitialBalance - buyTokenAmount)
         ).toBeTruthy();
         expect(expectBalancePrivate(usdc, buyer.getAddress(), sellTokenAmount)).toBeTruthy();
-        expect(expectBalancePrivate(weth, seller.getAddress(), buyTokenAmount)).toBeTruthy();
+        expect(expectBalancePrivate(eth, seller.getAddress(), buyTokenAmount)).toBeTruthy();
         expect(expectBalancePrivate(usdc, escrow.address, 0n)).toBeTruthy();
     });
 });
