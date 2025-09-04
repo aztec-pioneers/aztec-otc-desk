@@ -3,7 +3,7 @@ import { wad, isTestnet, getPriorityFeeOptions, getSponsoredFeePaymentMethod } f
 import { AccountWalletWithSecretKey, Fr, type PXE, type SendMethodOptions } from "@aztec/aztec.js";
 import accounts from "../data/accounts.json";
 import { deriveSigningKey } from "@aztec/stdlib/keys";
-import { getInitialTestAccountsWallets } from "@aztec/accounts/testing";
+import { getInitialTestAccountsManagers, getInitialTestAccountsWallets } from "@aztec/accounts/testing";
 
 export const ethMintAmount = wad(1n);
 export const usdcMintAmount = wad(5000n);
@@ -35,11 +35,11 @@ export const getOTCAccounts = async (pxe: PXE): Promise<{
     let buyer: AccountWalletWithSecretKey;
     if (!testnet) {
         // if sandbox, get initialized test accounts
-        const wallets = await getInitialTestAccountsWallets(pxe);
+        const wallets = await getInitialTestAccountsManagers(pxe);
         if (!wallets[0]) throw new Error("Seller/ Minter not found");
         if (!wallets[1]) throw new Error("Buyer not found");
-        seller = wallets[0];
-        buyer = wallets[1];
+        seller = await wallets[0].getWallet();
+        buyer = await wallets[1].getWallet();
     } else {
         // if testnet, get accounts from env (should run setup_accounts.ts first)
         seller = await getAccountFromFs("seller", pxe);
