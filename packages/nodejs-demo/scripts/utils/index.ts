@@ -42,15 +42,15 @@ export const getOTCAccounts = async (pxe: PXE): Promise<{
         buyer = wallets[1];
     } else {
         // if testnet, get accounts from env (should run setup_accounts.ts first)
-        seller = await getAccountFromEnv("seller", pxe);
-        buyer = await getAccountFromEnv("buyer", pxe);
+        seller = await getAccountFromFs("seller", pxe);
+        buyer = await getAccountFromFs("buyer", pxe);
         await pxe.registerSender(seller.getAddress());
         await pxe.registerSender(buyer.getAddress());
     }
     return { seller, buyer };
 }
 
-export const getAccountFromEnv = async (
+export const getAccountFromFs = async (
     accountType: "seller" | "buyer",
     pxe: PXE
 ): Promise<AccountWalletWithSecretKey> => {
