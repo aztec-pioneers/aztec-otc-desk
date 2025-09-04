@@ -3,7 +3,8 @@ import { wad, isTestnet, getPriorityFeeOptions, getSponsoredFeePaymentMethod } f
 import { AccountWalletWithSecretKey, Fr, type PXE, type SendMethodOptions } from "@aztec/aztec.js";
 import accounts from "../data/accounts.json";
 import { deriveSigningKey } from "@aztec/stdlib/keys";
-import { getInitialTestAccountsManagers, getInitialTestAccountsWallets } from "@aztec/accounts/testing";
+import { getInitialTestAccountsManagers } from "@aztec/accounts/testing";
+import readline from "readline";
 
 export const ethMintAmount = wad(1n);
 export const usdcMintAmount = wad(5000n);
@@ -69,6 +70,34 @@ export const getAccountFromFs = async (
     });
     return accountManager.getWallet();
 }
+
+export const waitForBlock = async (pxe: PXE, targetBlock: number) => {
+    return new Promise((resolve) => {
+        let currentBlock = 0;
+        let seconds = 0;
+
+        const interval = setInterval(async () => {
+            if (seconds % 5 === 0) {
+                (async () => {
+                    currentBlock = await pxe.getBlockNumber();
+                })();
+            }
+            seconds++;
+            const dots = '.'.repeat((seconds - 1) % 4);
+
+            readline.clearLine(process.stdout, 0);
+            readline.cursorTo(process.stdout, 0);
+            process.stdout.write(`Current block: ${currentBlock} (waiting until ${targetBlock})${dots}`);
+
+            if (currentBlock >= targetBlock) {
+                clearInterval(interval);
+                process.stdout.write('\n');
+                resolve(currentBlock);
+            }
+        }, 1000);
+    });
+};
+
 
 export * from "./api.js";
 export * from "./types.js";

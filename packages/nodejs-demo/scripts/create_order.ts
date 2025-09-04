@@ -18,9 +18,13 @@ import {
     getFeeSendOptions
 } from "./utils";
 
-const { L2_NODE_URL } = process.env;
+// get environment variables
+const { L2_NODE_URL, API_URL } = process.env;
 if (!L2_NODE_URL) {
     throw new Error("L2_NODE_URL is not defined");
+}
+if (!API_URL) {
+    throw new Error("API_URL is not defined");
 }
 
 const main = async () => {
@@ -73,7 +77,8 @@ const main = async () => {
         eth.address,
         ethMintAmount,
         AztecAddress.fromString(usdcDeployment.address),
-        usdcMintAmount
+        usdcMintAmount,
+        API_URL
     )
 }
 

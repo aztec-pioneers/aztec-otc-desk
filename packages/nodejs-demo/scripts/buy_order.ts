@@ -11,14 +11,18 @@ import {
     usdcMintAmount
 } from "./utils";
 
-const { L2_NODE_URL } = process.env;
+// get environment variables
+const { L2_NODE_URL, API_URL } = process.env;
 if (!L2_NODE_URL) {
     throw new Error("L2_NODE_URL is not defined");
+}
+if (!API_URL) {
+    throw new Error("API_URL is not defined");
 }
 
 const main = async () => {
     // fetch orders
-    const orders = await getOrders();
+    const orders = await getOrders(API_URL);
     //// NOTE: should add dynamic order selection
     //// also need to make it not need !
     const orderToFill = orders[0]!;
@@ -50,7 +54,7 @@ const main = async () => {
     console.log("Filled OTC order with txHash: ", txHash);
 
     // remove the order from the OTC service so it isn't reused
-    await closeOrder(orderToFill.orderId);
+    await closeOrder(orderToFill.orderId, API_URL);
 }
 
 main();

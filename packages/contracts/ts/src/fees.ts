@@ -1,10 +1,12 @@
 import {
+  AccountManager,
   AccountWallet,
   AccountWalletWithSecretKey,
   AztecAddress,
   type ContractInstanceWithAddress,
   Fr,
   L1FeeJuicePortalManager,
+  L2AmountClaim,
   type PXE,
   SponsoredFeePaymentMethod,
   type Wallet,
@@ -18,6 +20,9 @@ import { createEthereumChain, createExtendedL1Client, FeeJuiceContract } from '@
 import { deriveStorageSlotInMap } from '@aztec/stdlib/hash';
 import { UserFeeOptions } from '@aztec/entrypoints/interfaces';
 import { GasSettings } from '@aztec/stdlib/gas';
+import { getSchnorrAccount } from '@aztec/accounts/schnorr';
+import { deriveSigningKey } from '@aztec/stdlib/keys';
+import { wad } from './utils';
 
 export async function getSponsoredFPCInstance(): Promise<ContractInstanceWithAddress> {
   return await getContractInstanceFromDeployParams(SponsoredFPCContract.artifact, {
@@ -96,4 +101,38 @@ export async function getPriorityFeeOptions(
       maxFeesPerGas: (await pxe.getCurrentBaseFees()).mul(feeMultiplier),
     }),
   }
+}
+
+/**
+ * Sets up an account with a claim
+ * 
+ * @param pxe PXE instance
+ * @param feeJuicePortalManager L1FeeJuicePortalManager instance
+ * @returns
+ *      - account: the account that was created
+ *      - claim: the claim to make once enough blocks have passed
+ */
+export const setupAccountWithFeeClaim = async (
+    pxe: PXE,
+    feeJuicePortalManager: L1FeeJuicePortalManager
+): Promise<{
+    account: AccountManager,
+    wallet: AccountWalletWithSecretKey,
+    claim: L2AmountClaim,
+}> => {
+    const masterKey = Fr.random();
+    const account = await getSchnorrAccount(
+        pxe,
+        masterKey,
+        deriveSigningKey(masterKey),
+        Fr.random() // salt
+    );
+    const wallet = await account.getWallet();
+    const claim = await feeJuicePortalManager.bridgeTokensPublic(
+        account.getAddress(),
+        wad(1n),
+        true
+    );
+
+    return { account, wallet, claim };
 }

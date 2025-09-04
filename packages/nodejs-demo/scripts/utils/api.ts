@@ -1,4 +1,3 @@
-import "dotenv/config";
 import {
     AccountWalletWithSecretKey,
     AztecAddress,
@@ -15,23 +14,18 @@ import {
 } from "../data/deployments.json"
 import type { OrderAPIResponse } from "./types";
 
-const { API_URL } = process.env;
-
-if (!API_URL) {
-    throw new Error("API_URL is not defined");
-}
-
 /**
  * Fetch orders from the API
+ * @param apiUrl The base URL of the orderflow API
  * 
  * @returns Open orders fetched from the API
  */
-export const getOrders = async (): Promise<Order[]> => {
+export const getOrders = async (apiUrl: string): Promise<Order[]> => {
     // get an order from the database
     // do this first to fail if no order found
     let orders: Order[];
     try {
-        const fullURL = `${API_URL}/order`
+        const fullURL = `${apiUrl}/order`
             + `?buy_token_address=${usdcDeployment.address}`
             + `&sell_token_address=${ethDeployment.address}`;
         const res = await fetch(fullURL, { method: "GET" });
@@ -65,6 +59,7 @@ export const getOrders = async (): Promise<Order[]> => {
  * @param sellTokenAmount The amount of the token to sell
  * @param buyTokenAddress The address of the token to buy
  * @param buyTokenAmount The amount of the token to buy
+ * @param apiUrl The base URL of the orderflow API
  */
 export const createOrder = async (
     escrowAddress: AztecAddress | string,
@@ -74,7 +69,8 @@ export const createOrder = async (
     sellTokenAddress: AztecAddress | string,
     sellTokenAmount: bigint,
     buyTokenAddress: AztecAddress | string,
-    buyTokenAmount: bigint
+    buyTokenAmount: bigint,
+    apiUrl: string
 ) => {
     // parse inputs
     if (typeof escrowAddress === "string") {
@@ -102,7 +98,7 @@ export const createOrder = async (
     }
     // post request to add order to api
     try {
-        const fullURL = `${API_URL}/order`;
+        const fullURL = `${apiUrl}/order`;
         const res = await fetch(fullURL,
             { method: "POST", body: JSON.stringify(payload) }
         );
@@ -117,11 +113,13 @@ export const createOrder = async (
 
 /**
  * Close an order once filled using the ID
+ * 
  * @param id The ID of the order to close
+ * @param apiUrl The base URL of the orderflow API
  */
-export const closeOrder = async (id: string) => {
+export const closeOrder = async (id: string, apiUrl: string) => {
     try {
-        const fullURL = `${API_URL}/order?id=${id}`;
+        const fullURL = `${apiUrl}/order?id=${id}`;
         const res = await fetch(fullURL, { method: "DELETE" });
         if (!res.ok) {
             throw new Error("Unknown error closing filled order");

@@ -2,13 +2,10 @@ import "dotenv/config";
 import {
     createPXE,
     deployTokenContractWithMinter,
-    getPriorityFeeOptions,
-    isTestnet,
     TOKEN_METADATA,
 } from "@aztec-otc-desk/contracts"
 import { writeFileSync } from "node:fs"
 import { getFeeSendOptions, getOTCAccounts } from "./utils";
-import { AztecAddress } from "@aztec/aztec.js";
 
 // Deploys Ether and USD Coin token contracts
 const main = async () => {

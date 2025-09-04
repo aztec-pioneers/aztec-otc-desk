@@ -1,93 +1,28 @@
 import "dotenv/config";
 import { writeFileSync } from "fs";
-import readline from "readline";
-import {
-    AccountManager,
-    AccountWalletWithSecretKey,
-    FeeJuicePaymentMethodWithClaim,
-    Fr, L1FeeJuicePortalManager,
-    sleep,
-    type L2AmountClaim,
-    type PXE
-} from "@aztec/aztec.js";
-import { getSchnorrAccount } from "@aztec/accounts/schnorr";
-import { deriveSigningKey } from "@aztec/stdlib/keys";
+import { FeeJuicePaymentMethodWithClaim } from "@aztec/aztec.js";
 import {
     createPXE,
-    wad,
-    getFeeJuicePortalManager
+    getFeeJuicePortalManager,
+    setupAccountWithFeeClaim
 } from "@aztec-otc-desk/contracts"
+import { waitForBlock } from "./utils";
 
 
+// get environment variables
 const {
     MNEMONIC,
     L1_RPC_URL,
     L2_NODE_URL
 } = process.env;
-
-if (!MNEMONIC || !L1_RPC_URL || !L2_NODE_URL) {
-    throw new Error("Missing environment variables");
+if (!MNEMONIC) {
+    throw new Error("MNEMONIC is not defined");
 }
-
-const waitForBlock = async (pxe: PXE, targetBlock: number) => {
-    return new Promise((resolve) => {
-        let currentBlock = 0;
-        let seconds = 0;
-
-        const interval = setInterval(async () => {
-            if (seconds % 5 === 0) {
-                (async () => {
-                    currentBlock = await pxe.getBlockNumber();
-                })();
-            }
-            seconds++;
-            const dots = '.'.repeat((seconds - 1) % 4);
-
-            readline.clearLine(process.stdout, 0);
-            readline.cursorTo(process.stdout, 0);
-            process.stdout.write(`Current block: ${currentBlock} (waiting until ${targetBlock})${dots}`);
-
-            if (currentBlock >= targetBlock) {
-                clearInterval(interval);
-                process.stdout.write('\n');
-                resolve(currentBlock);
-            }
-        }, 1000);
-    });
-};
-
-/**
- * Sets up an account with a claim
- * 
- * @param pxe PXE instance
- * @param feeJuicePortalManager L1FeeJuicePortalManager instance
- * @returns
- *      - account: the account that was created
- *      - claim: the claim to make once enough blocks have passed
- */
-const setupAccountWithClaim = async (
-    pxe: PXE,
-    feeJuicePortalManager: L1FeeJuicePortalManager
-): Promise<{
-    account: AccountManager,
-    wallet: AccountWalletWithSecretKey,
-    claim: L2AmountClaim,
-}> => {
-    const masterKey = Fr.random();
-    const account = await getSchnorrAccount(
-        pxe,
-        masterKey,
-        deriveSigningKey(masterKey),
-        Fr.random() // salt
-    );
-    const wallet = await account.getWallet();
-    const claim = await feeJuicePortalManager.bridgeTokensPublic(
-        account.getAddress(),
-        wad(1n),
-        true
-    );
-
-    return { account, wallet, claim };
+if (!L1_RPC_URL) {
+    throw new Error("L1_RPC_URL is not defined");
+}
+if (!L2_NODE_URL) {
+    throw new Error("L2_NODE_URL is not defined");
 }
 
 // Fund 2 accounts
@@ -101,8 +36,8 @@ const main = async () => {
     );
 
     // create two accounts & make claims (can't do concurrently)
-    const sellerSetup = await setupAccountWithClaim(pxe, feeJuicePortalManager);
-    const buyerSetup = await setupAccountWithClaim(pxe, feeJuicePortalManager);
+    const sellerSetup = await setupAccountWithFeeClaim(pxe, feeJuicePortalManager);
+    const buyerSetup = await setupAccountWithFeeClaim(pxe, feeJuicePortalManager);
 
     console.log("SELLER CLAIM: ", sellerSetup.claim);
     console.log("BUYER CLAIM: ", buyerSetup.claim);

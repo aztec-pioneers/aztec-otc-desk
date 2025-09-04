@@ -8,7 +8,6 @@ import {
     TxHash,
     AccountWallet,
     createAztecNodeClient,
-    SponsoredFeePaymentMethod,
     SendMethodOptions,
 } from "@aztec/aztec.js";
 import { computePartialAddress, ContractInstanceWithAddress } from "@aztec/stdlib/contract";
@@ -18,9 +17,6 @@ import {
     TokenContract,
     TokenContractArtifact
 } from "./artifacts";
-import { GasSettings } from "@aztec/stdlib/gas";
-import { getSponsoredFPCAddress, getSponsoredFPCInstance } from "./fees";
-import { SponsoredFPCContract } from "@aztec/noir-contracts.js/SponsoredFPC";
 
 /**
  * Deploys a new instance of the OTC Escrow Contract
