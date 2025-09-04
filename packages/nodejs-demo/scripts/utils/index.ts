@@ -1,6 +1,6 @@
 import { getSchnorrAccount, SchnorrAccountContractArtifact } from "@aztec/accounts/schnorr";
 import { wad, isTestnet, getPriorityFeeOptions, getSponsoredFeePaymentMethod } from "@aztec-otc-desk/contracts";
-import { AccountWalletWithSecretKey, Fr, type PXE, type SendMethodOptions } from "@aztec/aztec.js";
+import { AccountWalletWithSecretKey, Fr, type PXE, type SendMethodOptions, type WaitOpts } from "@aztec/aztec.js";
 import accounts from "../data/accounts.json";
 import { deriveSigningKey } from "@aztec/stdlib/keys";
 import { getInitialTestAccountsManagers } from "@aztec/accounts/testing";
@@ -10,20 +10,30 @@ export const ethMintAmount = wad(1n);
 export const usdcMintAmount = wad(5000n);
 
 /**
- * In high fee environments (testnet) get send options
+ * In high fee environments (testnet) get send and wait options
  * @param pxe - the PXE to execute with
  * @param withFPC - if true, use sponsored FPC
- * @returns send options optimized for testnet
+ * @returns send/ wait options optimized for testnet
  */
-export const getFeeSendOptions = async (pxe: PXE, withFPC: boolean): Promise<SendMethodOptions> => {
+export const getTestnetSendWaitOptions = async (
+    pxe: PXE,
+    withFPC: boolean = false
+): Promise<{
+    send: SendMethodOptions,
+    wait: WaitOpts
+}> => {
     let sendOptions: SendMethodOptions = {};
+    let waitOptions: WaitOpts = {};
     if (await isTestnet(pxe)) {
-        // const paymentMethod = await getSponsoredFeePaymentMethod(pxe);
         let fee = await getPriorityFeeOptions(pxe, 100, 10n);
-        // fee = { ...fee, paymentMethod };
+        if (withFPC) {
+            const paymentMethod = await getSponsoredFeePaymentMethod(pxe);
+            fee = { ...fee, paymentMethod };
+        }
         sendOptions = { fee };
+        waitOptions = { timeout: 3600 };
     }
-    return sendOptions;
+    return { send: sendOptions, wait: waitOptions };
 }
 
 export const getOTCAccounts = async (pxe: PXE): Promise<{

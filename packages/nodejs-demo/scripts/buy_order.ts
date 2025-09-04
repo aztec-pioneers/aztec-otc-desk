@@ -5,9 +5,9 @@ import { AztecAddress } from "@aztec/aztec.js";
 import {
     closeOrder,
     escrowInstanceFromOrder,
-    getFeeSendOptions,
     getOrders,
     getOTCAccounts,
+    getTestnetSendWaitOptions,
     usdcMintAmount
 } from "./utils";
 
@@ -45,12 +45,12 @@ const main = async () => {
     // register escrow contract and account then get deployed instance
     const escrow = await escrowInstanceFromOrder(pxe, buyer, orderToFill);
 
-    // if testnet, send with high gas fee allowance and sponsored fpc
-    const sendOptions = await getFeeSendOptions(pxe, true);
+    // if testnet, get send/ wait opts optimized for waiting and high gas
+    const opts = await getTestnetSendWaitOptions(pxe, true);
 
     // fill the otc order
     console.log("Attempting to fill order");
-    const txHash = await fillOTCOrder(escrow, buyer, usdc, usdcMintAmount, sendOptions);
+    const txHash = await fillOTCOrder(escrow, buyer, usdc, usdcMintAmount, opts);
     console.log("Filled OTC order with txHash: ", txHash);
 
     // remove the order from the OTC service so it isn't reused

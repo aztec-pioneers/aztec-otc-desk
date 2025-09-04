@@ -15,7 +15,7 @@ import {
     ethMintAmount,
     getOTCAccounts,
     usdcMintAmount,
-    getFeeSendOptions
+    getTestnetSendWaitOptions
 } from "./utils";
 
 // get environment variables
@@ -42,8 +42,8 @@ const main = async () => {
     const usdcAddress = AztecAddress.fromString(usdcDeployment.address);
     await getTokenContract(pxe, seller, usdcAddress, L2_NODE_URL);
 
-    // if testnet, send with high gas fee allowance and sponsored fpc
-    const sendOptions = await getFeeSendOptions(pxe, true);
+    // if testnet, get send/ wait opts optimized for waiting and high gas
+    const opts = await getTestnetSendWaitOptions(pxe, true);
 
     // build deploy
     const { contract: escrowContract, secretKey } = await deployEscrowContract(pxe,
@@ -52,7 +52,7 @@ const main = async () => {
         ethMintAmount,
         AztecAddress.fromString(usdcDeployment.address),
         usdcMintAmount,
-        sendOptions
+        opts
     );
 
     console.log("Escrow contract deployed, address: ", escrowContract.address);
@@ -64,7 +64,7 @@ const main = async () => {
         seller,
         eth,
         ethMintAmount,
-        sendOptions
+        opts
     );
     console.log("Eth deposited to escrow, transaction hash: ", receipt.hash);
 
