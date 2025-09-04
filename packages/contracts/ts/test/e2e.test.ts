@@ -19,7 +19,8 @@ import {
     fillOTCOrder,
     expectBalancePrivate,
     OTCEscrowContract,
-    TokenContract
+    TokenContract,
+    setupAccountWithFeeClaim
 } from "../src";
 
 describe("Private Transfer Demo Test", () => {
@@ -36,7 +37,7 @@ describe("Private Transfer Demo Test", () => {
     let usdc: TokenContract;
     let eth: TokenContract;
 
-    let feeJuicePortalManager: L1FeeJuicePortalManager;
+    let buyerFeeJuicePortalManager: L1FeeJuicePortalManager;
 
     const sellTokenAmount = wad(1000n, 6n);
     const buyTokenAmount = wad(1n);
@@ -55,29 +56,23 @@ describe("Private Transfer Demo Test", () => {
         seller = wallets[1];
 
         // deploy PXE2 account
-        const buyerMasterKey = Fr.random();
-        const buyerAccount = await getSchnorrAccount(
-            buyerPXE,
-            buyerMasterKey,
-            deriveSigningKey(buyerMasterKey),
-            Fr.random() // salt
-        );
-        buyer = await buyerAccount.getWallet();
-        feeJuicePortalManager = await getFeeJuicePortalManager(buyerPXE);
-        const claim = await feeJuicePortalManager.bridgeTokensPublic(
-            buyer.getAddress(),
-            wad(1n),
-            true
-        );
         // NOTE: must allow two transactions to pass before claiming
-
+        buyerFeeJuicePortalManager = await getFeeJuicePortalManager(buyerPXE);
+        const {
+            claim: buyerClaim,
+            wallet: buyerWallet,
+            account: buyerAccount
+        } = await setupAccountWithFeeClaim(buyerPXE, buyerFeeJuicePortalManager);
+        buyer = buyerWallet;
         // deploy token contract
         usdc = await deployTokenContractWithMinter(TOKEN_METADATA.usdc, minter);
         eth = await deployTokenContractWithMinter(TOKEN_METADATA.eth, minter);
 
         // claim fee juice for buyer and deploy
-        const claimAndPay = new FeeJuicePaymentMethodWithClaim(buyer, claim);
+        const claimAndPay = new FeeJuicePaymentMethodWithClaim(buyer, buyerClaim);
         await buyerAccount.deploy({ fee: { paymentMethod: claimAndPay } }).wait();
+
+        // register accounts and contracts in each PXE
         await sellerPXE.registerSender(buyer.getAddress());
         await buyerPXE.registerSender(minter.getAddress());
         await buyerPXE.registerSender(seller.getAddress());
