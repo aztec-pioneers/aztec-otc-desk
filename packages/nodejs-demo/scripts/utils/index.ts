@@ -8,7 +8,10 @@ import readline from "readline";
 
 export const ethMintAmount = wad(1n);
 export const usdcMintAmount = wad(5000n);
-
+export const testnetBaseFeePadding = 100; // pad by 100%
+export const testnetPriorityFee = 10n; // multiply base fee allowance by 10x
+export const testnetTimeout = 3600; // seconds until timeout waiting for send
+export const testnetInterval = 3; // seconds between polling for tx
 /**
  * In high fee environments (testnet) get send and wait options
  * @param pxe - the PXE to execute with
@@ -25,13 +28,17 @@ export const getTestnetSendWaitOptions = async (
     let sendOptions: SendMethodOptions = {};
     let waitOptions: WaitOpts = {};
     if (await isTestnet(pxe)) {
-        let fee = await getPriorityFeeOptions(pxe, 100, 10n);
+        let fee = await getPriorityFeeOptions(
+            pxe,
+            testnetBaseFeePadding,
+            testnetPriorityFee
+        );
         if (withFPC) {
             const paymentMethod = await getSponsoredFeePaymentMethod(pxe);
             fee = { ...fee, paymentMethod };
         }
         sendOptions = { fee };
-        waitOptions = { timeout: 3600 };
+        waitOptions = { timeout: testnetTimeout, interval: testnetInterval };
     }
     return { send: sendOptions, wait: waitOptions };
 }
