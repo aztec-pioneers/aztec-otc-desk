@@ -22,7 +22,7 @@ const main = async () => {
     const eth = await getTokenContract(pxe, seller, ethAddress, L2_NODE_URL);
 
     // if testnet, get send/ wait opts optimized for waiting and high gas
-    const opts = await getTestnetSendWaitOptions(pxe, true);
+    const opts = await getTestnetSendWaitOptions(pxe);
 
     // mint eth
     console.log("Minting eth to seller account");

@@ -46,7 +46,7 @@ const main = async () => {
     const escrow = await escrowInstanceFromOrder(pxe, buyer, orderToFill);
 
     // if testnet, get send/ wait opts optimized for waiting and high gas
-    const opts = await getTestnetSendWaitOptions(pxe, true);
+    const opts = await getTestnetSendWaitOptions(pxe);
 
     // fill the otc order
     console.log("Attempting to fill order");

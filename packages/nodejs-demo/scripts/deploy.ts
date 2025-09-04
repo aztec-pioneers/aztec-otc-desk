@@ -15,7 +15,7 @@ const main = async () => {
     const { seller } = await getOTCAccounts(pxe);
 
     // if testnet, get send/ wait opts optimized for waiting and high gas
-    const opts = await getTestnetSendWaitOptions(pxe, false);
+    const opts = await getTestnetSendWaitOptions(pxe);
 
     // deploy token contracts
     console.log("Deploying Wrapped Ether token contract");

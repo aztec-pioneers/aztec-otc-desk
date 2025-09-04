@@ -43,7 +43,7 @@ const main = async () => {
     await getTokenContract(pxe, seller, usdcAddress, L2_NODE_URL);
 
     // if testnet, get send/ wait opts optimized for waiting and high gas
-    const opts = await getTestnetSendWaitOptions(pxe, true);
+    const opts = await getTestnetSendWaitOptions(pxe);
 
     // build deploy
     const { contract: escrowContract, secretKey } = await deployEscrowContract(pxe,
