@@ -12,22 +12,21 @@ use aztec::{
         cheatcodes
     }
 };
-use std::test::OracleMock;
 
 // Token metadata
-pub global USDC_NAME: str<31> = "Circle USD\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n";
+pub global USDC_NAME: str<31> = "USD Coin\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n";
 pub global USDC_SYMBOL: str<31> = "USDC\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n";
 pub global USDC_DECIMALS: u8 = 6;
 
-pub global WETH_NAME: str<31> = "Wrapped Ether\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n";
-pub global WETH_SYMBOL: str<31> = "WETH\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n";
-pub global WETH_DECIMALS: u8 = 18;
+pub global ETH_NAME: str<31> = "Ether\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n";
+pub global ETH_SYMBOL: str<31> = "ETH\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n";
+pub global ETH_DECIMALS: u8 = 18;
 
 pub global USDC_ESCROW_AMOUNT: u128 = (1000 * 10.pow_32(6)) as u128;
-pub global WETH_ESCROW_AMOUNT: u128 = (1 * 10.pow_32(18)) as u128;
+pub global ETH_ESCROW_AMOUNT: u128 = (1 * 10.pow_32(18)) as u128;
 
 // pub global USDC_ESCROW_AMOUNT: u128 = 1;
-// pub global WETH_ESCROW_AMOUNT: u128 = 1;
+// pub global ETH_ESCROW_AMOUNT: u128 = 1;
 
 // Named structs for easy readability
 pub struct TestAccounts {
@@ -40,14 +39,14 @@ pub struct TestAccounts {
 
 pub struct TestContracts {
     usdc: AztecAddress,
-    weth: AztecAddress,
+    eth: AztecAddress,
     escrow: AztecAddress,
 }
 
 /**
  * Setup hook for test environment
  *
- * @param mint - if true, mint USDC to seller and WETH to buyer
+ * @param mint - if true, mint USDC to seller and ETH to buyer
  * @return
  *          - the TXE test environment context
  *          - named accounts deployed for the test
@@ -77,20 +76,20 @@ pub unconstrained fn setup(mint: bool) -> (
         USDC_SYMBOL,
         USDC_DECIMALS
     );
-    let weth = deploy_token_contract(
+    let eth = deploy_token_contract(
         &mut env,
         test_accounts.minter,
-        WETH_NAME,
-        WETH_SYMBOL,
-        WETH_DECIMALS
+        ETH_NAME,
+        ETH_SYMBOL,
+        ETH_DECIMALS
     );
     let (escrow, escrow_secret) = deploy_escrow_contract(
         &mut env,
         test_accounts.seller,
         usdc,
         USDC_ESCROW_AMOUNT,
-        weth,
-        WETH_ESCROW_AMOUNT
+        eth,
+        ETH_ESCROW_AMOUNT
     );
     // mint to accounts
     if (mint) {
@@ -103,14 +102,14 @@ pub unconstrained fn setup(mint: bool) -> (
         );
         mint_to_private(
             &mut env,
-            weth,
+            eth,
             test_accounts.minter,
             test_accounts.buyer,
-            WETH_ESCROW_AMOUNT
+            ETH_ESCROW_AMOUNT
         );
     }
     // named contract struct 
-    let test_contracts = TestContracts { usdc, weth, escrow };
+    let test_contracts = TestContracts { usdc, eth, escrow };
     test_accounts.escrow_secret = escrow_secret;
 
     (&mut env, test_accounts, test_contracts)

@@ -13,12 +13,16 @@
       "@aztec/ethereum": "^1.2.1",
       "@aztec/stdlib": "^1.2.1",
       "@aztec/noir-contracts.js": "1.2.1",
+      "dotenv": "^17.2.1",
       "@jest/globals": "^30.0.5",
       "jest": "^30.0.5"
     }
   },
   "scripts": {
-    "build-token": "sh scripts/token.sh",
-    "postinstall": "bun run build-token"
+    "build-token": "bun run scripts/token.ts"
+  },
+  "dependencies": {
+    "@aztec/entrypoints": "^1.2.1",
+    "dotenv": "^17.2.1"
   }
 }

@@ -1,60 +1,39 @@
-import {createPXE, deployTokenContractWithMinter, TOKEN_METADATA, wad} from "../../contracts/ts/test/utils/index"
-import {getInitialTestAccounts, getInitialTestAccountsWallets} from "@aztec/accounts/testing"
-import {writeFileSync} from "node:fs"
-import { ethMintAmount, usdcMintAmount } from "./utils";
+import "dotenv/config";
+import {
+    createPXE,
+    deployTokenContractWithMinter,
+    TOKEN_METADATA,
+} from "@aztec-otc-desk/contracts"
+import { writeFileSync } from "node:fs"
+import { getTestnetSendWaitOptions, getOTCAccounts } from "./utils";
 
-// Deploys two token contracts:
-// - Eth
-// - USDC
-// - Mints 1 Eth to Buyer of the OTC
-// - Mints 5000 USDC to Buyer of the OTC
-const main = async ( ) => {
+// Deploys Ether and USD Coin token contracts
+const main = async () => {
     const pxe = await createPXE();
 
-    const wallets = await getInitialTestAccountsWallets(pxe);
+    // get accounts
+    const { seller } = await getOTCAccounts(pxe);
 
-    const minter = wallets[0];
-    if(!minter) {
-        throw new Error("Minter not found");
-    }
-    const seller = minter;
-    const buyer = wallets[1];
-    if(!buyer) {
-        throw new Error("Buyer not found");
-    }
+    // if testnet, get send/ wait opts optimized for waiting and high gas
+    const opts = await getTestnetSendWaitOptions(pxe);
 
-    console.log("Deploying eth token contract");
-    const eth = await deployTokenContractWithMinter(TOKEN_METADATA.weth, minter);
-    console.log("Eth token contract deployed, address: ", eth.address);
+    // deploy token contracts
+    console.log("Deploying Wrapped Ether token contract");
+    const eth = await deployTokenContractWithMinter(TOKEN_METADATA.eth, seller, opts);
+    console.log("eth token contract deployed, address: ", eth.address);
 
-    console.log("Deploying usdc token contract");
-    const usdc = await deployTokenContractWithMinter(TOKEN_METADATA.usdc, minter);
-    console.log("Usdc token contract deployed, address: ", usdc.address);
+    console.log("Deploying USD Coin token contract");
+    const usdc = await deployTokenContractWithMinter(TOKEN_METADATA.usdc, seller, opts);
+    console.log("USDC token contract deployed, address: ", usdc.address);
 
-
-    console.log("Minting eth to seller");
-    await eth.withWallet(minter).methods.mint_to_private(minter.getAddress(), seller.getAddress(), ethMintAmount * 10n).send().wait();
-    console.log("Eth minted to seller");
-
-    console.log("Checking eth balance of seller");
-    const balance = await eth.methods.balance_of_private(seller.getAddress()).simulate();
-    console.log("Eth balance of seller: ", balance);
-
-    console.log("Minting usdc to buyer");
-    await usdc.withWallet(minter).methods.mint_to_private(minter.getAddress(), buyer.getAddress(), usdcMintAmount * 10n).send().wait();
-    console.log("Usdc minted to buyer");
-
-    console.log("Checking usdc balance of buyer");
-    const usdcBalance = await usdc.methods.balance_of_private(buyer.getAddress()).simulate();
-    console.log("Usdc balance of buyer: ", usdcBalance);
-
+    // write deployment to fs
     const deployments = {
-        eth: { address: eth.address, },
+        eth: { address: eth.address },
         usdc: { address: usdc.address }
     };
-
-    writeFileSync("deployments.json", JSON.stringify(deployments, null, 2));
-    console.log("Deployments written to deployments.json");
+    const filepath = `${__dirname}/data/deployments.json`;
+    writeFileSync(filepath, JSON.stringify(deployments, null, 2));
+    console.log(`Deployments written to ${filepath}`);
 }
 
 main();

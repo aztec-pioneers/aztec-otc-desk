@@ -1,64 +1,85 @@
-import { getInitialTestAccountsWallets } from "@aztec/accounts/testing";
-import { createPXE, deployEscrowContract, depositToEscrow } from "../../contracts/ts/test/utils";
-import { eth as ethDeployment, usdc as usdcDeployment } from "../deployments.json"
-import { TokenContract } from "../../contracts/artifacts/Token"
+import "dotenv/config";
+import {
+    createPXE,
+    deployEscrowContract,
+    depositToEscrow,
+    getTokenContract,
+} from "@aztec-otc-desk/contracts";
 import { AztecAddress } from "@aztec/aztec.js";
-import { ethMintAmount, usdcMintAmount } from "./utils";
+import {
+    eth as ethDeployment,
+    usdc as usdcDeployment
+} from "./data/deployments.json"
+import {
+    createOrder,
+    ethMintAmount,
+    getOTCAccounts,
+    usdcMintAmount,
+    getTestnetSendWaitOptions
+} from "./utils";
 
-const API_URL = "http://localhost:3000";
+// get environment variables
+const { L2_NODE_URL, API_URL } = process.env;
+if (!L2_NODE_URL) {
+    throw new Error("L2_NODE_URL is not defined");
+}
+if (!API_URL) {
+    throw new Error("API_URL is not defined");
+}
 
 const main = async () => {
-    
+
     const pxe = await createPXE();
-    const wallets = await getInitialTestAccountsWallets(pxe);
 
-    const seller = wallets[0];
-    if (!seller) {
-        throw new Error("Seller not found");
-    }
+    // get accounts
+    const { seller } = await getOTCAccounts(pxe);
 
-    const eth = await TokenContract.at(AztecAddress.fromString(ethDeployment.address), seller);
+    // get tokens
+    const ethAddress = AztecAddress.fromString(ethDeployment.address);
+    const eth = await getTokenContract(pxe, seller, ethAddress, L2_NODE_URL);
+    //// NOTE: need to get usdc token too to make sure PXE knows it exists
+    ////       but we don't need to do anything with it
+    const usdcAddress = AztecAddress.fromString(usdcDeployment.address);
+    await getTokenContract(pxe, seller, usdcAddress, L2_NODE_URL);
 
+    // if testnet, get send/ wait opts optimized for waiting and high gas
+    const opts = await getTestnetSendWaitOptions(pxe);
+
+    // build deploy
     const { contract: escrowContract, secretKey } = await deployEscrowContract(pxe,
         seller,
         eth.address,
         ethMintAmount,
         AztecAddress.fromString(usdcDeployment.address),
         usdcMintAmount,
+        opts
     );
 
     console.log("Escrow contract deployed, address: ", escrowContract.address);
     console.log("Escrow contract secret key: ", secretKey);
 
     console.log("Depositing eth to escrow");
-    const receipt = await depositToEscrow(escrowContract, seller, eth, ethMintAmount);
+    const receipt = await depositToEscrow(
+        escrowContract,
+        seller,
+        eth,
+        ethMintAmount,
+        opts
+    );
     console.log("Eth deposited to escrow, transaction hash: ", receipt.hash);
 
-
-    // update api
-    /// build the requesy body
-    const payload = {
-        escrowAddress: escrowContract.address.toString(),
-        contractInstance: JSON.stringify(escrowContract.instance),
-        secretKey: secretKey.toString(),
-        partialAddress: (await escrowContract.partialAddress).toString(),
-        sellTokenAddress: eth.address.toString(),
-        sellTokenAmount: ethMintAmount.toString(),
-        buyTokenAddress: AztecAddress.fromString(usdcDeployment.address).toString(),
-        buyTokenAmount: usdcMintAmount.toString()
-    }
-    try {
-        const fullURL = `${API_URL}/order`;
-        const res = await fetch(fullURL,
-            { method: "POST", body: JSON.stringify(payload) }
-        );
-        if (!res.ok) {
-            throw new Error("Failed to fetch health status");
-        }
-        console.log("Order added to otc order service")
-    } catch (err) {
-        throw new Error("Error creating order: " + (err as Error).message);
-    }
+    // update api to add order
+    await createOrder(
+        escrowContract.address,
+        escrowContract.instance,
+        secretKey,
+        (await escrowContract.partialAddress),
+        eth.address,
+        ethMintAmount,
+        AztecAddress.fromString(usdcDeployment.address),
+        usdcMintAmount,
+        API_URL
+    )
 }
 
 main();

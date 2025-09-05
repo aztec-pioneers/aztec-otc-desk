@@ -5,7 +5,7 @@ import {
     L1FeeJuicePortalManager,
     FeeJuicePaymentMethodWithClaim,
 } from "@aztec/aztec.js";
-import { getInitialTestAccountsWallets } from "@aztec/accounts/testing";
+import { getInitialTestAccountsManagers, getInitialTestAccountsWallets } from "@aztec/accounts/testing";
 import {
     deployEscrowContract,
     deployTokenContractWithMinter,
@@ -16,16 +16,10 @@ import {
     TOKEN_METADATA,
     fillOTCOrder,
     expectBalancePrivate,
-} from "./utils/index.js";
-import {
-    OTCEscrowContractContract as OTCEscrowContract,
-} from "../../artifacts/OTCEscrowContract.js";
-
-import {
+    OTCEscrowContract,
     TokenContract,
-} from "../../artifacts/Token.js";
-import { getSchnorrAccount } from "@aztec/accounts/schnorr";
-import { deriveSigningKey } from "@aztec/stdlib/keys";
+    setupAccountWithFeeClaim
+} from "../src";
 
 describe("Private Transfer Demo Test", () => {
     let sellerPXE: PXE;
@@ -39,60 +33,54 @@ describe("Private Transfer Demo Test", () => {
 
     let escrow: OTCEscrowContract;
     let usdc: TokenContract;
-    let weth: TokenContract;
+    let eth: TokenContract;
 
-    let feeJuicePortalManager: L1FeeJuicePortalManager;
+    let buyerFeeJuicePortalManager: L1FeeJuicePortalManager;
 
     const sellTokenAmount = wad(1000n, 6n);
     const buyTokenAmount = wad(1n);
     const sellerUSDCInitialBalance = wad(10000n, 6n);
-    const buyerWETHInitialBalance = wad(4n);
+    const buyerETHInitialBalance = wad(4n);
 
     beforeAll(async () => {
         console.log("trying connect")
         // setup PXE connections
         sellerPXE = await createPXE();
-        console.log("1")
         buyerPXE = await createPXE(1);
-        console.log(2)
 
         // get PXE 1 accounts
-        const wallets = await getInitialTestAccountsWallets(sellerPXE);
+        const wallets = await Promise.all(
+            (await getInitialTestAccountsManagers(sellerPXE)).map(m => m.register())
+        );
         minter = wallets[0];
         seller = wallets[1];
 
         // deploy PXE2 account
-        const buyerMasterKey = Fr.random();
-        const buyerAccount = await getSchnorrAccount(
-            buyerPXE,
-            buyerMasterKey,
-            deriveSigningKey(buyerMasterKey),
-            Fr.random() // salt
-        );
-        buyer = await buyerAccount.getWallet();
-        feeJuicePortalManager = await getFeeJuicePortalManager(buyerPXE);
-        const claim = await feeJuicePortalManager.bridgeTokensPublic(
-            buyer.getAddress(),
-            wad(1n),
-            true
-        );
         // NOTE: must allow two transactions to pass before claiming
-
+        buyerFeeJuicePortalManager = await getFeeJuicePortalManager(buyerPXE);
+        const {
+            claim: buyerClaim,
+            wallet: buyerWallet,
+            account: buyerAccount
+        } = await setupAccountWithFeeClaim(buyerPXE, buyerFeeJuicePortalManager);
+        buyer = buyerWallet;
         // deploy token contract
         usdc = await deployTokenContractWithMinter(TOKEN_METADATA.usdc, minter);
-        weth = await deployTokenContractWithMinter(TOKEN_METADATA.weth, minter);
+        eth = await deployTokenContractWithMinter(TOKEN_METADATA.eth, minter);
 
         // claim fee juice for buyer and deploy
-        const claimAndPay = new FeeJuicePaymentMethodWithClaim(buyer, claim);
+        const claimAndPay = new FeeJuicePaymentMethodWithClaim(buyer, buyerClaim);
         await buyerAccount.deploy({ fee: { paymentMethod: claimAndPay } }).wait();
+
+        // register accounts and contracts in each PXE
         await sellerPXE.registerSender(buyer.getAddress());
         await buyerPXE.registerSender(minter.getAddress());
         await buyerPXE.registerSender(seller.getAddress());
         await buyerPXE.registerContract(usdc);
-        await buyerPXE.registerContract(weth);
+        await buyerPXE.registerContract(eth);
 
         // mint tokens
-        await weth
+        await eth
             .withWallet(minter)
             .methods.mint_to_private(
                 minter.getAddress(),
@@ -120,7 +108,7 @@ describe("Private Transfer Demo Test", () => {
             seller,
             usdc.address,
             buyTokenAmount,
-            weth.address,
+            eth.address,
             sellTokenAmount,
         ));
 
@@ -163,7 +151,7 @@ describe("Private Transfer Demo Test", () => {
             seller,
             usdc.address,
             sellTokenAmount,
-            weth.address,
+            eth.address,
             buyTokenAmount,
         ));
 
@@ -186,14 +174,14 @@ describe("Private Transfer Demo Test", () => {
             expectBalancePrivate(usdc, seller.getAddress(), sellerUSDCInitialBalance - sellTokenAmount)
         ).toBeTruthy();
         expect(expectBalancePrivate(usdc, escrow.address, sellTokenAmount)).toBeTruthy();
-       
+
 
         // check buyer balance balances before filling order
         usdc = usdc.withWallet(buyer);
-        weth = weth.withWallet(buyer);
-        expect(expectBalancePrivate(weth, seller.getAddress(), buyerWETHInitialBalance)).toBeTruthy();
+        eth = eth.withWallet(buyer);
+        expect(expectBalancePrivate(eth, seller.getAddress(), buyerETHInitialBalance)).toBeTruthy();
         expect(expectBalancePrivate(usdc, seller.getAddress(), 0n)).toBeTruthy();
-        expect(expectBalancePrivate(weth, escrow.address, 0n)).toBeTruthy();
+        expect(expectBalancePrivate(eth, escrow.address, 0n)).toBeTruthy();
 
         // give buyer knowledge of the escrow
         await buyerPXE.registerAccount(escrowMasterKey, await escrow.partialAddress);
@@ -201,14 +189,14 @@ describe("Private Transfer Demo Test", () => {
         await escrow.withWallet(buyer).methods.sync_private_state().simulate();
 
         // transfer tokens back out
-        await fillOTCOrder(escrow, buyer, weth, buyTokenAmount);
+        await fillOTCOrder(escrow, buyer, eth, buyTokenAmount);
 
         // check balances after filling order
         expect(
-            expectBalancePrivate(weth, buyer.getAddress(), buyerWETHInitialBalance - buyTokenAmount)
+            expectBalancePrivate(eth, buyer.getAddress(), buyerETHInitialBalance - buyTokenAmount)
         ).toBeTruthy();
         expect(expectBalancePrivate(usdc, buyer.getAddress(), sellTokenAmount)).toBeTruthy();
-        expect(expectBalancePrivate(weth, seller.getAddress(), buyTokenAmount)).toBeTruthy();
+        expect(expectBalancePrivate(eth, seller.getAddress(), buyTokenAmount)).toBeTruthy();
         expect(expectBalancePrivate(usdc, escrow.address, 0n)).toBeTruthy();
     });
 });
