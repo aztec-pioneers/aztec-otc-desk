@@ -5,7 +5,7 @@ import {
     L1FeeJuicePortalManager,
     FeeJuicePaymentMethodWithClaim,
 } from "@aztec/aztec.js";
-import { getInitialTestAccountsWallets } from "@aztec/accounts/testing";
+import { getInitialTestAccountsManagers, getInitialTestAccountsWallets } from "@aztec/accounts/testing";
 import {
     deployEscrowContract,
     deployTokenContractWithMinter,
@@ -49,7 +49,9 @@ describe("Private Transfer Demo Test", () => {
         buyerPXE = await createPXE(1);
 
         // get PXE 1 accounts
-        const wallets = await getInitialTestAccountsWallets(sellerPXE);
+        const wallets = await Promise.all(
+            (await getInitialTestAccountsManagers(sellerPXE)).map(m => m.register())
+        );
         minter = wallets[0];
         seller = wallets[1];
 
@@ -172,7 +174,7 @@ describe("Private Transfer Demo Test", () => {
             expectBalancePrivate(usdc, seller.getAddress(), sellerUSDCInitialBalance - sellTokenAmount)
         ).toBeTruthy();
         expect(expectBalancePrivate(usdc, escrow.address, sellTokenAmount)).toBeTruthy();
-       
+
 
         // check buyer balance balances before filling order
         usdc = usdc.withWallet(buyer);

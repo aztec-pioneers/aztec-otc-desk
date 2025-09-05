@@ -53,11 +53,13 @@ export const getOTCAccounts = async (pxe: PXE): Promise<{
     let buyer: AccountWalletWithSecretKey;
     if (!testnet) {
         // if sandbox, get initialized test accounts
-        const wallets = await getInitialTestAccountsManagers(pxe);
+        const wallets = await Promise.all(
+            (await getInitialTestAccountsManagers(pxe)).map(m => m.register())
+        );
         if (!wallets[0]) throw new Error("Seller/ Minter not found");
         if (!wallets[1]) throw new Error("Buyer not found");
-        seller = await wallets[0].getWallet();
-        buyer = await wallets[1].getWallet();
+        seller = await wallets[0];
+        buyer = await wallets[1];
     } else {
         // if testnet, get accounts from env (should run setup_accounts.ts first)
         seller = await getAccountFromFs("seller", pxe);
