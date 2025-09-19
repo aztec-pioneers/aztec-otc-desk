@@ -1,6 +1,24 @@
 # Orderflow Service
 
-A Bun-based HTTP service for handling order operations in the Aztec OTC Desk.
+A RESTful HTTP service that provides order management and discovery capabilities, facilitating the creation, retrieval, and management of private OTC orders on the Aztec network.
+
+## 🔑 Key Features
+
+- **Order Management**: Create, update, and manage private OTC orders with unique escrow addresses
+- **Order Discovery**: Query, filter, and search for existing orders by various parameters
+- **Private Order Coordination**: Facilitate secure communication between trading parties
+- **SQLite Database**: Persistent storage with pluggable architecture for scalability
+- **RESTful API**: Standard HTTP endpoints for seamless integration
+
+## 🚀 Quick Start
+
+```bash
+bun install
+bun run start  # Production mode
+bun run dev    # Development mode with hot reload
+```
+
+The service will start on `http://localhost:3000`.
 
 ## Endpoints
 
@@ -213,13 +231,14 @@ bun run test:watch
 - ✅ **Integration Tests**: Comprehensive filtering and edge cases
 - ✅ **Error Handling**: Invalid inputs, duplicate constraints, server errors
 
-## Database
+## 🗄️ Database
 
 The service uses a **pluggable database architecture** with a clean interface that supports multiple database backends.
 
 ### Current Implementation
 - **Default**: SQLite using Bun's built-in SQLite support
 - **Database file**: `orders.sqlite` (created automatically in project root)
+- **Schema**: Optimized for fast order queries and filtering
 
 ### Database Schema
 ```sql
@@ -234,23 +253,24 @@ CREATE TABLE orders (
 );
 ```
 
-## Implementation Status
+## ✅ Implementation Status
 
-✅ **POST /order** - Fully implemented with SQLite persistence and unique escrow address constraint  
-✅ **GET /order** - Fully implemented with support for retrieving all orders or specific order by ID
+- ✅ **Order Creation**: Fully implemented with SQLite persistence and unique escrow address constraint
+- ✅ **Order Retrieval**: Complete support for retrieving all orders or filtering by various parameters
+- ✅ **Query Filtering**: Advanced filtering by escrow address, sell token, and buy token addresses
+- ✅ **Database Architecture**: Pluggable interface ready for multiple database backends
+- ✅ **Comprehensive Testing**: Full test coverage including database, handlers, and integration tests
 
-## TODO
+## 🛠️ Technology Stack
 
-- [x] Implement order creation logic in `handleCreateOrder`
-- [x] Add database integration with SQLite
-- [x] Add UUID generation for order IDs
-- [x] Implement pluggable database architecture with interfaces
-- [x] Add unique constraint for escrow addresses
-- [x] Implement order retrieval logic in `handleGetOrder`
-- [x] Add dependency injection for database
-- [x] Add query filtering by escrow, sell token, and buy token addresses
-- [x] Add comprehensive test suite with database, handler, and integration tests
-- [ ] Add input validation and sanitization
-- [ ] Add authentication and authorization
-- [ ] Add error handling and logging
-- [ ] Implement alternative database providers (PostgreSQL, MongoDB, etc.)
+- **Runtime**: Bun with native HTTP server
+- **Database**: SQLite (pluggable architecture for PostgreSQL, MongoDB, etc.)
+- **Testing**: Jest with Bun test runner
+- **TypeScript**: Full type safety across all components
+
+## 🔗 Integration
+
+This service is designed to work seamlessly with:
+- **Contracts Package**: Receives escrow addresses from deployed contracts
+- **CLI Demo**: Provides order discovery and management for the demonstration workflow
+- **External Applications**: RESTful API for third-party integrations

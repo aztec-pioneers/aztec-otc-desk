@@ -8,7 +8,24 @@
         "dotenv": "^17.2.1",
       },
     },
-    "packages/cli": {
+    "packages/contracts": {
+      "name": "@aztec-otc-desk/contracts",
+      "devDependencies": {
+        "@aztec/accounts": "catalog:",
+        "@aztec/aztec.js": "catalog:",
+        "@aztec/entrypoints": "catalog:",
+        "@aztec/ethereum": "catalog:",
+        "@aztec/noir-contracts.js": "catalog:",
+        "@aztec/stdlib": "catalog:",
+        "@types/bun": "catalog:",
+        "@types/jest": "catalog:",
+        "jest": "catalog:",
+      },
+      "peerDependencies": {
+        "typescript": "catalog:",
+      },
+    },
+    "packages/nodejs-demo": {
       "name": "@aztec-otc-desk/cli",
       "devDependencies": {
         "@aztec-otc-desk/contracts": "workspace:*",
@@ -25,24 +42,8 @@
         "typescript": "catalog:",
       },
     },
-    "packages/contracts": {
-      "name": "@aztec-otc-desk/contracts",
-      "devDependencies": {
-        "@aztec/accounts": "catalog:",
-        "@aztec/aztec.js": "catalog:",
-        "@aztec/ethereum": "catalog:",
-        "@aztec/noir-contracts.js": "catalog:",
-        "@aztec/stdlib": "catalog:",
-        "@types/bun": "catalog:",
-        "@types/jest": "catalog:",
-        "jest": "catalog:",
-      },
-      "peerDependencies": {
-        "typescript": "catalog:",
-      },
-    },
     "packages/orderflow-service": {
-      "name": "@aztec-otc-desk/orderflow-service",
+      "name": "@aztec-otc-desk/api",
       "version": "1.0.0",
       "devDependencies": {
         "@types/bun": "^1.0.0",
@@ -53,6 +54,7 @@
   "catalog": {
     "@aztec/accounts": "^1.2.1",
     "@aztec/aztec.js": "^1.2.1",
+    "@aztec/entrypoints": "^1.2.1",
     "@aztec/ethereum": "^1.2.1",
     "@aztec/noir-contracts.js": "1.2.1",
     "@aztec/stdlib": "^1.2.1",
@@ -68,11 +70,11 @@
 
     "@ampproject/remapping": ["@ampproject/remapping@2.3.0", "", { "dependencies": { "@jridgewell/gen-mapping": "^0.3.5", "@jridgewell/trace-mapping": "^0.3.24" } }, "sha512-30iZtAPgz+LTIYoeivqYo853f02jBYSd5uGnGpkFV0M3xOt9aN73erkgYAmZU43x4VfqcnLxW9Kpg3R5LC4YYw=="],
 
-    "@aztec-otc-desk/cli": ["@aztec-otc-desk/cli@workspace:packages/cli"],
+    "@aztec-otc-desk/api": ["@aztec-otc-desk/api@workspace:packages/orderflow-service"],
+
+    "@aztec-otc-desk/cli": ["@aztec-otc-desk/cli@workspace:packages/nodejs-demo"],
 
     "@aztec-otc-desk/contracts": ["@aztec-otc-desk/contracts@workspace:packages/contracts"],
-
-    "@aztec-otc-desk/orderflow-service": ["@aztec-otc-desk/orderflow-service@workspace:packages/orderflow-service"],
 
     "@aztec/accounts": ["@aztec/accounts@1.2.1", "", { "dependencies": { "@aztec/aztec.js": "1.2.1", "@aztec/entrypoints": "1.2.1", "@aztec/ethereum": "1.2.1", "@aztec/foundation": "1.2.1", "@aztec/stdlib": "1.2.1", "tslib": "^2.4.0" } }, "sha512-OZht8Zs2yibtVgUji4ekpETC6KVzn9GSD2GlVvenWbEygLzuKesvjHpMVuwP9LpFscBKHDhbXzDosnJXPVPZmQ=="],
 
@@ -288,7 +290,7 @@
 
     "@types/babel__traverse": ["@types/babel__traverse@7.28.0", "", { "dependencies": { "@babel/types": "^7.28.2" } }, "sha512-8PvcXf70gTDZBgt9ptxJ8elBeBjcLOAcOtoO/mPJjtji1+CdGbHgm77om1GrsPxsiE+uXIpNSK64UYaIwQXd4Q=="],
 
-    "@types/bun": ["@types/bun@1.2.21", "", { "dependencies": { "bun-types": "1.2.21" } }, "sha512-NiDnvEqmbfQ6dmZ3EeUO577s4P5bf4HCTXtI6trMc6f6RzirY5IrF3aIookuSpyslFzrnvv2lmEWv5HyC1X79A=="],
+    "@types/bun": ["@types/bun@1.2.22", "", { "dependencies": { "bun-types": "1.2.22" } }, "sha512-5A/KrKos2ZcN0c6ljRSOa1fYIyCKhZfIVYeuyb4snnvomnpFqC0tTsEkdqNxbAgExV384OETQ//WAjl3XbYqQA=="],
 
     "@types/caseless": ["@types/caseless@0.12.5", "", {}, "sha512-hWtVTC2q7hc7xZ/RLbxapMvDMgUnDvKvMOpKal4DrMyfGBUfB1oKaZlIRr6mJL+If3bAP6sV/QneGzF6tJjZDg=="],
 
@@ -420,7 +422,7 @@
 
     "buffer-from": ["buffer-from@1.1.2", "", {}, "sha512-E+XQCRwSbaaiChtv6k6Dwgc+bx+Bs6vuKJHHl5kox/BaKbhiXzqQOwK4cO22yElGp2OCmjwVhT3HmxgyPGnJfQ=="],
 
-    "bun-types": ["bun-types@1.2.21", "", { "dependencies": { "@types/node": "*" }, "peerDependencies": { "@types/react": "^19" } }, "sha512-sa2Tj77Ijc/NTLS0/Odjq/qngmEPZfbfnOERi0KRUYhT9R8M4VBioWVmMWE5GrYbKMc+5lVybXygLdibHaqVqw=="],
+    "bun-types": ["bun-types@1.2.22", "", { "dependencies": { "@types/node": "*" }, "peerDependencies": { "@types/react": "^19" } }, "sha512-hwaAu8tct/Zn6Zft4U9BsZcXkYomzpHJX28ofvx7k0Zz2HNz54n1n+tDgxoWFGB4PcFvJXJQloPhaV2eP3Q6EA=="],
 
     "bytes": ["bytes@3.1.2", "", {}, "sha512-/Nf7TyzTx6S3yRJObOAV7956r8cr2+Oj8AC5dt8wSP3BQAoeX58NoHyCU8P8zGkNXStjTSi6fzO6F0pBdcYbEg=="],
 
@@ -1116,8 +1118,6 @@
 
     "zod": ["zod@3.25.76", "", {}, "sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ=="],
 
-    "@aztec-otc-desk/orderflow-service/@types/bun": ["@types/bun@1.2.20", "", { "dependencies": { "bun-types": "1.2.20" } }, "sha512-dX3RGzQ8+KgmMw7CsW4xT5ITBSCrSbfHc36SNT31EOUg/LA9JWq0VDdEXDRSe1InVWpd2yLUM1FUF/kEOyTzYA=="],
-
     "@aztec/ethereum/dotenv": ["dotenv@16.6.1", "", {}, "sha512-uBq4egWHTcTt33a72vpSG0z3HnPuIl6NqYcTrKEg2azoEyl2hpW0zqlxysq2pK9HlDIHyHyakeYaYnSAwd8bow=="],
 
     "@babel/core/semver": ["semver@6.3.1", "", { "bin": { "semver": "bin/semver.js" } }, "sha512-BR7VvDCVHO+q2xBEWskxS6DJE1qRnb7DxzUrogb71CWoSficBxYsiAGd+Kl0mmq/MprG9yArRkyrQxTO6XjMzA=="],
@@ -1191,8 +1191,6 @@
     "wrap-ansi-cjs/ansi-styles": ["ansi-styles@4.3.0", "", { "dependencies": { "color-convert": "^2.0.1" } }, "sha512-zbB9rCJAT1rbjiVDb2hqKFHNYLxgtk8NURxZ3IZwD3F6NtxbXZQCnnSi1Lkx+IDohdPlFp222wVALIheZJQSEg=="],
 
     "write-file-atomic/signal-exit": ["signal-exit@4.1.0", "", {}, "sha512-bzyZ1e88w9O1iNJbKnOlvYTrWPDl46O1bG0D3XInv+9tkPrxrN8jUUTiFlDkkmKWgn1M6CfIA13SuGqOa9Korw=="],
-
-    "@aztec-otc-desk/orderflow-service/@types/bun/bun-types": ["bun-types@1.2.20", "", { "dependencies": { "@types/node": "*" }, "peerDependencies": { "@types/react": "^19" } }, "sha512-pxTnQYOrKvdOwyiyd/7sMt9yFOenN004Y6O4lCcCUoKVej48FS5cvTw9geRaEcB9TsDZaJKAxPTVvi8tFsVuXA=="],
 
     "@isaacs/cliui/string-width/emoji-regex": ["emoji-regex@9.2.2", "", {}, "sha512-L18DaJsXSUk2+42pv8mLs5jJT2hqFkFE4j21wOmgbUqsZ2hL72NsUU785g9RXgo3s0ZNgVl42TiHp3ZtOv/Vyg=="],
 
