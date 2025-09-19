@@ -2,6 +2,8 @@
 
 A private over-the-counter (OTC) trading platform built on the Aztec protocol, designed to facilitate confidential and secure asset swaps between parties using zero-knowledge proofs. The platform enables private and secure peer-to-peer token swaps through smart contract escrows while ensuring transaction confidentiality and security.
 
+📖 **Read our detailed article explaining why we built this and how it works:** [https://x.com/bajpaiharsh244/status/1968996432855392747](https://x.com/bajpaiharsh244/status/1968996432855392747)
+
 ## 🏗️ Architecture Overview
 
 The Aztec OTC Desk is a monorepo containing three main packages that work together to provide a complete private OTC trading solution:
