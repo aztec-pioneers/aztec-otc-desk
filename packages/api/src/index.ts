@@ -17,7 +17,8 @@ const main = async () => {
   const {
     handleCreateOrder,
     handleGetOrder,
-    handleCloseOrder
+    handleCloseOrder,
+    handleOTCMatchOrder
   } = createOrderHandlers(database);
   
   const server = Bun.serve({
@@ -39,13 +40,10 @@ const main = async () => {
             return new Response("Method Not Allowed", { status: 405 });
         }
       }
-      if (req.method === "POST" && url.pathname === "/order") {
-        return handleCreateOrder(req);
-      }
-      
-      // GET /order endpoint
-      if (req.method === "GET" && url.pathname === "/order") {
-        return handleGetOrder(req);
+
+      // POST /order/match endpoint
+      if (url.pathname === "/order/match" && req.method === "POST") {
+        return handleOTCMatchOrder(req);
       }
 
       // healthcheck endpoint

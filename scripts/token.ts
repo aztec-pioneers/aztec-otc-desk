@@ -72,7 +72,7 @@ async function main() {
     if (!existsSync(targetDir)) {
       await mkdir(targetDir, { recursive: true });
     }
-    
+
     await execCommand("cp", [
       "deps/aztec-standards/target/token_contract-Token.json",
       "packages/contracts/target/"

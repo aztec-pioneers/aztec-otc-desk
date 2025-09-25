@@ -1,5 +1,5 @@
 import { Database } from "bun:sqlite";
-import type { Order } from "../types/api";
+import type { Order, OTCRequest } from "../types/api";
 import type { IDatabase } from "./interface";
 
 /**
@@ -110,6 +110,37 @@ export class SQLiteDatabase implements IDatabase {
     const rows = stmt.all() as any[];
     
     return rows.map(row => this.mapRowToOrder(row));
+  }
+
+  /**
+   * Match an OTC buy and sell order by looking for overlapping price ranges
+   * NOTE: this should be done in a TEE (i mean all data should be encrypted too)
+   * @param orderRequest - the OTC order request containing token addresses and price/size ranges
+   * @returns - An order that matches the criteria, or null if none found
+   */
+  getOrderByRange(orderRequest: OTCRequest): Order | null {
+    const stmt = this.db.prepare(`
+      SELECT * FROM orders 
+      WHERE sellTokenAddress = ? 
+        AND buyTokenAddress = ? 
+        AND sellTokenAmount BETWEEN ? AND ?
+        AND buyTokenAmount BETWEEN ? AND ?
+      ORDER BY createdAt DESC
+      LIMIT 1
+    `);
+    
+    const rows = stmt.all(
+      orderRequest.sellTokenAddress,
+      orderRequest.buyTokenAddress,
+      orderRequest.minSize.toString(),
+      orderRequest.maxSize.toString(),
+      orderRequest.minPrice.toString(),
+      orderRequest.maxPrice.toString()
+    ) as any[];
+    
+    if (rows.length === 0) return null;
+    
+    return this.mapRowToOrder(rows[0]);
   }
 
   /**

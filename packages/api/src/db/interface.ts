@@ -1,4 +1,4 @@
-import type { Order } from "../types/api";
+import type { Order, OTCRequest } from "../types/api";
 
 /**
  * Database interface for order operations
@@ -35,6 +35,13 @@ export interface IDatabase {
    * Get all orders
    */
   getAllOrders(): Order[];
+
+  /**
+   * Match an OTC buy and sell order by looking for overlapping price ranges
+   * @param orderRequest - the OTC order request containing token addresses and price/size ranges
+   * @return An order that matches the criteria, or null if none found
+   */
+  getOrderByRange(orderRequest: OTCRequest): Order | null;
 
   /**
    * Removes an order once it has been fulfilled

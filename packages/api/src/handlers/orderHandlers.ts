@@ -1,4 +1,4 @@
-import type { RequestHandler, ApiResponse, OrderResponse, Order, CreateOrderRequest } from "../types/api";
+import type { RequestHandler, ApiResponse, OrderResponse, Order, CreateOrderRequest, OTCRequest } from "../types/api";
 import type { IDatabase } from "../db";
 import { generateOrderId } from "../utils/uuid";
 import { stringifyWithBigInt, serializeOrder, serializeOrders } from "../utils/serialization";
@@ -204,10 +204,76 @@ export function createOrderHandlers(database: IDatabase) {
     }
 
   }
+  
+  /**
+   * Handle POST /order/match - Match an OTC order by range
+   */
+  const handleOTCMatchOrder: RequestHandler = async (req: Request): Promise<Response> => {
+    try {
+      // Parse the request body
+      const rawData = await req.json();
+      
+      // Convert string amounts to BigInt
+      const otcRequest: OTCRequest = {
+        sellTokenAddress: rawData.sellTokenAddress,
+        buyTokenAddress: rawData.buyTokenAddress,
+        minSize: BigInt(rawData.minSize),
+        maxSize: BigInt(rawData.maxSize),
+        minPrice: BigInt(rawData.minPrice),
+        maxPrice: BigInt(rawData.maxPrice)
+      };
+      
+      // Find a matching order in the database
+      const matchedOrder = database.getOrderByRange(otcRequest);
+      
+      if (!matchedOrder) {
+        const response: ApiResponse<any> = {
+          success: false,
+          message: "No matching order found"
+        };
+        return new Response(
+          JSON.stringify(response),
+          {
+            status: 404,
+            headers: { "Content-Type": "application/json" }
+          }
+        );
+      }
+      
+      const response: ApiResponse<any> = {
+        success: true,
+        message: "Matching order found",
+        data: serializeOrder(matchedOrder)
+      };
+      return new Response(
+        JSON.stringify(response),
+        {
+          status: 200,
+          headers: { "Content-Type": "application/json" }
+        }
+      );
+    } catch (error) {
+      console.error("Error matching OTC order:", error);
+      
+      const response: ApiResponse = {
+        success: false,
+        error: error instanceof Error ? error.message : "Failed to match OTC order"
+      };
+      return new Response(
+        JSON.stringify
+        (response),
+        {
+          status: 500,
+          headers: { "Content-Type": "application/json" }
+        }
+      );
+    }
+  };
 
   return {
     handleCreateOrder,
     handleGetOrder,
-    handleCloseOrder
+    handleCloseOrder,
+    handleOTCMatchOrder
   };
 }

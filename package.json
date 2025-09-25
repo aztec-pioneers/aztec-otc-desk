@@ -8,15 +8,13 @@
       "@types/bun": "latest",
       "@types/jest": "^30.0.0",
       "typescript": "^5.0.0",
-      "@aztec/aztec.js": "^1.2.1",
-      "@aztec/accounts": "^1.2.1",
-      "@aztec/ethereum": "^1.2.1",
-      "@aztec/stdlib": "^1.2.1",
-      "@aztec/entrypoints": "^1.2.1",
-      "@aztec/noir-contracts.js": "1.2.1",
-      "dotenv": "^17.2.1",
-      "@jest/globals": "^30.0.5",
-      "jest": "^30.0.5"
+      "@aztec/aztec.js": "3.0.0-nightly.20250923",
+      "@aztec/accounts": "3.0.0-nightly.20250923",
+      "@aztec/ethereum": "3.0.0-nightly.20250923",
+      "@aztec/stdlib": "3.0.0-nightly.20250923",
+      "@aztec/entrypoints": "3.0.0-nightly.20250923",
+      "@aztec/noir-contracts.js": "3.0.0-nightly.20250923",
+      "dotenv": "^17.2.1"
     }
   },
   "scripts": {

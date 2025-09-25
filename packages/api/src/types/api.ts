@@ -55,4 +55,13 @@ export interface OrderResponse extends ApiResponse {
   orderId?: string;
 }
 
+export interface OTCRequest {
+  sellTokenAddress: string;
+  buyTokenAddress: string;
+  minSize: BigInt;
+  maxSize: BigInt;
+  minPrice: BigInt;
+  maxPrice: BigInt;
+}
+
 export type RequestHandler = (req: Request) => Promise<Response>;
