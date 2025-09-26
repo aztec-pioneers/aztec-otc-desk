@@ -22,7 +22,7 @@
   },
   "scripts": {
     "test": "bun run test:nr && bun test",
-    "test:nr": "LOG_LEVEL=debug aztec test",
+    "test:nr": "aztec test",
     "deploy-token": "bun run ./scripts/deploy_token.ts",
     "compile": "aztec-nargo compile",
     "codegen": "aztec codegen target --outdir artifacts",

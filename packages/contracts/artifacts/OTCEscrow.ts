@@ -32,21 +32,21 @@ import {
   type U128Like,
   type WrappedFieldLike,
 } from '@aztec/aztec.js';
-import OTCEscrowContractContractArtifactJson from '../target/otc_escrow-OTCEscrowContract.json' with { type: 'json' };
-export const OTCEscrowContractContractArtifact = loadContractArtifact(OTCEscrowContractContractArtifactJson as NoirCompiledContract);
+import OTCEscrowContractArtifactJson from '../target/otc_escrow-OTCEscrow.json' with { type: 'json' };
+export const OTCEscrowContractArtifact = loadContractArtifact(OTCEscrowContractArtifactJson as NoirCompiledContract);
 
 
 
 /**
- * Type-safe interface for contract OTCEscrowContract;
+ * Type-safe interface for contract OTCEscrow;
  */
-export class OTCEscrowContractContract extends ContractBase {
+export class OTCEscrowContract extends ContractBase {
   
   private constructor(
     instance: ContractInstanceWithAddress,
     wallet: Wallet,
   ) {
-    super(instance, OTCEscrowContractContractArtifact, wallet);
+    super(instance, OTCEscrowContractArtifact, wallet);
   }
   
 
@@ -61,7 +61,7 @@ export class OTCEscrowContractContract extends ContractBase {
     address: AztecAddress,
     wallet: Wallet,
   ) {
-    return Contract.at(address, OTCEscrowContractContract.artifact, wallet) as Promise<OTCEscrowContractContract>;
+    return Contract.at(address, OTCEscrowContract.artifact, wallet) as Promise<OTCEscrowContract>;
   }
 
   
@@ -69,28 +69,28 @@ export class OTCEscrowContractContract extends ContractBase {
    * Creates a tx to deploy a new instance of this contract.
    */
   public static deploy(wallet: Wallet, sell_token_address: AztecAddressLike, sell_token_amount: (bigint | number), buy_token_address: AztecAddressLike, buy_token_amount: (bigint | number)) {
-    return new DeployMethod<OTCEscrowContractContract>(PublicKeys.default(), wallet, OTCEscrowContractContractArtifact, OTCEscrowContractContract.at, Array.from(arguments).slice(1));
+    return new DeployMethod<OTCEscrowContract>(PublicKeys.default(), wallet, OTCEscrowContractArtifact, OTCEscrowContract.at, Array.from(arguments).slice(1));
   }
 
   /**
    * Creates a tx to deploy a new instance of this contract using the specified public keys hash to derive the address.
    */
   public static deployWithPublicKeys(publicKeys: PublicKeys, wallet: Wallet, sell_token_address: AztecAddressLike, sell_token_amount: (bigint | number), buy_token_address: AztecAddressLike, buy_token_amount: (bigint | number)) {
-    return new DeployMethod<OTCEscrowContractContract>(publicKeys, wallet, OTCEscrowContractContractArtifact, OTCEscrowContractContract.at, Array.from(arguments).slice(2));
+    return new DeployMethod<OTCEscrowContract>(publicKeys, wallet, OTCEscrowContractArtifact, OTCEscrowContract.at, Array.from(arguments).slice(2));
   }
 
   /**
    * Creates a tx to deploy a new instance of this contract using the specified constructor method.
    */
-  public static deployWithOpts<M extends keyof OTCEscrowContractContract['methods']>(
+  public static deployWithOpts<M extends keyof OTCEscrowContract['methods']>(
     opts: { publicKeys?: PublicKeys; method?: M; wallet: Wallet },
-    ...args: Parameters<OTCEscrowContractContract['methods'][M]>
+    ...args: Parameters<OTCEscrowContract['methods'][M]>
   ) {
-    return new DeployMethod<OTCEscrowContractContract>(
+    return new DeployMethod<OTCEscrowContract>(
       opts.publicKeys ?? PublicKeys.default(),
       opts.wallet,
-      OTCEscrowContractContractArtifact,
-      OTCEscrowContractContract.at,
+      OTCEscrowContractArtifact,
+      OTCEscrowContract.at,
       Array.from(arguments).slice(1),
       opts.method ?? 'constructor',
     );
@@ -102,14 +102,14 @@ export class OTCEscrowContractContract extends ContractBase {
    * Returns this contract's artifact.
    */
   public static get artifact(): ContractArtifact {
-    return OTCEscrowContractContractArtifact;
+    return OTCEscrowContractArtifact;
   }
 
   /**
    * Returns this contract's artifact with public bytecode.
    */
   public static get artifactForPublic(): ContractArtifact {
-    return loadContractArtifactForPublic(OTCEscrowContractContractArtifactJson as NoirCompiledContract);
+    return loadContractArtifactForPublic(OTCEscrowContractArtifactJson as NoirCompiledContract);
   }
   
 

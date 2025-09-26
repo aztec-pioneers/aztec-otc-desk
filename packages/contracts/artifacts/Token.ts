@@ -14,7 +14,6 @@ import {
   type ContractInstanceWithAddress,
   type ContractMethod,
   type ContractStorageLayout,
-  type ContractNotes,
   decodeFromAbi,
   DeployMethod,
   EthAddress,
@@ -26,7 +25,6 @@ import {
   loadContractArtifact,
   loadContractArtifactForPublic,
   type NoirCompiledContract,
-  NoteSelector,
   Point,
   type PublicKey,
   PublicKeys,
@@ -34,10 +32,16 @@ import {
   type U128Like,
   type WrappedFieldLike,
 } from '@aztec/aztec.js';
-import TokenContractArtifactJson from '../target/token_contract-Token.json' with { type: 'json' };
+import TokenContractArtifactJson from '../target/otc_escrow-Token.json' with { type: 'json' };
 export const TokenContractArtifact = loadContractArtifact(TokenContractArtifactJson as NoirCompiledContract);
 
 
+      export type Transfer = {
+        from: AztecAddressLike
+to: AztecAddressLike
+amount: (bigint | number)
+      }
+    
 
 /**
  * Type-safe interface for contract Token;
@@ -70,14 +74,14 @@ export class TokenContract extends ContractBase {
   /**
    * Creates a tx to deploy a new instance of this contract.
    */
-  public static deploy(wallet: Wallet, name: string, symbol: string, decimals: (bigint | number), asset: AztecAddressLike, upgrade_authority: AztecAddressLike) {
+  public static deploy(wallet: Wallet, admin: AztecAddressLike, name: string, symbol: string, decimals: (bigint | number)) {
     return new DeployMethod<TokenContract>(PublicKeys.default(), wallet, TokenContractArtifact, TokenContract.at, Array.from(arguments).slice(1));
   }
 
   /**
    * Creates a tx to deploy a new instance of this contract using the specified public keys hash to derive the address.
    */
-  public static deployWithPublicKeys(publicKeys: PublicKeys, wallet: Wallet, name: string, symbol: string, decimals: (bigint | number), asset: AztecAddressLike, upgrade_authority: AztecAddressLike) {
+  public static deployWithPublicKeys(publicKeys: PublicKeys, wallet: Wallet, admin: AztecAddressLike, name: string, symbol: string, decimals: (bigint | number)) {
     return new DeployMethod<TokenContract>(publicKeys, wallet, TokenContractArtifact, TokenContract.at, Array.from(arguments).slice(2));
   }
 
@@ -115,47 +119,35 @@ export class TokenContract extends ContractBase {
   }
   
 
-  public static get storage(): ContractStorageLayout<'name' | 'symbol' | 'decimals' | 'private_balances' | 'total_supply' | 'public_balances' | 'minter' | 'upgrade_authority' | 'asset'> {
+  public static get storage(): ContractStorageLayout<'admin' | 'minters' | 'balances' | 'total_supply' | 'public_balances' | 'symbol' | 'name' | 'decimals'> {
       return {
-        name: {
+        admin: {
       slot: new Fr(1n),
     },
-symbol: {
+minters: {
+      slot: new Fr(2n),
+    },
+balances: {
       slot: new Fr(3n),
     },
-decimals: {
-      slot: new Fr(5n),
-    },
-private_balances: {
-      slot: new Fr(7n),
-    },
 total_supply: {
-      slot: new Fr(8n),
+      slot: new Fr(4n),
     },
 public_balances: {
-      slot: new Fr(9n),
+      slot: new Fr(5n),
     },
-minter: {
+symbol: {
+      slot: new Fr(6n),
+    },
+name: {
+      slot: new Fr(8n),
+    },
+decimals: {
       slot: new Fr(10n),
-    },
-upgrade_authority: {
-      slot: new Fr(12n),
-    },
-asset: {
-      slot: new Fr(14n),
     }
-      } as ContractStorageLayout<'name' | 'symbol' | 'decimals' | 'private_balances' | 'total_supply' | 'public_balances' | 'minter' | 'upgrade_authority' | 'asset'>;
+      } as ContractStorageLayout<'admin' | 'minters' | 'balances' | 'total_supply' | 'public_balances' | 'symbol' | 'name' | 'decimals'>;
     }
     
-
-  public static get notes(): ContractNotes<'UintNote'> {
-    return {
-      UintNote: {
-          id: new NoteSelector(0),
-        }
-    } as ContractNotes<'UintNote'>;
-  }
-  
 
   /** Type-safe wrappers for the public methods exposed by the contract. */
   public declare methods: {
@@ -166,68 +158,50 @@ asset: {
     /** balance_of_public(owner: struct) */
     balance_of_public: ((owner: AztecAddressLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
 
-    /** burn_private(from: struct, amount: integer, _nonce: field) */
-    burn_private: ((from: AztecAddressLike, amount: (bigint | number), _nonce: FieldLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
+    /** burn_private(from: struct, amount: integer, authwit_nonce: field) */
+    burn_private: ((from: AztecAddressLike, amount: (bigint | number), authwit_nonce: FieldLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
 
-    /** burn_public(from: struct, amount: integer, _nonce: field) */
-    burn_public: ((from: AztecAddressLike, amount: (bigint | number), _nonce: FieldLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
+    /** burn_public(from: struct, amount: integer, authwit_nonce: field) */
+    burn_public: ((from: AztecAddressLike, amount: (bigint | number), authwit_nonce: FieldLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
 
-    /** constructor_with_asset(name: string, symbol: string, decimals: integer, asset: struct, upgrade_authority: struct) */
-    constructor_with_asset: ((name: string, symbol: string, decimals: (bigint | number), asset: AztecAddressLike, upgrade_authority: AztecAddressLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
+    /** cancel_authwit(inner_hash: field) */
+    cancel_authwit: ((inner_hash: FieldLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
 
-    /** constructor_with_initial_supply(name: string, symbol: string, decimals: integer, initial_supply: integer, to: struct, upgrade_authority: struct) */
-    constructor_with_initial_supply: ((name: string, symbol: string, decimals: (bigint | number), initial_supply: (bigint | number), to: AztecAddressLike, upgrade_authority: AztecAddressLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
+    /** constructor(admin: struct, name: string, symbol: string, decimals: integer) */
+    constructor: ((admin: AztecAddressLike, name: string, symbol: string, decimals: (bigint | number)) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
 
-    /** constructor_with_minter(name: string, symbol: string, decimals: integer, minter: struct, upgrade_authority: struct) */
-    constructor_with_minter: ((name: string, symbol: string, decimals: (bigint | number), minter: AztecAddressLike, upgrade_authority: AztecAddressLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
+    /** finalize_mint_to_private(amount: integer, partial_note: struct) */
+    finalize_mint_to_private: ((amount: (bigint | number), partial_note: { commitment: FieldLike }) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
 
-    /** decimals() */
-    decimals: (() => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
+    /** finalize_transfer_to_private(amount: integer, partial_note: struct) */
+    finalize_transfer_to_private: ((amount: (bigint | number), partial_note: { commitment: FieldLike }) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
 
-    /** deposit_private_to_private(from: struct, to: struct, assets: integer, shares: integer, _nonce: field) */
-    deposit_private_to_private: ((from: AztecAddressLike, to: AztecAddressLike, assets: (bigint | number), shares: (bigint | number), _nonce: FieldLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
+    /** finalize_transfer_to_private_from_private(from: struct, partial_note: struct, amount: integer, authwit_nonce: field) */
+    finalize_transfer_to_private_from_private: ((from: AztecAddressLike, partial_note: { commitment: FieldLike }, amount: (bigint | number), authwit_nonce: FieldLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
 
-    /** deposit_private_to_private_exact(from: struct, to: struct, assets: integer, min_shares: integer, _nonce: field) */
-    deposit_private_to_private_exact: ((from: AztecAddressLike, to: AztecAddressLike, assets: (bigint | number), min_shares: (bigint | number), _nonce: FieldLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
+    /** get_admin() */
+    get_admin: (() => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
 
-    /** deposit_private_to_public(from: struct, to: struct, assets: integer, _nonce: field) */
-    deposit_private_to_public: ((from: AztecAddressLike, to: AztecAddressLike, assets: (bigint | number), _nonce: FieldLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
+    /** is_minter(minter: struct) */
+    is_minter: ((minter: AztecAddressLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
 
-    /** deposit_public_to_private(from: struct, to: struct, assets: integer, shares: integer, _nonce: field) */
-    deposit_public_to_private: ((from: AztecAddressLike, to: AztecAddressLike, assets: (bigint | number), shares: (bigint | number), _nonce: FieldLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
-
-    /** deposit_public_to_private_exact(from: struct, to: struct, assets: integer, min_shares: integer, _nonce: field) */
-    deposit_public_to_private_exact: ((from: AztecAddressLike, to: AztecAddressLike, assets: (bigint | number), min_shares: (bigint | number), _nonce: FieldLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
-
-    /** deposit_public_to_public(from: struct, to: struct, assets: integer, _nonce: field) */
-    deposit_public_to_public: ((from: AztecAddressLike, to: AztecAddressLike, assets: (bigint | number), _nonce: FieldLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
-
-    /** initialize_transfer_commitment(from: struct, to: struct, completer: struct) */
-    initialize_transfer_commitment: ((from: AztecAddressLike, to: AztecAddressLike, completer: AztecAddressLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
-
-    /** issue_private_to_private_exact(from: struct, to: struct, shares: integer, max_assets: integer, _nonce: field) */
-    issue_private_to_private_exact: ((from: AztecAddressLike, to: AztecAddressLike, shares: (bigint | number), max_assets: (bigint | number), _nonce: FieldLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
-
-    /** issue_private_to_public_exact(from: struct, to: struct, shares: integer, max_assets: integer, _nonce: field) */
-    issue_private_to_public_exact: ((from: AztecAddressLike, to: AztecAddressLike, shares: (bigint | number), max_assets: (bigint | number), _nonce: FieldLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
-
-    /** issue_public_to_private(from: struct, to: struct, shares: integer, max_assets: integer, _nonce: field) */
-    issue_public_to_private: ((from: AztecAddressLike, to: AztecAddressLike, shares: (bigint | number), max_assets: (bigint | number), _nonce: FieldLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
-
-    /** issue_public_to_public(from: struct, to: struct, shares: integer, max_assets: integer, _nonce: field) */
-    issue_public_to_public: ((from: AztecAddressLike, to: AztecAddressLike, shares: (bigint | number), max_assets: (bigint | number), _nonce: FieldLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
-
-    /** mint_to_commitment(commitment: field, amount: integer) */
-    mint_to_commitment: ((commitment: FieldLike, amount: (bigint | number)) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
-
-    /** mint_to_private(from: struct, to: struct, amount: integer) */
-    mint_to_private: ((from: AztecAddressLike, to: AztecAddressLike, amount: (bigint | number)) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
+    /** mint_to_private(to: struct, amount: integer) */
+    mint_to_private: ((to: AztecAddressLike, amount: (bigint | number)) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
 
     /** mint_to_public(to: struct, amount: integer) */
     mint_to_public: ((to: AztecAddressLike, amount: (bigint | number)) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
 
-    /** name() */
-    name: (() => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
+    /** prepare_private_balance_increase(to: struct) */
+    prepare_private_balance_increase: ((to: AztecAddressLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
+
+    /** private_get_decimals() */
+    private_get_decimals: (() => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
+
+    /** private_get_name() */
+    private_get_name: (() => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
+
+    /** private_get_symbol() */
+    private_get_symbol: (() => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
 
     /** process_message(message_ciphertext: struct, message_context: struct) */
     process_message: ((message_ciphertext: FieldLike[], message_context: { tx_hash: FieldLike, unique_note_hashes_in_tx: FieldLike[], first_nullifier_in_tx: FieldLike, recipient: AztecAddressLike }) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
@@ -235,20 +209,20 @@ asset: {
     /** public_dispatch(selector: field) */
     public_dispatch: ((selector: FieldLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
 
-    /** redeem_private_to_private_exact(from: struct, to: struct, shares: integer, min_assets: integer, _nonce: field) */
-    redeem_private_to_private_exact: ((from: AztecAddressLike, to: AztecAddressLike, shares: (bigint | number), min_assets: (bigint | number), _nonce: FieldLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
+    /** public_get_decimals() */
+    public_get_decimals: (() => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
 
-    /** redeem_private_to_public(from: struct, to: struct, shares: integer, _nonce: field) */
-    redeem_private_to_public: ((from: AztecAddressLike, to: AztecAddressLike, shares: (bigint | number), _nonce: FieldLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
+    /** public_get_name() */
+    public_get_name: (() => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
 
-    /** redeem_public_to_private_exact(from: struct, to: struct, shares: integer, min_assets: integer, _nonce: field) */
-    redeem_public_to_private_exact: ((from: AztecAddressLike, to: AztecAddressLike, shares: (bigint | number), min_assets: (bigint | number), _nonce: FieldLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
+    /** public_get_symbol() */
+    public_get_symbol: (() => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
 
-    /** redeem_public_to_public(from: struct, to: struct, shares: integer, _nonce: field) */
-    redeem_public_to_public: ((from: AztecAddressLike, to: AztecAddressLike, shares: (bigint | number), _nonce: FieldLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
+    /** set_admin(new_admin: struct) */
+    set_admin: ((new_admin: AztecAddressLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
 
-    /** symbol() */
-    symbol: (() => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
+    /** set_minter(minter: struct, approve: boolean) */
+    set_minter: ((minter: AztecAddressLike, approve: boolean) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
 
     /** sync_private_state() */
     sync_private_state: (() => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
@@ -256,45 +230,77 @@ asset: {
     /** total_supply() */
     total_supply: (() => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
 
-    /** transfer_private_to_commitment(from: struct, commitment: field, amount: integer, _nonce: field) */
-    transfer_private_to_commitment: ((from: AztecAddressLike, commitment: FieldLike, amount: (bigint | number), _nonce: FieldLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
+    /** transfer(to: struct, amount: integer) */
+    transfer: ((to: AztecAddressLike, amount: (bigint | number)) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
 
-    /** transfer_private_to_private(from: struct, to: struct, amount: integer, _nonce: field) */
-    transfer_private_to_private: ((from: AztecAddressLike, to: AztecAddressLike, amount: (bigint | number), _nonce: FieldLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
+    /** transfer_in_private(from: struct, to: struct, amount: integer, authwit_nonce: field) */
+    transfer_in_private: ((from: AztecAddressLike, to: AztecAddressLike, amount: (bigint | number), authwit_nonce: FieldLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
 
-    /** transfer_private_to_public(from: struct, to: struct, amount: integer, _nonce: field) */
-    transfer_private_to_public: ((from: AztecAddressLike, to: AztecAddressLike, amount: (bigint | number), _nonce: FieldLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
+    /** transfer_in_public(from: struct, to: struct, amount: integer, authwit_nonce: field) */
+    transfer_in_public: ((from: AztecAddressLike, to: AztecAddressLike, amount: (bigint | number), authwit_nonce: FieldLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
 
-    /** transfer_private_to_public_with_commitment(from: struct, to: struct, amount: integer, _nonce: field) */
-    transfer_private_to_public_with_commitment: ((from: AztecAddressLike, to: AztecAddressLike, amount: (bigint | number), _nonce: FieldLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
+    /** transfer_to_private(to: struct, amount: integer) */
+    transfer_to_private: ((to: AztecAddressLike, amount: (bigint | number)) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
 
-    /** transfer_public_to_commitment(from: struct, commitment: field, amount: integer, _nonce: field) */
-    transfer_public_to_commitment: ((from: AztecAddressLike, commitment: FieldLike, amount: (bigint | number), _nonce: FieldLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
+    /** transfer_to_public(from: struct, to: struct, amount: integer, authwit_nonce: field) */
+    transfer_to_public: ((from: AztecAddressLike, to: AztecAddressLike, amount: (bigint | number), authwit_nonce: FieldLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
 
-    /** transfer_public_to_private(from: struct, to: struct, amount: integer, _nonce: field) */
-    transfer_public_to_private: ((from: AztecAddressLike, to: AztecAddressLike, amount: (bigint | number), _nonce: FieldLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
-
-    /** transfer_public_to_public(from: struct, to: struct, amount: integer, _nonce: field) */
-    transfer_public_to_public: ((from: AztecAddressLike, to: AztecAddressLike, amount: (bigint | number), _nonce: FieldLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
-
-    /** upgrade_contract(new_contract_class_id: field) */
-    upgrade_contract: ((new_contract_class_id: FieldLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
-
-    /** withdraw_private_to_private(from: struct, to: struct, assets: integer, shares: integer, _nonce: field) */
-    withdraw_private_to_private: ((from: AztecAddressLike, to: AztecAddressLike, assets: (bigint | number), shares: (bigint | number), _nonce: FieldLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
-
-    /** withdraw_private_to_private_exact(from: struct, to: struct, assets: integer, max_shares: integer, _nonce: field) */
-    withdraw_private_to_private_exact: ((from: AztecAddressLike, to: AztecAddressLike, assets: (bigint | number), max_shares: (bigint | number), _nonce: FieldLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
-
-    /** withdraw_private_to_public_exact(from: struct, to: struct, assets: integer, max_shares: integer, _nonce: field) */
-    withdraw_private_to_public_exact: ((from: AztecAddressLike, to: AztecAddressLike, assets: (bigint | number), max_shares: (bigint | number), _nonce: FieldLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
-
-    /** withdraw_public_to_private(from: struct, to: struct, assets: integer, _nonce: field) */
-    withdraw_public_to_private: ((from: AztecAddressLike, to: AztecAddressLike, assets: (bigint | number), _nonce: FieldLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
-
-    /** withdraw_public_to_public(from: struct, to: struct, assets: integer, _nonce: field) */
-    withdraw_public_to_public: ((from: AztecAddressLike, to: AztecAddressLike, assets: (bigint | number), _nonce: FieldLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
+    /** transfer_to_public_and_prepare_private_balance_increase(from: struct, to: struct, amount: integer, authwit_nonce: field) */
+    transfer_to_public_and_prepare_private_balance_increase: ((from: AztecAddressLike, to: AztecAddressLike, amount: (bigint | number), authwit_nonce: FieldLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
   };
 
+  
+    public static get events(): { Transfer: {abiType: AbiType, eventSelector: EventSelector, fieldNames: string[] } } {
+    return {
+      Transfer: {
+        abiType: {
+    "kind": "struct",
+    "fields": [
+        {
+            "name": "from",
+            "type": {
+                "kind": "struct",
+                "fields": [
+                    {
+                        "name": "inner",
+                        "type": {
+                            "kind": "field"
+                        }
+                    }
+                ],
+                "path": "aztec::protocol_types::address::aztec_address::AztecAddress"
+            }
+        },
+        {
+            "name": "to",
+            "type": {
+                "kind": "struct",
+                "fields": [
+                    {
+                        "name": "inner",
+                        "type": {
+                            "kind": "field"
+                        }
+                    }
+                ],
+                "path": "aztec::protocol_types::address::aztec_address::AztecAddress"
+            }
+        },
+        {
+            "name": "amount",
+            "type": {
+                "kind": "integer",
+                "sign": "unsigned",
+                "width": 128
+            }
+        }
+    ],
+    "path": "Token::Transfer"
+},
+        eventSelector: EventSelector.fromString("0x70a1894e"),
+        fieldNames: ["from","to","amount"],
+      }
+    };
+  }
   
 }

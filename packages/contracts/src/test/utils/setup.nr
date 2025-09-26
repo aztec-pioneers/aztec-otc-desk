@@ -140,7 +140,7 @@ pub unconstrained fn deploy_token_contract(
     let initializer_call_interface = Token::interface()
         .constructor(owner, name, symbol, decimals);
 
-    env.deploy("~/nargo/github.com/AztecProtocol/aztec-packages/v3.0.0-nightly.20250923/noir-projects/noir-contracts/contracts/app/token_contract/Token")
+    env.deploy("Token")
         .with_public_initializer(owner, initializer_call_interface)
 }
 

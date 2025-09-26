@@ -14,7 +14,6 @@ import {
   type ContractInstanceWithAddress,
   type ContractMethod,
   type ContractStorageLayout,
-  type ContractNotes,
   decodeFromAbi,
   DeployMethod,
   EthAddress,
@@ -26,7 +25,6 @@ import {
   loadContractArtifact,
   loadContractArtifactForPublic,
   type NoirCompiledContract,
-  NoteSelector,
   Point,
   type PublicKey,
   PublicKeys,
@@ -34,7 +32,7 @@ import {
   type U128Like,
   type WrappedFieldLike,
 } from '@aztec/aztec.js';
-import OTCEscrowContractContractArtifactJson from './OTCEscrowContract.json' with { type: 'json' };
+import OTCEscrowContractContractArtifactJson from '../target/otc_escrow-OTCEscrowContract.json' with { type: 'json' };
 export const OTCEscrowContractContractArtifact = loadContractArtifact(OTCEscrowContractContractArtifactJson as NoirCompiledContract);
 
 
@@ -124,18 +122,6 @@ export class OTCEscrowContractContract extends ContractBase {
     }
     
 
-  public static get notes(): ContractNotes<'UintNote' | 'DefinitionNote'> {
-    return {
-      UintNote: {
-          id: new NoteSelector(0),
-        },
-DefinitionNote: {
-          id: new NoteSelector(1),
-        }
-    } as ContractNotes<'UintNote' | 'DefinitionNote'>;
-  }
-  
-
   /** Type-safe wrappers for the public methods exposed by the contract. */
   public declare methods: {
     
@@ -153,9 +139,6 @@ DefinitionNote: {
 
     /** process_message(message_ciphertext: struct, message_context: struct) */
     process_message: ((message_ciphertext: FieldLike[], message_context: { tx_hash: FieldLike, unique_note_hashes_in_tx: FieldLike[], first_nullifier_in_tx: FieldLike, recipient: AztecAddressLike }) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
-
-    /** public_dispatch(selector: field) */
-    public_dispatch: ((selector: FieldLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
 
     /** sync_private_state() */
     sync_private_state: (() => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
