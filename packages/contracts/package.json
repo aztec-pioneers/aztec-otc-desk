@@ -25,7 +25,7 @@
     "postinstall": "bun run ./scripts/txe_token_artifact.ts",
     "test": "bun run test:nr && bun test",
     "test:nr": "aztec test",
-    "deploy-token": "bun run ./scripts/deploy_token.ts",
+    "deploy-tokens": "bun run ./scripts/deploy_tokens.ts",
     "compile": "aztec-nargo compile && aztec-postprocess-contract",
     "codegen": "aztec codegen target --outdir artifacts",
     "copy-artifacts": "bun run scripts/add_artifacts.ts",

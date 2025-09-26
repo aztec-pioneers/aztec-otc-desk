@@ -30,7 +30,6 @@ describe("Private Transfer Demo Test", () => {
     let sellerPXE: PXE;
     let buyerPXE: PXE;
 
-
     let minter: { wallet: Wallet, default: AccountManager };
     let seller: { wallet: Wallet, default: AccountManager };
     let buyer: { wallet: Wallet, default: AccountManager };
@@ -40,8 +39,6 @@ describe("Private Transfer Demo Test", () => {
     let escrow: OTCEscrowContract;
     let usdc: TokenContract;
     let eth: TokenContract;
-
-    let buyerFeeJuicePortalManager: L1FeeJuicePortalManager;
 
     const sellTokenAmount = wad(1000n, 6n);
     const buyTokenAmount = wad(1n);
