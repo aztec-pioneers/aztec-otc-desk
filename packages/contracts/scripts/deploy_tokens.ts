@@ -1,7 +1,7 @@
 import { createPXEClient, waitForPXE } from "@aztec/aztec.js"
 import { getInitialTestAccountsData } from "@aztec/accounts/testing"
 
-import { TokenContract } from "../artifacts/Token"
+import { TokenContract } from "@aztec/noir-contracts.js/Token";
 import { createAztecNodeClient } from "@aztec/stdlib/interfaces/client";
 import { TestWallet } from "@aztec/test-wallet";
 import { TOKEN_METADATA } from "../ts/src";
@@ -42,6 +42,7 @@ async function main(){
       .send({ from: await minter.default.getAddress() })
       .deployed();
     mints.push({ address: token.address, metadata });
+    console.log("xxx", token.instance.currentContractClassId);
   }
   for (const mint of mints) {
     console.log(`Deployed ${mint.metadata.symbol} at ${mint.address}`);
