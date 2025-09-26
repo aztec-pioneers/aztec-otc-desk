@@ -52,15 +52,10 @@ describe("Private Transfer Demo Test", () => {
         console.log("trying connect")
         // setup PXE connections
         sellerPXE = await createPXE();
-        // buyerPXE = await createPXE(1);
-        buyerPXE = sellerPXE; // TEMPORARY: using single PXE
+        buyerPXE = await createPXE(1);
 
-        // get PXE 1 accounts
-        // const wallets = await Promise.all(
-        //     (await getInitialTestAccountsManagers(sellerPXE)).map(m => m.register())
-        // );
+        // set up accounts
         const deployedAccounts = await getDeployedTestAccounts(sellerPXE);
-
         const minterWallet = new TestWallet(sellerPXE, node);
         const minterAccount = await (minterWallet as TestWallet).createSchnorrAccount(
             deployedAccounts[0].secret,
@@ -68,7 +63,6 @@ describe("Private Transfer Demo Test", () => {
             deployedAccounts[0].signingKey
         );
         minter = { wallet: minterWallet, default: minterAccount };
-
         const sellerWallet = new TestWallet(sellerPXE, node);
         const sellerAccount = await (sellerWallet as TestWallet).createSchnorrAccount(
             deployedAccounts[1].secret,
@@ -76,8 +70,7 @@ describe("Private Transfer Demo Test", () => {
             deployedAccounts[1].signingKey
         );
         seller = { wallet: sellerWallet, default: sellerAccount };
-
-        const buyerWallet = new TestWallet(sellerPXE, node);
+        const buyerWallet = new TestWallet(buyerPXE, node);
         const buyerAccount = await (buyerWallet as TestWallet).createSchnorrAccount(
             deployedAccounts[2].secret,
             deployedAccounts[2].salt,
@@ -85,41 +78,17 @@ describe("Private Transfer Demo Test", () => {
         );
         buyer = { wallet: buyerWallet, default: buyerAccount };
 
-        // seller = new TestWallet(sellerPXE, node);
-        // buyer = new TestWallet(buyerPXE, node);
-
-        // await (seller as TestWallet).createSchnorrAccount(
-        //     deployedAccounts[1].secret,
-        //     deployedAccounts[1].salt,
-        //     deployedAccounts[1].signingKey
-        // );
-        // wallets[0]
-        // minter = wallets[0];
-        // seller = wallets[1];
-
-        // deploy PXE2 account
-        // NOTE: must allow two transactions to pass before claiming
-        // buyerFeeJuicePortalManager = await getFeeJuicePortalManager(buyerPXE);
-        // const {
-        //     claim: buyerClaim,
-        //     wallet: buyerWallet,
-        //     account: buyerAccount
-        // } = await setupAccountWithFeeClaim(buyerPXE, buyerFeeJuicePortalManager);
-        // buyer = buyerWallet;
-        // // deploy token contract
+        // deploy token contract
         usdc = await deployTokenContract(TOKEN_METADATA.usdc, minter.wallet);
         eth = await deployTokenContract(TOKEN_METADATA.eth, minter.wallet);
 
-        // claim fee juice for buyer and deploy
-        // const claimAndPay = new FeeJuicePaymentMethodWithClaim(buyer, buyerClaim);
-        // await buyerAccount.deploy({ fee: { paymentMethod: claimAndPay } }).wait();
-
-        // register accounts and contracts in each PXE
-        // await sellerPXE.registerSender(buyer.getAddress());
-        // await buyerPXE.registerSender(minter.getAddress());
-        // await buyerPXE.registerSender(seller.getAddress());
-        // await buyerPXE.registerContract(usdc);
-        // await buyerPXE.registerContract(eth);
+        // register senders and accounts
+        buyer.wallet.registerSender(seller.default.getAddress());
+        buyer.wallet.registerSender(minter.default.getAddress());
+        // will work for minter as well
+        seller.wallet.registerSender(buyer.default.getAddress());
+        buyer.wallet.registerContract(usdc);
+        buyer.wallet.registerContract(eth);
 
         // mint tokens
         await eth
@@ -141,48 +110,51 @@ describe("Private Transfer Demo Test", () => {
             .wait();
     });
 
-    // test("check escrow key leaking", async () => {
-    //     // deploy new escrow instance
-    //     ({ contract: escrow, secretKey: escrowMasterKey } = await deployEscrowContract(
-    //         sellerPXE,
-    //         seller,
-    //         usdc.address,
-    //         buyTokenAmount,
-    //         eth.address,
-    //         sellTokenAmount,
-    //     ));
+    test("check escrow key leaking", async () => {
+        // deploy new escrow instance
+        ({ contract: escrow, secretKey: escrowMasterKey } = await deployEscrowContract(
+            sellerPXE,
+            seller.wallet,
+            usdc.address,
+            buyTokenAmount,
+            eth.address,
+            sellTokenAmount,
+        ));
 
-    //     // Check seller Escrow
-    //     const sellerDefinition = await escrow
-    //         .withWallet(seller)
-    //         .methods.get_definition()
-    //         .simulate();
-    //     // expect(sellerDefinition.owner).toEqual(escrow.address.toBigInt());
-    //     expect(sellerDefinition.owner).not.toEqual(0n);
+        // Check seller Escrow
+        const sellerDefinition = await escrow
+            .withWallet(seller.wallet)
+            .methods.get_definition()
+            .simulate({ from: seller.default.getAddress() });
+        // expect(sellerDefinition.owner).toEqual(escrow.address.toBigInt());
+        expect(sellerDefinition.owner).not.toEqual(0n);
 
-    //     // register contract but do not register decryption keys
-    //     // if contract is not registered they definitely can't call it
-    //     await buyerPXE.registerContract(escrow);
+        // register contract but do not register decryption keys
+        // if contract is not registered they definitely can't call it
+        await buyerPXE.registerContract(escrow);
 
-    //     // check if maker note exists
-    //     expect(async () => {
-    //         await escrow
-    //             .withWallet(buyer)
-    //             .methods.get_definition()
-    //             .simulate();
-    //     }).toThrow()
+        // check if maker note exists
+        expect(async () => {
+            await escrow
+                .withWallet(buyer.wallet)
+                .methods.get_definition()
+                .simulate({ from: buyer.default.getAddress() });
+        }).toThrow()
 
-    //     // add account to buyer pxe
-    //     await buyerPXE.registerAccount(escrowMasterKey, await escrow.partialAddress);
-    //     await escrow.withWallet(buyer).methods.sync_private_state().simulate();
-    //     const buyerDefinition = await escrow
-    //         .withWallet(buyer)
-    //         .methods
-    //         .get_definition()
-    //         .simulate();
-    //     // expect(buyerDefinition.owner).toEqual(escrow.address.toBigInt());
-    //     expect(buyerDefinition.owner).not.toEqual(0n);
-    // });
+        // add account to buyer pxe
+        await buyerPXE.registerAccount(escrowMasterKey, await escrow.partialAddress);
+        await escrow
+            .withWallet(buyer.wallet)
+            .methods
+            .sync_private_state()
+            .simulate({ from: buyer.default.getAddress() });
+        const buyerDefinition = await escrow
+            .withWallet(buyer.wallet)
+            .methods
+            .get_definition()
+            .simulate({ from: buyer.default.getAddress() });
+        expect(buyerDefinition.owner).not.toEqual(0n);
+    });
 
     test("e2e", async () => {
         // deploy new escrow instance
