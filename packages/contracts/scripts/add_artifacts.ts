@@ -35,37 +35,20 @@ async function main() {
     console.log("Moving escrow artifacts...");
     // Move the escrow artifacts
     await copyFileWithLog(
-      "./target/otc_escrow-OTCEscrowContract.json",
-      "./ts/src/artifacts/escrow/OTCEscrowContract.json"
+      "./target/otc_escrow-OTCEscrow.json",
+      "./ts/src/artifacts/escrow/OTCEscrow.json"
     );
     await copyFileWithLog(
-      "./artifacts/OTCEscrowContract.ts",
-      "./ts/src/artifacts/escrow/OTCEscrowContract.ts"
-    );
-
-    console.log("Moving token artifacts...");
-    // Move the token artifacts
-    await copyFileWithLog(
-      "../../deps/aztec-standards/target/token_contract-Token.json",
-      "./ts/src/artifacts/token/Token.json"
-    );
-    await copyFileWithLog(
-      "./artifacts/Token.ts",
-      "./ts/src/artifacts/token/Token.ts"
+      "./artifacts/OTCEscrow.ts",
+      "./ts/src/artifacts/escrow/OTCEscrow.ts"
     );
 
     console.log("Fixing imports...");
     // Fix imports using string replacement instead of sed
     await replaceInFile(
-      "./ts/src/artifacts/escrow/OTCEscrowContract.ts",
-      "../target/otc_escrow-OTCEscrowContract.json",
-      "./OTCEscrowContract.json"
-    );
-
-    await replaceInFile(
-      "./ts/src/artifacts/token/Token.ts",
-      "../target/token_contract-Token.json",
-      "./Token.json"
+      "./ts/src/artifacts/escrow/OTCEscrow.ts",
+      "../target/otc_escrow-OTCEscrow.json",
+      "./OTCEscrow.json"
     );
 
     console.log("Artifacts moved and imports fixed successfully!");
