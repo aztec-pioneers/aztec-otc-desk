@@ -4,16 +4,19 @@ pub mod types;
 pub mod test;
 
 #[aztec]
-pub contract OTCEscrowContract {
+pub contract OTCEscrow {
     // aztec library imports
     use aztec::{
         macros::{
             functions::{initializer, private, utility},
             storage::storage
         },
-        prelude::{AztecAddress, PrivateImmutable, PrivateMutable},
-        messages::logs::note::encode_and_encrypt_note,
-        protocol_types::traits::ToField,
+        messages::message_delivery::MessageDelivery,
+        protocol_types::{
+            traits::ToField,
+            address::AztecAddress
+        },
+        state_vars::{PrivateImmutable, PrivateMutable}
     };
     use crate::types::definition_note::DefinitionNote;
 
@@ -37,11 +40,8 @@ pub contract OTCEscrowContract {
 
         // create partial note
         let partial_note = Token::at(buy_token_address)
-            .initialize_transfer_commitment(
-                self_address,
-                caller,
-                self_address
-            ).call(&mut context);
+            .prepare_private_balance_increase(caller)
+            .call(&mut context);
 
         // Create definition note
         let definition = DefinitionNote::new(
@@ -53,11 +53,11 @@ pub contract OTCEscrowContract {
             buy_token_amount
         );
         
-        storage.definition.initialize(definition).emit(encode_and_encrypt_note(
+        storage.definition.initialize(definition).emit(
             &mut context,
             self_address,
-            self_address
-        ));
+            MessageDelivery.CONSTRAINED_ONCHAIN
+        );
     }
     
     /**
@@ -75,7 +75,7 @@ pub contract OTCEscrowContract {
 
         // transfer tokens in
         Token::at(definition.sell_token_address)
-            .transfer_private_to_private(
+            .transfer_in_private(
                 caller,
                 self_address,
                 definition.sell_token_amount,
@@ -101,7 +101,7 @@ pub contract OTCEscrowContract {
 
         // transfer ask tokens in
         Token::at(definition.buy_token_address)
-            .transfer_private_to_private(
+            .transfer_in_private(
                 caller,
                 self_address,
                 definition.buy_token_amount,
@@ -110,7 +110,7 @@ pub contract OTCEscrowContract {
             .call(&mut context);
 
         Token::at(definition.buy_token_address)
-            .transfer_private_to_commitment(
+            .finalize_transfer_to_private_from_private(
                 self_address,
                 definition.partial_note,
                 definition.buy_token_amount,
@@ -120,17 +120,15 @@ pub contract OTCEscrowContract {
 
         // transfer offer tokens out
         Token::at(definition.sell_token_address)
-            .transfer_private_to_private(
-                self_address,
+            .transfer(
                 caller,
-                definition.sell_token_amount,
-                0
+                definition.sell_token_amount
             )
             .call(&mut context);
     }
 
     #[utility]
-    pub unconstrained fn get_definition() -> DefinitionNote {
+    unconstrained fn get_definition() -> DefinitionNote {
         storage.definition.view_note()
     }
 }

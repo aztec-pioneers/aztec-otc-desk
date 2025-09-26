@@ -23,7 +23,7 @@ unconstrained fn full_otc_order_success() {
     let (env, accounts, contracts) = setup(true);
     
     // check the definition
-    let definition = get_escrow_definition(contracts.escrow);
+    let definition = get_escrow_definition(env, contracts.escrow);
     assert_eq(definition.owner, contracts.escrow, "Definition owner mismatch!");
     assert_eq(definition.sell_token_address, contracts.usdc, "Definition sell token address mismatch!");
     assert_eq(definition.sell_token_amount, USDC_ESCROW_AMOUNT, "Definition sell token amount mismatch!");
@@ -31,17 +31,17 @@ unconstrained fn full_otc_order_success() {
     assert_eq(definition.buy_token_amount, ETH_ESCROW_AMOUNT, "Definition buy token amount mismatch!");
 
     // check the partial note commitment in the definition is valid
-    let validity_commitment = PartialUintNote { 
-        commitment: definition.partial_note 
-    }.compute_validity_commitment(contracts.escrow);
-    assert(
-        env.public().nullifier_exists(validity_commitment, contracts.eth),
-        "Validity nullifier should exist",
-    );
+    let validity_commitment = definition.partial_note.compute_validity_commitment(contracts.escrow);
+    env.public_context(|context| {
+        assert(
+            context.nullifier_exists(validity_commitment, contracts.usdc),
+            "Validity nullifier should exist"
+        );
+    });
 
     // check usdc balance of seller and contract before deposit
-    expect_private_balance(contracts.usdc, accounts.seller, USDC_ESCROW_AMOUNT);
-    expect_private_balance(contracts.usdc, contracts.escrow, 0);
+    expect_private_balance(env, contracts.usdc, accounts.seller, USDC_ESCROW_AMOUNT);
+    expect_private_balance(env, contracts.usdc, contracts.escrow, 0);
 
     // deposit to escrow
     deposit_to_escrow(
@@ -54,8 +54,8 @@ unconstrained fn full_otc_order_success() {
     );
 
     // check usdc balance of seller and contract after deposit
-    expect_private_balance(contracts.usdc, accounts.seller, 0);
-    expect_private_balance(contracts.usdc, contracts.escrow, USDC_ESCROW_AMOUNT);
+    expect_private_balance(env, contracts.usdc, accounts.seller, 0);
+    expect_private_balance(env, contracts.usdc, contracts.escrow, USDC_ESCROW_AMOUNT);
 
     // fill the otc order
     fill_otc_order(
@@ -70,9 +70,9 @@ unconstrained fn full_otc_order_success() {
     // check balances after otc order is complete
     // why does uncommenting this cause
     // "Assertion failed: A partial note's completion log did not result in any notes being found - this should never happen"
-    // expect_private_balance(contracts.usdc, accounts.buyer, USDC_ESCROW_AMOUNT);
-    // expect_private_balance(contracts.usdc, contracts.escrow, 0);
-    // expect_private_balance(contracts.eth, accounts.seller, ETH_ESCROW_AMOUNT);
+    expect_private_balance(env, contracts.usdc, accounts.buyer, USDC_ESCROW_AMOUNT);
+    expect_private_balance(env, contracts.usdc, contracts.escrow, 0);
+    expect_private_balance(env, contracts.eth, accounts.seller, ETH_ESCROW_AMOUNT);
 }
 
 // ensure cannot deposit without sufficient balance

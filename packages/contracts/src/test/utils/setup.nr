@@ -1,17 +1,20 @@
-use crate::{
-    OTCEscrowContract,
-    test::utils::token::mint_to_private,
-};
-use token_contract::Token;
 use aztec::{
-    prelude::AztecAddress,
     oracle::random::random,
-    protocol_types::contract_instance::ContractInstance,
+    protocol_types::{
+        contract_instance::ContractInstance,
+        address::AztecAddress,
+    },
     test::helpers::{
         test_environment::TestEnvironment,
-        cheatcodes
+        txe_oracles
     }
 };
+use token_contract::Token;
+use crate::{
+    OTCEscrow,
+    test::utils::token::mint_to_private,
+};
+
 
 // Token metadata
 pub global USDC_NAME: str<31> = "USD Coin\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n";
@@ -30,17 +33,17 @@ pub global ETH_ESCROW_AMOUNT: u128 = (1 * 10.pow_32(18)) as u128;
 
 // Named structs for easy readability
 pub struct TestAccounts {
-    minter: AztecAddress,
-    seller: AztecAddress,
-    buyer: AztecAddress,
-    external: AztecAddress,
-    escrow_secret: Field
+    pub minter: AztecAddress,
+    pub seller: AztecAddress,
+    pub buyer: AztecAddress,
+    pub external: AztecAddress,
+    pub escrow_secret: Field
 }
 
 pub struct TestContracts {
-    usdc: AztecAddress,
-    eth: AztecAddress,
-    escrow: AztecAddress,
+    pub usdc: AztecAddress,
+    pub eth: AztecAddress,
+    pub escrow: AztecAddress,
 }
 
 /**
@@ -120,8 +123,9 @@ pub unconstrained fn setup_accounts<let NUM_ACCOUNTS: u32>(
 ) -> [AztecAddress; NUM_ACCOUNTS] {
     // Setup env, generate keys
     let mut accounts = [AztecAddress::zero(); NUM_ACCOUNTS];
-    for i in 0..NUM_ACCOUNTS {        
-        accounts[i] = env.create_account_contract(i as Field);
+    for i in 0..NUM_ACCOUNTS {
+        // always use account contracts since we need authwits
+        accounts[i] = env.create_contract_account();
     }
     accounts
 }
@@ -134,19 +138,10 @@ pub unconstrained fn deploy_token_contract(
     decimals: u8
 ) -> AztecAddress {
     let initializer_call_interface = Token::interface()
-        .constructor_with_minter(
-            name,
-            symbol,
-            decimals,
-            owner,
-            AztecAddress::zero()
-        );
-    let contract_instance = env
-        .deploy("../../deps/aztec-standards/@token_contract", "Token")
-        .with_public_void_initializer(owner, initializer_call_interface);
-    env.advance_block_by(1);
+        .constructor(owner, name, symbol, decimals);
 
-    contract_instance.to_address()
+    env.deploy("~/nargo/github.com/AztecProtocol/aztec-packages/v3.0.0-nightly.20250923/noir-projects/noir-contracts/contracts/app/token_contract/Token")
+        .with_public_initializer(owner, initializer_call_interface)
 }
 
 pub unconstrained fn deploy_escrow_contract(
@@ -159,20 +154,21 @@ pub unconstrained fn deploy_escrow_contract(
 ) -> (AztecAddress, Field) {
     // setup keys for escrow account
     let escrow_secret = unsafe { random() };
-    let escrow_contract_account = cheatcodes::add_account(escrow_secret);
+    let escrow_contract_account = txe_oracles::add_account(escrow_secret);
 
     // deploy escrow contract
-    let initializer_call_interface = OTCEscrowContract::interface()
+    let initializer_call_interface = OTCEscrow::interface()
         .constructor(
             sell_token_address,
             sell_token_amount,
             buy_token_address,
             buy_token_amount
         );
-    let contract_instance = env
-        .deploy_self_with_public_keys("OTCEscrowContract", escrow_secret)
-        .with_private_initializer(owner, initializer_call_interface);
-    env.advance_block_by(1);
+    let mut contract_instance = env.deploy("OTCEscrow");
 
-    (contract_instance.to_address(), escrow_secret)
+    contract_instance.secret = escrow_secret;
+        
+    let contract_address = contract_instance.with_private_initializer(owner, initializer_call_interface);
+
+    (contract_address, escrow_secret)
 }

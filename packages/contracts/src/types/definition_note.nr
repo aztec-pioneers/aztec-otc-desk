@@ -1,28 +1,31 @@
 use aztec::{
     macros::notes::note,
     oracle::random::random,
-    prelude::AztecAddress,
-    protocol_types::traits::{Deserialize, Serialize},
+    protocol_types::{
+        traits::{Deserialize, Serialize, Packable},
+        address::AztecAddress
+    },
 };
 use poseidon::poseidon2::Poseidon2;
+use uint_note::uint_note::PartialUintNote;
 
 
+#[derive(Eq, Serialize, Deserialize, Packable)]
 #[note]
-#[derive(Eq, Serialize, Deserialize)]
 pub struct DefinitionNote {
-    owner: AztecAddress,
-    partial_note: Field,
-    sell_token_address: AztecAddress,
-    sell_token_amount: u128,
-    buy_token_address: AztecAddress,
-    buy_token_amount: u128,
-    randomness: Field,
+    pub owner: AztecAddress,
+    pub partial_note: PartialUintNote,
+    pub sell_token_address: AztecAddress,
+    pub sell_token_amount: u128,
+    pub buy_token_address: AztecAddress,
+    pub buy_token_amount: u128,
+    pub randomness: Field,
 }
 
 impl DefinitionNote {
     pub fn new(
         owner: AztecAddress,
-        partial_note: Field,
+        partial_note: PartialUintNote,
         sell_token_address: AztecAddress,
         sell_token_amount: u128,
         buy_token_address: AztecAddress,

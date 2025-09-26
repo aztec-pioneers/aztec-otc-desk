@@ -1,11 +1,9 @@
 use token_contract::Token;
 use aztec::{
-    prelude::AztecAddress,
-    oracle::execution::get_contract_address,
+    protocol_types::address::AztecAddress,
     test::helpers::{
         test_environment::TestEnvironment,
-        cheatcodes,
-        authwit as authwit_cheatcodes
+        authwit::add_private_authwit_from_call_interface
     }
 };
 
@@ -16,33 +14,23 @@ pub unconstrained fn mint_to_private(
     recipient: AztecAddress,
     amount: u128
 ) {
-    env.impersonate(minter);
-    Token::at(token_address)
-        .mint_to_private(minter, recipient, amount)
-        .call(&mut env.private()
-    ); 
-    env.advance_block_by(1);
+    env.call_private(
+        minter,
+        Token::at(token_address).mint_to_private(recipient, amount)
+    );
 }
 
-pub unconstrained fn get_balance_private(
-    token_address: AztecAddress,
-    account_address: AztecAddress,
-) -> u128 {
-    let current_contract_address = get_contract_address();
-    cheatcodes::set_contract_address(token_address);
-    
-    let amount = Token::balance_of_private(account_address);
-    cheatcodes::set_contract_address(current_contract_address);
-    amount
-}
 
 pub unconstrained fn expect_private_balance(
+    env: &mut TestEnvironment,
     token_address: AztecAddress,
     account_address: AztecAddress,
     expected_balance: u128
 ) {
-    let actual_balance = get_balance_private(token_address, account_address);
-    assert_eq(actual_balance, expected_balance, "Unexpected private balance");
+    assert_eq(
+        env.simulate_utility(Token::at(token_address).balance_of_private(account_address)),
+        expected_balance,
+    );
 }
 
 /**
@@ -63,8 +51,8 @@ pub unconstrained fn private_transfer_authwit(
     nonce: Field
 ) {
     let call_interface = Token::at(token_address)
-        .transfer_private_to_private(from, caller, amount, nonce);
-    authwit_cheatcodes::add_private_authwit_from_call_interface(
+        .transfer_in_private(from, caller, amount, nonce);
+    add_private_authwit_from_call_interface(
         from,
         caller,
         call_interface
