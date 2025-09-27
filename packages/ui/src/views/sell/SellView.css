@@ -53,7 +53,7 @@
 .sell-view__form {
   display: flex;
   flex-direction: column;
-  gap: var(--space-xl);
+  gap: 1.25rem;
   align-items: center;
 }
 
@@ -252,8 +252,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 2.25rem;
-  height: 2.25rem;
+  width: 2.5rem;
+  height: 2.5rem;
   border-radius: 50%;
   border: 1px solid var(--border-muted);
   background: var(--surface-muted);
@@ -273,4 +273,5 @@
 
 .sell-view__switch-icon {
   color: var(--text-primary);
+  transform: scale(1.15);
 }
