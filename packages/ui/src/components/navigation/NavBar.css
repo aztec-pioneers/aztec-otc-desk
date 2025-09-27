@@ -1,0 +1,176 @@
+.nav-bar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--color-bg-shell);
+  backdrop-filter: var(--blur-shell);
+  border-bottom: 1px solid var(--color-border-soft);
+}
+
+.nav-bar__inner {
+  margin: 0 auto;
+  padding: var(--space-sm) 0;
+  width: min(1200px, 92vw);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+}
+
+.nav-bar__inner--mobile {
+  justify-content: center;
+}
+
+.nav-bar__brand {
+  background: none;
+  border: 1px solid var(--color-border-strong);
+  color: inherit;
+  padding: 0.35rem var(--space-xs);
+  border-radius: var(--radius-pill);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2xs);
+  cursor: pointer;
+  transition:
+    border-color var(--transition-base),
+    background-color var(--transition-base);
+}
+
+.nav-bar__brand:hover,
+.nav-bar__brand:focus-visible {
+  border-color: var(--color-text-accent);
+  background-color: var(--color-bg-highlight);
+}
+
+.nav-bar__brand:focus-visible {
+  outline: 2px solid var(--color-outline-accent);
+  outline-offset: 2px;
+}
+
+.nav-bar__brand-mark {
+  display: inline-grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(
+    135deg,
+    var(--color-gradient-primary-start) 0%,
+    var(--color-gradient-primary-end) 100%
+  );
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+.nav-bar__brand-text {
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.nav-bar__links {
+  list-style: none;
+  display: flex;
+  gap: var(--space-sm);
+  margin: 0;
+  padding: 0;
+}
+
+.nav-bar__link {
+  padding: 0.5rem var(--space-xs);
+  border-radius: var(--radius-pill);
+  font-weight: 500;
+  color: var(--color-text-muted);
+  transition:
+    background-color var(--transition-base),
+    color var(--transition-base);
+}
+
+.nav-bar__link:hover,
+.nav-bar__link:focus-visible {
+  background-color: var(--color-bg-hover);
+  color: var(--color-text-primary);
+}
+
+.nav-bar__link--active {
+  background: linear-gradient(
+    135deg,
+    var(--color-gradient-primary-soft-start),
+    var(--color-gradient-primary-soft-end)
+  );
+  color: var(--color-text-primary);
+}
+
+.nav-bar__wallet {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.45rem 0.85rem;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--wallet-border-color, var(--color-border-soft));
+  background: var(--wallet-bg-color, transparent);
+  font-size: var(--font-size-sm);
+  color: var(--wallet-text-color, var(--color-text-muted));
+  cursor: pointer;
+  transition:
+    background-color var(--transition-base),
+    border-color var(--transition-base),
+    color var(--transition-base);
+}
+
+.nav-bar__wallet-indicator {
+  display: inline-block;
+  width: 0.65rem;
+  height: 0.65rem;
+  border-radius: 50%;
+  background: var(--wallet-indicator-color, var(--color-text-accent));
+  box-shadow: var(--wallet-indicator-shadow, var(--shadow-glow-danger));
+}
+
+.nav-bar__wallet:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+.nav-bar__wallet--disconnected {
+  --wallet-border-color: var(--color-indicator-danger-border);
+  --wallet-bg-color: var(--color-indicator-danger-bg);
+  --wallet-indicator-color: var(--color-indicator-danger);
+  --wallet-indicator-shadow: var(--shadow-glow-danger);
+}
+
+.nav-bar__wallet--connecting {
+  --wallet-border-color: var(--color-indicator-info-border);
+  --wallet-bg-color: var(--color-indicator-info-bg);
+  --wallet-indicator-color: var(--color-indicator-info);
+  --wallet-indicator-shadow: var(--shadow-glow-info);
+  --wallet-text-color: var(--color-text-primary);
+}
+
+.nav-bar__wallet--connected {
+  --wallet-border-color: var(--color-indicator-success-border);
+  --wallet-bg-color: var(--color-indicator-success-bg);
+  --wallet-indicator-color: var(--color-indicator-success);
+  --wallet-indicator-shadow: var(--shadow-glow-success);
+  --wallet-text-color: var(--color-text-primary);
+}
+
+@media (max-width: 960px) {
+  .nav-bar__inner {
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: var(--space-sm);
+  }
+
+  .nav-bar__links {
+    order: 3;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .nav-bar__wallet {
+    order: 2;
+    margin-left: auto;
+  }
+}

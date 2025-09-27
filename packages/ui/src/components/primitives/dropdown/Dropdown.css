@@ -1,0 +1,93 @@
+.ui-dropdown {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  gap: var(--space-3xs);
+  width: 100%;
+}
+
+.ui-dropdown__label {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-subtle);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.ui-dropdown__button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2xs);
+  padding: 0.55rem 0.75rem;
+  width: 100%;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border-soft);
+  background: rgba(18, 22, 35, 0.65);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  transition:
+    border-color var(--transition-base),
+    background-color var(--transition-base),
+    color var(--transition-base);
+}
+
+.ui-dropdown__button:hover,
+.ui-dropdown__button:focus-visible {
+  border-color: var(--color-border-strong);
+  background: rgba(18, 22, 35, 0.85);
+  outline: none;
+}
+
+.ui-dropdown__chevron {
+  width: 1rem;
+  height: 1rem;
+  fill: none;
+  stroke: var(--color-text-subtle);
+  stroke-width: 1.75;
+  transition: transform var(--transition-base);
+}
+
+.ui-dropdown__button[aria-expanded='true'] .ui-dropdown__chevron {
+  transform: rotate(180deg);
+}
+
+.ui-dropdown__list {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + var(--space-3xs));
+  left: 0;
+  width: 100%;
+  max-height: 260px;
+  overflow-y: auto;
+  padding: var(--space-3xs) 0;
+  margin: 0;
+  list-style: none;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border-soft);
+  background: rgba(12, 15, 24, 0.95);
+  box-shadow: 0 18px 40px rgba(5, 7, 12, 0.45);
+}
+
+.ui-dropdown__option {
+  padding: 0.55rem 0.75rem;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-primary);
+  cursor: pointer;
+  transition:
+    background-color var(--transition-base),
+    color var(--transition-base);
+}
+
+.ui-dropdown__option--highlighted {
+  background: rgba(198, 207, 255, 0.12);
+}
+
+.ui-dropdown__option--selected {
+  color: var(--color-text-primary);
+  font-weight: 600;
+}
+
+.ui-dropdown__option:active {
+  background: rgba(68, 85, 255, 0.25);
+}

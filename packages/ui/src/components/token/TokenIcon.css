@@ -1,0 +1,22 @@
+.token-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  box-shadow: 0 8px 18px rgba(9, 12, 19, 0.35);
+}
+
+.token-icon--md {
+  width: 2.8rem;
+  height: 2.8rem;
+  font-size: 1rem;
+}
+
+.token-icon--sm {
+  width: 2rem;
+  height: 2rem;
+  font-size: 0.85rem;
+}

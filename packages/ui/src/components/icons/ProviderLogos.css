@@ -1,0 +1,17 @@
+.provider-logo {
+  width: 2.5rem;
+  height: 2.5rem;
+  flex-shrink: 0;
+}
+
+.wallet-modal__provider-logo-wrapper {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: var(--radius-md);
+  background: rgba(18, 22, 35, 0.6);
+  border: 1px solid var(--color-border-soft);
+  margin-right: var(--space-sm);
+}

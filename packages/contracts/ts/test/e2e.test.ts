@@ -50,6 +50,7 @@ describe("Private Transfer Demo Test", () => {
         // setup PXE connections
         sellerPXE = await createPXE();
         buyerPXE = await createPXE(1);
+        console.log("connected")
 
         // set up accounts
         const deployedAccounts = await getDeployedTestAccounts(sellerPXE);

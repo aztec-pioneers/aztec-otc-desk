@@ -1,0 +1,205 @@
+.sell-view {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  align-items: center;
+}
+
+.sell-view--locked {
+  min-height: 320px;
+  justify-content: center;
+  text-align: center;
+}
+
+.sell-view--locked p {
+  font-size: 1.1rem;
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+.sell-view__header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xs);
+  max-width: 720px;
+  align-self: flex-start;
+}
+
+.sell-view__header h1 {
+  margin: 0;
+  font-size: clamp(2.1rem, 3.6vw, 2.8rem);
+}
+
+.sell-view__header p {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 1rem;
+}
+
+.sell-view__panel {
+  max-width: 640px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  padding: var(--space-xl) clamp(var(--space-lg), 4vw, var(--space-2xl));
+  border-radius: var(--radius-lg);
+  background: rgba(14, 17, 26, 0.8);
+  border: 1px solid var(--color-border-soft);
+  box-shadow: var(--shadow-soft);
+  align-items: center;
+  width: min(640px, 100%);
+}
+
+.sell-view__form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xl);
+  align-items: center;
+}
+
+.sell-view__form--disabled {
+  cursor: wait;
+}
+
+.sell-view__field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  border: none;
+  padding: 0;
+  margin: 0;
+  align-items: center;
+  width: 100%;
+}
+
+.sell-view__field[disabled] {
+  opacity: 0.75;
+}
+
+.sell-view__amount {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3xs);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-subtle);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  width: min(280px, 100%);
+  align-items: flex-start;
+  text-align: left;
+}
+
+.sell-view__amount input {
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border-soft);
+  background: rgba(18, 22, 35, 0.75);
+  color: var(--color-text-primary);
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.sell-view__amount input:focus-visible {
+  outline: 2px solid var(--color-outline-accent);
+  outline-offset: 2px;
+}
+
+.sell-view__progress {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3xs);
+  width: min(360px, 100%);
+  align-items: center;
+}
+
+.sell-view__progress-bar {
+  position: relative;
+  height: 0.55rem;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+
+.sell-view__progress-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 0;
+  border-radius: inherit;
+  background: linear-gradient(135deg, #54ffe6 0%, #6d9dff 100%);
+  transition: width 280ms ease;
+}
+
+.sell-view__progress-label {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
+.sell-view__field .token-selector {
+  width: min(320px, 100%);
+  margin: 0 auto;
+}
+
+.sell-view__field-error {
+  display: block;
+  margin-top: var(--space-4xs);
+  color: #ff8a9d;
+  font-size: var(--font-size-sm);
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.sell-view__submit {
+  align-self: center;
+  padding: 0.85rem 2.6rem;
+  border-radius: var(--radius-pill);
+  border: none;
+  background: linear-gradient(
+    135deg,
+    var(--color-gradient-primary-start),
+    var(--color-gradient-primary-end)
+  );
+  color: rgba(15, 17, 25, 0.92);
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    transform var(--transition-base),
+    box-shadow var(--transition-base);
+}
+
+.sell-view__submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.sell-view__submit:hover:not(:disabled),
+.sell-view__submit:focus-visible:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 16px 36px rgba(84, 255, 230, 0.28);
+}
+
+@media (max-width: 960px) {
+  .sell-view__panel {
+    padding: var(--space-lg);
+  }
+
+  .sell-view__form {
+    width: 100%;
+  }
+
+  .sell-view__field {
+    align-items: stretch;
+  }
+
+  .sell-view__amount {
+    width: 100%;
+  }
+
+  .sell-view__submit {
+    width: 100%;
+  }
+}

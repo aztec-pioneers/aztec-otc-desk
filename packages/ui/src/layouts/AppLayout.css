@@ -1,0 +1,20 @@
+.app-layout {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  color: inherit;
+}
+
+.app-layout__content {
+  flex: 1;
+  width: min(1200px, 92vw);
+  margin: 0 auto;
+  padding: var(--space-xl) 0 var(--space-2xl);
+}
+
+@media (max-width: 768px) {
+  .app-layout__content {
+    width: min(100%, 92vw);
+    padding: 2.5rem 0 var(--space-xl);
+  }
+}
