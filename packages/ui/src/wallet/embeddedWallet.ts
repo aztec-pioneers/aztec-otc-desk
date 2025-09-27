@@ -11,6 +11,7 @@ import {
   createAztecNodeClient,
   type Aliased,
   type AztecNode,
+  CompleteAddress,
 } from '@aztec/aztec.js'
 import { getPXEServiceConfig, type PXEServiceConfig } from '@aztec/pxe/config'
 import { createPXEService } from '@aztec/pxe/client/lazy'
@@ -22,7 +23,7 @@ import { WalletDB, type AccountType } from './walletDB'
 import { convertFromUTF8BufferAsString } from '../utils/conversion'
 import { createStore } from '@aztec/kv-store/indexeddb'
 import { createLogger } from '@aztec/foundation/log'
-import { MINTER_ACCOUNT } from '../data/tokens'
+import { MINTER_ACCOUNT } from '../constants/tokens'
 
 export interface AccountData {
   secret: Fr
@@ -59,7 +60,7 @@ export class EmbeddedWallet extends BaseWallet {
         pxe: pxeLogger,
         prover: createLogger('wallet:prover'),
       },
-      
+
     })
 
     const walletLogger = createLogger('wallet:data:idb')
@@ -131,6 +132,13 @@ export class EmbeddedWallet extends BaseWallet {
     await accountManager.register()
 
     return accountManager
+  }
+
+  async registerAccountWithPXE(
+    contractSecretKey: Fr,
+    partialAddress: Fr
+  ): Promise<CompleteAddress> {
+    return await this.pxe.registerAccount(contractSecretKey, partialAddress)
   }
 
   async createAndStoreAccount(

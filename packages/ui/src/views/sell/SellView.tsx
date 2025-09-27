@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, type ChangeEvent, type FormEventHandler } from 'react'
 import { useNavigate } from 'react-router-dom'
 import TokenSelector from '../../components/token/TokenSelector'
-import { TOKENS } from '../../data/tokens'
+import { TOKENS } from '../../constants/tokens'
 import useSellOrder from '../../hooks/useSellOrder'
 import useWallet from '../../hooks/useWallet'
 import useIsMobile from '../../hooks/useIsMobile'

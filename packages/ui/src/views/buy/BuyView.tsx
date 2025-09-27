@@ -9,7 +9,7 @@ import {
 } from 'react'
 import { useNavigate } from 'react-router-dom'
 import TokenSelector from '../../components/token/TokenSelector'
-import { TOKENS } from '../../data/tokens'
+import { TOKENS } from '../../constants/tokens'
 import useWallet from '../../hooks/useWallet'
 import useBuyOrder from '../../hooks/useBuyOrder'
 import useIsMobile from '../../hooks/useIsMobile'

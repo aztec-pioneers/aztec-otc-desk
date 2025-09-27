@@ -20,6 +20,7 @@
     "@aztec/noir-contracts.js": "catalog:",
     "@aztec/pxe": "3.0.0-nightly.20250923",
     "@aztec/stdlib": "catalog:",
+    "@aztec-otc-desk/contracts": "workspace:*",
     "buffer-json": "^2.0.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",

@@ -55,6 +55,7 @@
       "name": "otc-ui",
       "version": "0.0.0",
       "dependencies": {
+        "@aztec-otc-desk/contracts": "workspace:*",
         "@aztec/accounts": "catalog:",
         "@aztec/aztec.js": "catalog:",
         "@aztec/entrypoints": "catalog:",

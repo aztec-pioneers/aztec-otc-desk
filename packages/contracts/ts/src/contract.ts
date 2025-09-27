@@ -73,10 +73,7 @@ export async function deployEscrowContract(
     const contract = await contractDeployment
         .send(opts.deploy)
         .deployed(opts.wait);
-    return {
-        contract: contract as OTCEscrowContract,
-        secretKey: contractSecretKey,
-    };
+    return { contract, secretKey: contractSecretKey };
 }
 
 /**
@@ -105,7 +102,7 @@ export async function deployTokenContract(
     )
         .send(opts.deploy)
         .deployed(opts.wait);
-    return contract as TokenContract;
+    return contract;
 }
 
 /**

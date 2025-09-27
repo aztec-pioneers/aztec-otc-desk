@@ -1,6 +1,11 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import useToast from './useToast'
+import WalletContext from '../context/wallet/WalletContext'
 import { formatBaseUnits } from '../utils/tokenAmount'
+import { deployEscrow, depositToEscrow } from '../utils/escrow'
+import { privateTransferAuthwit } from '../utils/token'
+import type { EmbeddedWallet } from '../wallet/embeddedWallet'
+import { createOTCDeskOrder } from '../utils/api'
 
 type SellOrderPhase =
   | 'idle'
@@ -52,6 +57,12 @@ export type UseSellOrderResult = {
 }
 
 const useSellOrder = (): UseSellOrderResult => {
+  const walletContext = useContext(WalletContext)
+  if (!walletContext) {
+    throw new Error('Wallet context needed for mint')
+  }
+  const { wallet, activeAccount } = walletContext
+
   const [phase, setPhase] = useState<SellOrderPhase>('idle')
   const [progress, setProgress] = useState(progressByPhase.idle)
   const [error, setError] = useState<string | null>(null)
@@ -111,25 +122,64 @@ const useSellOrder = (): UseSellOrderResult => {
       if (phase !== 'idle') {
         return false
       }
+      if (!wallet || !wallet.instance || !activeAccount) {
+        const message = 'Wallet not connected'
+        setError(message)
+        pushToast({ message, variant: 'error' })
+        return false
+      }
 
       setError(null)
       applyPhase('signingEscrow')
 
       try {
-        await simulateSignature('Escrow creation', options?.failStage === 'escrowSignature')
-        applyPhase('waitingEscrowConfirmation')
+        // deploy the escrow contract
+        const { escrow, escrowSecretKey } = await deployEscrow(
+          // todo: handle extension wallet needing pxe access
+          wallet.instance as EmbeddedWallet,
+          activeAccount.address,
+          sellToken,
+          sellAmount,
+          buyToken,
+          buyAmount,
+        );
+        applyPhase('deployEscrow');
 
-        await simulateTransaction('Escrow creation', options?.failStage === 'escrowTransaction')
-        applyPhase('signingDeposit')
+        // create authwit for deposit
+        const { authwit, nonce } = await privateTransferAuthwit(
+          wallet.instance,
+          activeAccount.address,
+          sellToken,
+          sellAmount,
+          escrow.address.toString(),
+        );
+        applyPhase('createAuthwit');
 
-        await simulateSignature('Escrow deposit', options?.failStage === 'depositSignature')
-        applyPhase('waitingDepositConfirmation')
+        // deposit tokens into escrow
+        const depositReceipt = await depositToEscrow(
+          wallet.instance,
+          activeAccount.address,
+          escrow.address.toString(),
+          authwit,
+          nonce
+        );
+        applyPhase('depositTokens')
 
-        await simulateTransaction('Escrow deposit', options?.failStage === 'depositTransaction')
+        // push the escrow to the OTC Desk Matching Engine API
+        await createOTCDeskOrder(
+          escrow.address.toString(),
+          escrow.instance,
+          escrowSecretKey,
+          await escrow.partialAddress,
+          sellToken,
+          sellAmount,
+          buyToken,
+          buyAmount
+        );
         applyPhase('success')
 
         pushToast({
-          message: `Sale submitted: Sell ${formatBaseUnits(sellToken, sellAmount)} ${sellToken} for ${formatBaseUnits(buyToken, buyAmount)} ${buyToken}`,
+          message: `Sell order submitted: Sell ${formatBaseUnits(sellToken, sellAmount)} ${sellToken} for ${formatBaseUnits(buyToken, buyAmount)} ${buyToken}`,
           variant: 'success',
         })
 

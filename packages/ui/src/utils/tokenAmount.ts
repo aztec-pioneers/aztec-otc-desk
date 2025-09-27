@@ -1,4 +1,4 @@
-import { TOKENS, type TokenMetadata } from '../data/tokens'
+import { TOKENS, type TokenMetadata } from '../constants/tokens'
 
 const FRACTION_DIGITS = 6
 

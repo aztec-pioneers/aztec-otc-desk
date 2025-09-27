@@ -9,7 +9,7 @@ import {
   type PropsWithChildren,
 } from 'react'
 import { TokenContractArtifact } from '@aztec/noir-contracts.js/Token'
-import { TOKENS } from '../../data/tokens'
+import { TOKENS } from '../../constants/tokens'
 import { fetchTokenBalance } from '../../utils/token'
 import WalletContext from '../wallet/WalletContext'
 import { AztecAddress } from '@aztec/aztec.js'

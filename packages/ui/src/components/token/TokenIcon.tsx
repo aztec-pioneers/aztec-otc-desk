@@ -1,4 +1,4 @@
-import type { TokenMetadata } from '../../data/tokens'
+import type { TokenMetadata } from '../../constants/tokens'
 import './TokenIcon.css'
 
 type TokenIconProps = {

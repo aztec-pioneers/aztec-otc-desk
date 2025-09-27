@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { TOKENS, DEFAULT_TOKEN_SYMBOL, type TokenMetadata } from '../../data/tokens'
+import { TOKENS, DEFAULT_TOKEN_SYMBOL, type TokenMetadata } from '../../constants/tokens'
 import TokenIcon from './TokenIcon'
 import './TokenSelector.css'
 
