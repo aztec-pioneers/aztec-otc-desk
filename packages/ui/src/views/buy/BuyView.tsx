@@ -63,6 +63,18 @@ const BuyViewContent = () => {
   const sellTokenBalance = useTokenBalance(sellToken)
   const buyTokenBalance = useTokenBalance(buyToken)
 
+  useEffect(() => {
+    if (sellTokenBalance.amount === undefined && sellTokenBalance.status === 'idle') {
+      void sellTokenBalance.ensure()
+    }
+  }, [sellTokenBalance.amount, sellTokenBalance.status, sellTokenBalance.ensure])
+
+  useEffect(() => {
+    if (buyTokenBalance.amount === undefined && buyTokenBalance.status === 'idle') {
+      void buyTokenBalance.ensure()
+    }
+  }, [buyTokenBalance.amount, buyTokenBalance.status, buyTokenBalance.ensure])
+
 const updatingSetter = (
   symbol: string,
   setter: Dispatch<SetStateAction<AmountField>>,

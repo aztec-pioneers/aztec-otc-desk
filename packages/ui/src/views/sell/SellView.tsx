@@ -45,6 +45,12 @@ const SellViewContent = () => {
 
   const sellBalance = useTokenBalance(sellToken)
 
+  useEffect(() => {
+    if (sellBalance.amount === undefined && sellBalance.status === 'idle') {
+      void sellBalance.ensure()
+    }
+  }, [sellBalance.amount, sellBalance.status, sellBalance.ensure])
+
   const { phase, progress, error: workflowError, initiateSale } = useSellOrder()
 
   const isProcessing = phase !== 'idle'
