@@ -120,8 +120,8 @@ const MintViewContent = () => {
               <input
                 id="mint-amount"
                 type="text"
-                inputMode="numeric"
-                pattern="[0-9]*"
+                inputMode="decimal"
+                pattern="^\\d*(\\.\\d{0,6})?$"
                 value={mintValue}
                 onChange={handleMintInputChange}
                 maxLength={9}

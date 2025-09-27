@@ -6,13 +6,14 @@ import { deployEscrow, depositToEscrow } from '../utils/escrow'
 import { privateTransferAuthwit } from '../utils/token'
 import type { EmbeddedWallet } from '../wallet/embeddedWallet'
 import { createOTCDeskOrder } from '../utils/api'
+import { TOKENS } from '../constants/tokens'
 
 type SellOrderPhase =
   | 'idle'
-  | 'signingEscrow'
-  | 'waitingEscrowConfirmation'
-  | 'signingDeposit'
-  | 'waitingDepositConfirmation'
+  | 'creatingEscrow'
+  | 'creatingTransferAuthwit'
+  | 'depositingToEscrow'
+  | 'postingOrderToOTCDesk'
   | 'success'
   | 'error'
 
@@ -31,18 +32,13 @@ type MockFailureStage =
 
 const progressByPhase: Record<SellOrderPhase, number> = {
   idle: 0,
-  signingEscrow: 0,
-  waitingEscrowConfirmation: 25,
-  signingDeposit: 50,
-  waitingDepositConfirmation: 75,
+  creatingEscrow: 15,
+  creatingTransferAuthwit: 35,
+  depositingToEscrow: 65,
+  postingOrderToOTCDesk: 85,
   success: 100,
   error: 0,
 }
-
-const delay = (duration: number) => new Promise((resolve) => setTimeout(resolve, duration))
-
-const signatureDelay = 650
-const transactionDelay = 1200
 
 export type SellOrderOptions = {
   failStage?: MockFailureStage
@@ -59,7 +55,7 @@ export type UseSellOrderResult = {
 const useSellOrder = (): UseSellOrderResult => {
   const walletContext = useContext(WalletContext)
   if (!walletContext) {
-    throw new Error('Wallet context needed for mint')
+    throw new Error('Wallet context needed for sell order')
   }
   const { wallet, activeAccount } = walletContext
 
@@ -101,20 +97,6 @@ const useSellOrder = (): UseSellOrderResult => {
     [applyPhase, clearPendingReset],
   )
 
-  const simulateSignature = useCallback(async (label: string, shouldFail: boolean) => {
-    await delay(signatureDelay)
-    if (shouldFail) {
-      throw new Error(`${label} signature rejected`)
-    }
-  }, [])
-
-  const simulateTransaction = useCallback(async (label: string, shouldFail: boolean) => {
-    await delay(transactionDelay)
-    if (shouldFail) {
-      throw new Error(`${label} transaction reverted`)
-    }
-  }, [])
-
   const initiateSale = useCallback<
     UseSellOrderResult['initiateSale']
   >(
@@ -130,52 +112,53 @@ const useSellOrder = (): UseSellOrderResult => {
       }
 
       setError(null)
-      applyPhase('signingEscrow')
+      applyPhase('creatingEscrow')
+
+
 
       try {
-        // deploy the escrow contract
+        // convert the tokens to addresses
+        const sellTokenAddress = TOKENS.find(t => t.symbol === sellToken)?.address!
+        const buyTokenAddress = TOKENS.find(t => t.symbol === buyToken)?.address!
+        
         const { escrow, escrowSecretKey } = await deployEscrow(
-          // todo: handle extension wallet needing pxe access
           wallet.instance as EmbeddedWallet,
           activeAccount.address,
-          sellToken,
+          sellTokenAddress,
           sellAmount,
-          buyToken,
+          buyTokenAddress,
           buyAmount,
-        );
-        applyPhase('deployEscrow');
+        )
+        applyPhase('creatingTransferAuthwit')
 
-        // create authwit for deposit
         const { authwit, nonce } = await privateTransferAuthwit(
           wallet.instance,
           activeAccount.address,
-          sellToken,
+          sellTokenAddress,
           sellAmount,
           escrow.address.toString(),
-        );
-        applyPhase('createAuthwit');
+        )
+        applyPhase('depositingToEscrow')
 
-        // deposit tokens into escrow
-        const depositReceipt = await depositToEscrow(
+        await depositToEscrow(
           wallet.instance,
           activeAccount.address,
           escrow.address.toString(),
           authwit,
-          nonce
-        );
-        applyPhase('depositTokens')
+          nonce,
+        )
+        applyPhase('postingOrderToOTCDesk')
 
-        // push the escrow to the OTC Desk Matching Engine API
         await createOTCDeskOrder(
           escrow.address.toString(),
           escrow.instance,
           escrowSecretKey,
           await escrow.partialAddress,
-          sellToken,
+          sellTokenAddress,
           sellAmount,
-          buyToken,
-          buyAmount
-        );
+          buyTokenAddress,
+          buyAmount,
+        )
         applyPhase('success')
 
         pushToast({
@@ -194,7 +177,7 @@ const useSellOrder = (): UseSellOrderResult => {
         return false
       }
     },
-    [applyPhase, phase, pushToast, scheduleReset, simulateSignature, simulateTransaction],
+    [activeAccount, applyPhase, phase, pushToast, scheduleReset, wallet],
   )
 
   return useMemo(

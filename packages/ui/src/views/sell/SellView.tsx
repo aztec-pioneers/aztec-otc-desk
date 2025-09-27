@@ -78,14 +78,14 @@ const SellViewContent = () => {
     switch (phase) {
       case 'idle':
         return 'Ready to submit order'
-      case 'signingEscrow':
-        return 'Awaiting escrow signature…'
-      case 'waitingEscrowConfirmation':
-        return 'Confirming escrow creation…'
-      case 'signingDeposit':
-        return 'Awaiting deposit signature…'
-      case 'waitingDepositConfirmation':
-        return 'Confirming deposit…'
+      case 'creatingEscrow':
+        return 'Deploying escrow contract…'
+      case 'creatingTransferAuthwit':
+        return 'Preparing transfer authorisation…'
+      case 'depositingToEscrow':
+        return 'Depositing tokens into escrow…'
+      case 'postingOrderToOTCDesk':
+        return 'Posting order to OTC desk…'
       case 'success':
         return 'Sale complete'
       case 'error':

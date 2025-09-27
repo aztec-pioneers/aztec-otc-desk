@@ -50,18 +50,11 @@ export const mintTokens = async (
 export const privateTransferAuthwit = async (
     wallet: Wallet,
     activeAccount: string,
-    symbol: string,
+    tokenAddress: string,
     amount: bigint,
     escrow: string,
 ): Promise<{ authwit: AuthWitness, nonce: Fr }> => {
-    // get the token
-    const tokenAddress = TOKENS.find(t => t.symbol === symbol)?.address;
-    if (!tokenAddress) {
-        throw new Error(`Token with symbol ${symbol} not found`);
-    }
     const token = await TokenContract.at(AztecAddress.fromString(tokenAddress), wallet);
-
-    // build call
     const activeAddress = AztecAddress.fromString(activeAccount);
     const escrowAddress = AztecAddress.fromString(escrow);
     const nonce = Fr.random();
