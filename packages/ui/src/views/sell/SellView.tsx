@@ -5,12 +5,11 @@ import { TOKENS } from '../../data/tokens'
 import useSellOrder from '../../hooks/useSellOrder'
 import useWallet from '../../hooks/useWallet'
 import useIsMobile from '../../hooks/useIsMobile'
-import { toBaseUnits, formatBaseUnits } from '../../utils/tokenAmount'
+import { clampDecimalInput, formatBaseUnits, parseDecimalAmount } from '../../utils/tokenAmount'
 import useTokenBalance from '../../hooks/useTokenBalance'
 import Spinner from '../../components/primitives/Spinner'
 import './SellView.css'
 
-const MAX_AMOUNT = 999_999_999
 const SELL_DEFAULT = 'ETH'
 const BUY_DEFAULT = 'USDC'
 
@@ -51,46 +50,20 @@ const SellViewContent = () => {
   const isProcessing = phase !== 'idle'
   const showProgress = phase !== 'idle'
 
-  const sanitiseAmount = (
-    value: string,
-    setValue: (next: string) => void,
-    setError: (next: string | null) => void,
-  ) => {
-    const nextValue = value.replace(/[^0-9]/g, '')
-
-    if (!nextValue) {
-      setValue('')
-      setError(null)
-      return
-    }
-
-    const parsed = Number(nextValue)
-
-    if (Number.isNaN(parsed)) {
-      setError('Enter a valid amount')
-      return
-    }
-
-    if (parsed > MAX_AMOUNT) {
-      setValue(String(MAX_AMOUNT))
-      setError('Maximum amount is 999,999,999')
-      return
-    }
-
-    setValue(String(parsed))
-    setError(parsed === 0 ? 'Amount must be greater than zero' : null)
-  }
-
   const handleSellAmountChange = (event: ChangeEvent<HTMLInputElement>) => {
-    sanitiseAmount(event.target.value, setSellAmount, setSellError)
+    const next = clampDecimalInput(sellToken, event.target.value, sellBalance.amount)
+    setSellAmount(next.display)
+    setSellError(next.error)
   }
 
   const handleBuyAmountChange = (event: ChangeEvent<HTMLInputElement>) => {
-    sanitiseAmount(event.target.value, setBuyAmount, setBuyError)
+    const next = clampDecimalInput(buyToken, event.target.value)
+    setBuyAmount(next.display)
+    setBuyError(next.error)
   }
 
-  const invalidSell = Boolean(sellError) || !sellAmount || sellAmount === '0'
-  const invalidBuy = Boolean(buyError) || !buyAmount || buyAmount === '0'
+  const invalidSell = Boolean(sellError) || !sellAmount
+  const invalidBuy = Boolean(buyError) || !buyAmount
   const formDisabled = invalidSell || invalidBuy
   const confirmDisabled = formDisabled || isProcessing
 
@@ -129,9 +102,9 @@ const SellViewContent = () => {
 
     const success = await initiateSale({
       sellToken,
-      sellAmount: toBaseUnits(sellToken, Number(sellAmount)),
+      sellAmount: parseDecimalAmount(sellToken, sellAmount),
       buyToken,
-      buyAmount: toBaseUnits(buyToken, Number(buyAmount)),
+      buyAmount: parseDecimalAmount(buyToken, buyAmount),
     })
 
     if (success) {

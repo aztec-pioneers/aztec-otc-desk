@@ -13,12 +13,11 @@ import { TOKENS } from '../../data/tokens'
 import useWallet from '../../hooks/useWallet'
 import useBuyOrder from '../../hooks/useBuyOrder'
 import useIsMobile from '../../hooks/useIsMobile'
-import { toBaseUnits, formatBaseUnits } from '../../utils/tokenAmount'
+import { clampDecimalInput, formatBaseUnits, parseDecimalAmount } from '../../utils/tokenAmount'
 import useTokenBalance from '../../hooks/useTokenBalance'
 import Spinner from '../../components/primitives/Spinner'
 import './BuyView.css'
 
-const MAX_AMOUNT = 999_999_999
 const SELL_DEFAULT = 'USDC'
 const BUY_DEFAULT = 'ETH'
 
@@ -28,28 +27,6 @@ type AmountField = {
 }
 
 const createAmountField = (): AmountField => ({ value: '', error: null })
-
-const sanitiseAmount = (raw: string) => {
-  const digitsOnly = raw.replace(/[^0-9]/g, '')
-  if (!digitsOnly) {
-    return { value: '', error: null }
-  }
-
-  const parsed = Number(digitsOnly)
-  if (Number.isNaN(parsed)) {
-    return { value: digitsOnly, error: 'Enter a valid amount' }
-  }
-
-  if (parsed > MAX_AMOUNT) {
-    return { value: String(MAX_AMOUNT), error: 'Maximum amount is 999,999,999' }
-  }
-
-  if (parsed === 0) {
-    return { value: '0', error: 'Amount must be greater than zero' }
-  }
-
-  return { value: String(parsed), error: null }
-}
 
 const BuyViewContent = () => {
   const [sellToken, setSellToken] = useState(SELL_DEFAULT)
@@ -86,16 +63,20 @@ const BuyViewContent = () => {
   const sellTokenBalance = useTokenBalance(sellToken)
   const buyTokenBalance = useTokenBalance(buyToken)
 
-  const updatingSetter = (setter: Dispatch<SetStateAction<AmountField>>) =>
-    (event: ChangeEvent<HTMLInputElement>) => {
-      const sanitized = sanitiseAmount(event.target.value)
-      setter({ value: sanitized.value, error: sanitized.error })
-    }
+const updatingSetter = (
+  symbol: string,
+  setter: Dispatch<SetStateAction<AmountField>>,
+  available?: bigint,
+) =>
+  (event: ChangeEvent<HTMLInputElement>) => {
+    const next = clampDecimalInput(symbol, event.target.value, available)
+    setter({ value: next.display, error: next.error })
+  }
 
-  const handleSellMinChange = updatingSetter(setSellMin)
-  const handleSellMaxChange = updatingSetter(setSellMax)
-  const handleBuyMinChange = updatingSetter(setBuyMin)
-  const handleBuyMaxChange = updatingSetter(setBuyMax)
+  const handleSellMinChange = updatingSetter(sellToken, setSellMin, sellTokenBalance.amount)
+  const handleSellMaxChange = updatingSetter(sellToken, setSellMax, sellTokenBalance.amount)
+  const handleBuyMinChange = updatingSetter(buyToken, setBuyMin)
+  const handleBuyMaxChange = updatingSetter(buyToken, setBuyMax)
 
   const sellRangeFilled = Boolean(sellMin.value) && Boolean(sellMax.value)
   const buyRangeFilled = Boolean(buyMin.value) && Boolean(buyMax.value)
@@ -152,12 +133,12 @@ const BuyViewContent = () => {
       sellToken,
       buyToken,
       sellAmountRange: {
-        min: toBaseUnits(sellToken, Number(sellMin.value)),
-        max: toBaseUnits(sellToken, Number(sellMax.value)),
+        min: parseDecimalAmount(sellToken, sellMin.value),
+        max: parseDecimalAmount(sellToken, sellMax.value),
       },
       buyAmountRange: {
-        min: toBaseUnits(buyToken, Number(buyMin.value)),
-        max: toBaseUnits(buyToken, Number(buyMax.value)),
+        min: parseDecimalAmount(buyToken, buyMin.value),
+        max: parseDecimalAmount(buyToken, buyMax.value),
       },
     })
 
@@ -258,34 +239,6 @@ const BuyViewContent = () => {
               onChange={setBuyToken}
               tokens={buyTokens}
             />
-            <div className="buy-view__balance">
-              <span className="buy-view__balance-label">Available:</span>
-              <div className="buy-view__balance-value">
-                {buyTokenBalance.status === 'loading' || (buyTokenBalance.status === 'idle' && buyTokenBalance.amount === undefined) ? (
-                  <span className="buy-view__balance-loading">
-                    <Spinner size="sm" label="Fetching balance" />
-                    <span>Fetching…</span>
-                  </span>
-                ) : buyTokenBalance.status === 'error' ? (
-                  <span className="buy-view__balance-error">{buyTokenBalance.error ?? 'Unavailable'}</span>
-                ) : (
-                  <span>
-                    {buyTokenBalance.amount !== undefined
-                      ? formatBaseUnits(buyToken, buyTokenBalance.amount)
-                      : '—'}
-                  </span>
-                )}
-                {(buyTokenBalance.status === 'success' || buyTokenBalance.status === 'error') && (
-                  <button
-                    type="button"
-                    className="buy-view__balance-refresh"
-                    onClick={() => buyTokenBalance.refresh()}
-                  >
-                    refresh
-                  </button>
-                )}
-              </div>
-            </div>
             <div className="buy-view__range">
               <label className="buy-view__amount" htmlFor="buy-min">
                 <span>Min amount</span>

@@ -8,7 +8,7 @@ import useMint from '../../hooks/useMint'
 import useToast from '../../hooks/useToast'
 import useWallet from '../../hooks/useWallet'
 import useIsMobile from '../../hooks/useIsMobile'
-import { formatBaseUnits, toBaseUnits } from '../../utils/tokenAmount'
+import { clampDecimalInput, formatBaseUnits, parseDecimalAmount } from '../../utils/tokenAmount'
 import './MintView.css'
 
 const MintViewContent = () => {
@@ -36,27 +36,9 @@ const MintViewContent = () => {
   const mintPending = mintStatus === 'pending'
 
   const handleMintInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const nextValue = event.target.value.replace(/[^0-9]/g, '')
-    if (nextValue.length === 0) {
-      setMintValue('')
-      setMintError(null)
-      return
-    }
-
-    const parsed = parseInt(nextValue, 10)
-    if (Number.isNaN(parsed)) {
-      setMintError('Enter a valid amount')
-      return
-    }
-
-    if (parsed > 999_999_999) {
-      setMintValue('999999999')
-      setMintError('Maximum mint amount is 999,999,999')
-      return
-    }
-
-    setMintValue(String(parsed))
-    setMintError(parsed === 0 ? 'Cannot mint 0 tokens' : null)
+    const result = clampDecimalInput(selectedToken, event.target.value)
+    setMintValue(result.display)
+    setMintError(result.error)
   }
 
   const handleMintSubmit = async (event: React.FormEvent) => {
@@ -67,14 +49,13 @@ const MintViewContent = () => {
     }
 
     try {
-      const parsedAmount = Number(mintValue)
-      if (parsedAmount === 0) {
+      const baseAmount = parseDecimalAmount(selectedToken, mintValue)
+      if (baseAmount === BigInt(0)) {
         const message = 'Cannot mint 0 tokens'
         setMintError(message)
         pushToast({ message, variant: 'error' })
         return
       }
-      const baseAmount = toBaseUnits(selectedToken, parsedAmount)
       const result = await mint(selectedToken, baseAmount)
       if (result.success) {
         setLocalBalance((prev) => prev + baseAmount)
