@@ -116,6 +116,8 @@ const WalletModal = ({ open, onClose }: { open: boolean; onClose: () => void }) 
       }}
       title={modalMeta.title}
       description={modalMeta.description}
+      showCloseButton
+      closeButtonDisabled={isConnecting}
     >
       {status === 'disconnected' ? (
         <div className="wallet-modal__providers">

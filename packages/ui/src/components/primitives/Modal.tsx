@@ -9,9 +9,21 @@ type ModalProps = {
   description?: string
   onClose: () => void
   children: ReactNode
+  showCloseButton?: boolean
+  closeButtonDisabled?: boolean
+  closeButtonLabel?: string
 }
 
-const Modal = ({ open, title, description, onClose, children }: ModalProps) => {
+const Modal = ({
+  open,
+  title,
+  description,
+  onClose,
+  children,
+  showCloseButton = false,
+  closeButtonDisabled = false,
+  closeButtonLabel = 'Close dialog',
+}: ModalProps) => {
   const overlayRef = useRef<HTMLDivElement | null>(null)
   const dialogRef = useRef<HTMLDivElement | null>(null)
   const previouslyFocusedElement = useRef<Element | null>(null)
@@ -102,6 +114,17 @@ const Modal = ({ open, title, description, onClose, children }: ModalProps) => {
         ref={dialogRef}
         onKeyDown={handleDialogKeyDown}
       >
+        {showCloseButton ? (
+          <button
+            type="button"
+            className="ui-modal__close"
+            onClick={onClose}
+            aria-label={closeButtonLabel}
+            disabled={closeButtonDisabled}
+          >
+            <span aria-hidden>X</span>
+          </button>
+        ) : null}
         {title ? (
           <header className="ui-modal__header" id={titleId}>
             <h2>{title}</h2>
