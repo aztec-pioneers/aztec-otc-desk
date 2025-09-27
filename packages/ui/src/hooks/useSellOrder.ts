@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import useToast from './useToast'
+import { formatBaseUnits } from '../utils/tokenAmount'
 
 type SellOrderPhase =
   | 'idle'
@@ -12,9 +13,9 @@ type SellOrderPhase =
 
 type SellOrderPayload = {
   sellToken: string
-  sellAmount: number
+  sellAmount: bigint
   buyToken: string
-  buyAmount: number
+  buyAmount: bigint
 }
 
 type MockFailureStage =
@@ -128,7 +129,7 @@ const useSellOrder = (): UseSellOrderResult => {
         applyPhase('success')
 
         pushToast({
-          message: `Sale submitted: Sell ${sellAmount.toLocaleString()} ${sellToken} for ${buyAmount.toLocaleString()} ${buyToken}`,
+          message: `Sale submitted: Sell ${formatBaseUnits(sellToken, sellAmount)} ${sellToken} for ${formatBaseUnits(buyToken, buyAmount)} ${buyToken}`,
           variant: 'success',
         })
 

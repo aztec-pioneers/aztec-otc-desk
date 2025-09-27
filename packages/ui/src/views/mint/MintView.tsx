@@ -8,6 +8,7 @@ import useMint from '../../hooks/useMint'
 import useToast from '../../hooks/useToast'
 import useWallet from '../../hooks/useWallet'
 import useIsMobile from '../../hooks/useIsMobile'
+import { formatBaseUnits, toBaseUnits } from '../../utils/tokenAmount'
 import './MintView.css'
 
 const MintViewContent = () => {
@@ -22,11 +23,8 @@ const MintViewContent = () => {
     if (amount === undefined) {
       return '—'
     }
-    return new Intl.NumberFormat('en-US', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 6,
-    }).format(amount)
-  }, [amount])
+    return formatBaseUnits(selectedToken, amount)
+  }, [amount, selectedToken])
 
   useEffect(() => {
     if (amount === undefined && status === 'idle') {
@@ -76,12 +74,13 @@ const MintViewContent = () => {
         pushToast({ message, variant: 'error' })
         return
       }
-      const result = await mint(selectedToken, parsedAmount)
+      const baseAmount = toBaseUnits(selectedToken, parsedAmount)
+      const result = await mint(selectedToken, baseAmount)
       if (result.success) {
-        setLocalBalance((prev) => prev + parsedAmount)
+        setLocalBalance((prev) => prev + baseAmount)
         setMintValue('')
         pushToast({
-          message: `Minted ${parsedAmount} ${selectedToken}. Tx: ${result.txHash}`,
+          message: `Minted ${formatBaseUnits(selectedToken, baseAmount)} ${selectedToken}. Tx: ${result.txHash}`,
           variant: 'success',
         })
       }

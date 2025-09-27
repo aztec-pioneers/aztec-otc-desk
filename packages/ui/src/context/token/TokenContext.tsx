@@ -135,7 +135,7 @@ export const TokenProvider = ({ children }: PropsWithChildren) => {
 
       const request = (async () => {
         try {
-          const amount = await fetchTokenBalance(symbol, wallet.instance, activeAccount.address);
+          const amount = await fetchTokenBalance(symbol, wallet.instance, activeAccount.address)
           commitBalances((prev) => ({
             ...prev,
             [symbol]: {
@@ -165,7 +165,7 @@ export const TokenProvider = ({ children }: PropsWithChildren) => {
       inflightRequests.current[symbol] = request
       return request
     },
-    [commitBalances, wallet],
+    [commitBalances, wallet, activeAccount],
   )
 
   const ensureBalance = useCallback(

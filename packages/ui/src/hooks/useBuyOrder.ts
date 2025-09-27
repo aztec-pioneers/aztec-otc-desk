@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import useToast from './useToast'
+import { formatBaseUnits } from '../utils/tokenAmount'
 
 type BuyOrderPhase = 'idle' | 'signing' | 'waitingConfirmation' | 'success' | 'error'
 
 type AmountRange = {
-  min: number
-  max: number
+  min: bigint
+  max: bigint
 }
 
 type BuyOrderPayload = {
@@ -95,7 +96,7 @@ const useBuyOrder = (): UseBuyOrderResult => {
 
         applyPhase('success')
         pushToast({
-          message: `Buy order placed: Sell ${sellToken} (${sellAmountRange.min.toLocaleString()}-${sellAmountRange.max.toLocaleString()}) for ${buyToken} (${buyAmountRange.min.toLocaleString()}-${buyAmountRange.max.toLocaleString()})`,
+          message: `Buy order placed: Sell ${sellToken} (${formatBaseUnits(sellToken, sellAmountRange.min)}-${formatBaseUnits(sellToken, sellAmountRange.max)}) for ${buyToken} (${formatBaseUnits(buyToken, buyAmountRange.min)}-${formatBaseUnits(buyToken, buyAmountRange.max)})`,
           variant: 'success',
         })
 

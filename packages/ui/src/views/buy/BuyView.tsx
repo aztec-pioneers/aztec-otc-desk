@@ -13,6 +13,7 @@ import { TOKENS } from '../../data/tokens'
 import useWallet from '../../hooks/useWallet'
 import useBuyOrder from '../../hooks/useBuyOrder'
 import useIsMobile from '../../hooks/useIsMobile'
+import { toBaseUnits } from '../../utils/tokenAmount'
 import './BuyView.css'
 
 const MAX_AMOUNT = 999_999_999
@@ -145,8 +146,14 @@ const BuyViewContent = () => {
     const success = await initiateBuy({
       sellToken,
       buyToken,
-      sellAmountRange: { min: Number(sellMin.value), max: Number(sellMax.value) },
-      buyAmountRange: { min: Number(buyMin.value), max: Number(buyMax.value) },
+      sellAmountRange: {
+        min: toBaseUnits(sellToken, Number(sellMin.value)),
+        max: toBaseUnits(sellToken, Number(sellMax.value)),
+      },
+      buyAmountRange: {
+        min: toBaseUnits(buyToken, Number(buyMin.value)),
+        max: toBaseUnits(buyToken, Number(buyMax.value)),
+      },
     })
 
     if (success) {

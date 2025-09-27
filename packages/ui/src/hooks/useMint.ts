@@ -20,7 +20,7 @@ const useMint = () => {
   const [lastResult, setLastResult] = useState<MintResult | null>(null)
 
   const mint = useCallback(
-    async (symbol: string, amount: number) => {
+    async (symbol: string, amount: bigint) => {
       setStatus('pending')
       setLastResult(null)
 
@@ -33,12 +33,7 @@ const useMint = () => {
       }
 
       try {
-        const receipt = await mintTokens(
-          symbol,
-          BigInt(amount),
-          wallet.instance,
-          activeAccount.address,
-        )
+        const receipt = await mintTokens(symbol, amount, wallet.instance, activeAccount.address)
         const result: MintResult = { success: true, txHash: receipt.txHash.toString() }
         setStatus('success')
         setLastResult(result)

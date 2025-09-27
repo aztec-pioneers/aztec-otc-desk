@@ -18,7 +18,7 @@ const useTokenBalance = (symbol: string) => {
       error: state.error,
       ensure: () => ensureBalance(symbol),
       refresh: () => refreshBalance(symbol),
-      setLocalBalance: (updater: (prev: number) => number) => setLocalBalance(symbol, updater),
+      setLocalBalance: (updater: (prev: bigint) => bigint) => setLocalBalance(symbol, updater),
     }),
     [state.amount, state.status, state.error, ensureBalance, refreshBalance, setLocalBalance, symbol],
   )
