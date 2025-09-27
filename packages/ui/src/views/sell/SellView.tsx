@@ -9,6 +9,8 @@ import { clampDecimalInput, formatBaseUnits, parseDecimalAmount } from '../../ut
 import useTokenBalance from '../../hooks/useTokenBalance'
 import Spinner from '../../components/primitives/Spinner'
 import SwapCircle from '../../components/icons/SwapCircle'
+import ProgressModal from '../../components/orders/ProgressModal'
+import { SELL_ORDER_PHASES, SELL_ORDER_STATUS } from '../../hooks/useSellOrder'
 import './SellView.css'
 
 const SELL_DEFAULT = 'ETH'
@@ -43,6 +45,10 @@ const SellViewContent = () => {
   const [buyAmount, setBuyAmount] = useState('')
   const [sellError, setSellError] = useState<string | null>(null)
   const [buyError, setBuyError] = useState<string | null>(null)
+  const [submittedBaseAmounts, setSubmittedBaseAmounts] = useState<{ sell: bigint; buy: bigint } | null>(null)
+
+  const { phase, progress, error: workflowError, initiateSale } = useSellOrder()
+  const [progressModalOpen, setProgressModalOpen] = useState(false)
 
   const sellBalance = useTokenBalance(sellToken)
 
@@ -52,10 +58,16 @@ const SellViewContent = () => {
     }
   }, [sellBalance.amount, sellBalance.status, sellBalance.ensure])
 
-  const { phase, progress, error: workflowError, initiateSale } = useSellOrder()
+  useEffect(() => {
+    if (phase !== 'idle') {
+      setProgressModalOpen(true)
+    } else {
+      setProgressModalOpen(false)
+      setSubmittedBaseAmounts(null)
+    }
+  }, [phase])
 
   const isProcessing = phase !== 'idle'
-  const showProgress = phase !== 'idle'
 
   const handleSellAmountChange = (event: ChangeEvent<HTMLInputElement>) => {
     const next = clampDecimalInput(sellToken, event.target.value, sellBalance.amount)
@@ -74,26 +86,19 @@ const SellViewContent = () => {
   const formDisabled = invalidSell || invalidBuy
   const confirmDisabled = formDisabled || isProcessing
 
-  const progressLabel = useMemo(() => {
-    switch (phase) {
-      case 'idle':
-        return 'Ready to submit order'
-      case 'creatingEscrow':
-        return 'Deploying escrow contract…'
-      case 'creatingTransferAuthwit':
-        return 'Preparing transfer authorisation…'
-      case 'depositingToEscrow':
-        return 'Depositing tokens into escrow…'
-      case 'postingOrderToOTCDesk':
-        return 'Posting order to OTC desk…'
-      case 'success':
-        return 'Sale complete'
-      case 'error':
-        return workflowError ?? 'Sale failed'
-      default:
-        return 'Processing order…'
+  const getDisplayAmount = (symbol: string, amountString: string, submitted?: bigint | null) => {
+    try {
+      if (submitted !== undefined && submitted !== null) {
+        return formatBaseUnits(symbol, submitted)
+      }
+      if (!amountString) {
+        return formatBaseUnits(symbol, BigInt(0))
+      }
+      return formatBaseUnits(symbol, parseDecimalAmount(symbol, amountString))
+    } catch (error) {
+      return amountString || '0'
     }
-  }, [phase, workflowError])
+  }
 
   const handleSubmit: FormEventHandler<HTMLFormElement> = async (event) => {
     event.preventDefault()
@@ -107,11 +112,15 @@ const SellViewContent = () => {
       return
     }
 
+    const sellBase = parseDecimalAmount(sellToken, sellAmount || '0')
+    const buyBase = parseDecimalAmount(buyToken, buyAmount || '0')
+    setSubmittedBaseAmounts({ sell: sellBase, buy: buyBase })
+
     const success = await initiateSale({
       sellToken,
-      sellAmount: parseDecimalAmount(sellToken, sellAmount),
+      sellAmount: sellBase,
       buyToken,
-      buyAmount: parseDecimalAmount(buyToken, buyAmount),
+      buyAmount: buyBase,
     })
 
     if (success) {
@@ -223,15 +232,23 @@ const SellViewContent = () => {
             Confirm order
           </button>
 
-          {showProgress ? (
-            <div className="sell-view__progress" role="status" aria-live="polite">
-              <div className="sell-view__progress-bar">
-                <span className="sell-view__progress-fill" style={{ width: `${progress}%` }} />
-              </div>
-              <span className="sell-view__progress-label">{progressLabel}</span>
-            </div>
-          ) : null}
         </form>
+        <ProgressModal
+          open={progressModalOpen}
+          onClose={() => setProgressModalOpen(false)}
+          title="Executing Order Creation"
+          phases={SELL_ORDER_PHASES}
+          activePhase={phase}
+          statusMessages={SELL_ORDER_STATUS}
+          progressPercent={progress}
+          summary={{
+            sellToken,
+            sellAmount: getDisplayAmount(sellToken, sellAmount, submittedBaseAmounts?.sell),
+            buyToken,
+            buyAmount: getDisplayAmount(buyToken, buyAmount, submittedBaseAmounts?.buy),
+          }}
+          error={phase === 'error' ? workflowError : null}
+        />
       </div>
     </section>
   )

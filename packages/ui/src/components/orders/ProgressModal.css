@@ -1,0 +1,69 @@
+.ui-modal.progress-modal__container {
+  width: min(600px, 96vw);
+  padding: var(--space-xl) clamp(var(--space-lg), 4vw, var(--space-2xl));
+}
+
+.progress-modal {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  width: 100%;
+}
+
+.progress-modal__summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-sm);
+  padding: var(--space-sm);
+  border-radius: var(--radius-lg);
+  background: rgba(18, 20, 32, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  width: 100%;
+}
+
+.progress-modal__summary-label {
+  display: block;
+  font-size: var(--font-size-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-text-subtle);
+}
+
+.progress-modal__summary-value {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  word-break: break-word;
+}
+
+.progress-modal__progress {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xs);
+}
+
+.progress-modal__bar {
+  position: relative;
+  height: 0.75rem;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+
+.progress-modal__fill {
+  position: absolute;
+  inset: 0;
+  width: 0;
+  transform-origin: left center;
+  background: linear-gradient(90deg, rgba(93, 180, 255, 0.85), rgba(152, 118, 255, 0.95));
+  transition: width 0.25s ease;
+}
+
+.progress-modal__status {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-primary);
+}
+
+.progress-modal__footer {
+  margin-top: var(--space-sm);
+}

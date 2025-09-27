@@ -2,6 +2,7 @@ import { AztecAddress, deriveKeys, Fr, TxReceipt, type Wallet } from "@aztec/azt
 import { OTCEscrowContract } from "@aztec-otc-desk/contracts";
 import { computePartialAddress } from "@aztec/stdlib/contract";
 import type { EmbeddedWallet } from "../wallet/embeddedWallet";
+import { prepareForFeePayment } from "./sponsoredFPC";
 
 export const deployEscrow = async (
     wallet: EmbeddedWallet,
@@ -31,8 +32,12 @@ export const deployEscrow = async (
     );
     await wallet.registerAccountWithPXE(contractSecretKey, partialAddress);
     // deploy contract
+    const paymentMethod = await prepareForFeePayment(wallet);
     const contract = await contractDeployment
-        .send({ from: AztecAddress.fromString(activeAccount) })
+        .send({
+            from: AztecAddress.fromString(activeAccount),
+            fee: { paymentMethod }
+        })
         .deployed();
     return {
         escrow: contract,
@@ -49,6 +54,7 @@ export const depositToEscrow = async (
 ): Promise<TxReceipt> => {
     const escrowAddress = AztecAddress.fromString(escrow);
     const contract = await OTCEscrowContract.at(escrowAddress, wallet);
+    const paymentMethod = await prepareForFeePayment(wallet);
     return await contract
         .withWallet(wallet)
         .methods
@@ -56,6 +62,7 @@ export const depositToEscrow = async (
         .send({
             from: AztecAddress.fromString(activeAccount),
             authWitnesses: [authwit],
+            fee: { paymentMethod }
         })
         .wait();
 }

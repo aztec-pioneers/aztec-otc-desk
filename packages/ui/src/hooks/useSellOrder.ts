@@ -8,7 +8,7 @@ import type { EmbeddedWallet } from '../wallet/embeddedWallet'
 import { createOTCDeskOrder } from '../utils/api'
 import { TOKENS } from '../constants/tokens'
 
-type SellOrderPhase =
+export type SellOrderPhase =
   | 'idle'
   | 'creatingEscrow'
   | 'creatingTransferAuthwit'
@@ -16,6 +16,35 @@ type SellOrderPhase =
   | 'postingOrderToOTCDesk'
   | 'success'
   | 'error'
+
+export const SELL_ORDER_PHASES: SellOrderPhase[] = [
+  'creatingEscrow',
+  'creatingTransferAuthwit',
+  'depositingToEscrow',
+  'postingOrderToOTCDesk',
+]
+
+const buildProgressByPhase = (): Record<SellOrderPhase, number> => {
+  const count = SELL_ORDER_PHASES.length
+  const segments = count + 1
+  const entries = SELL_ORDER_PHASES.reduce<Record<SellOrderPhase, number>>((acc, phase, index) => {
+    acc[phase] = ((index + 1) / segments) * 100
+    return acc
+  }, {} as Record<SellOrderPhase, number>)
+  return {
+    idle: 0,
+    ...entries,
+    success: 100,
+    error: 0,
+  }
+}
+
+export const SELL_ORDER_STATUS: Record<Exclude<SellOrderPhase, 'idle' | 'success' | 'error'>, string> = {
+  creatingEscrow: 'Deploying escrow contract…',
+  creatingTransferAuthwit: 'Preparing transfer authorisation…',
+  depositingToEscrow: 'Depositing tokens into escrow…',
+  postingOrderToOTCDesk: 'Posting order to OTC desk…',
+}
 
 type SellOrderPayload = {
   sellToken: string
@@ -30,15 +59,7 @@ type MockFailureStage =
   | 'depositSignature'
   | 'depositTransaction'
 
-const progressByPhase: Record<SellOrderPhase, number> = {
-  idle: 0,
-  creatingEscrow: 15,
-  creatingTransferAuthwit: 35,
-  depositingToEscrow: 65,
-  postingOrderToOTCDesk: 85,
-  success: 100,
-  error: 0,
-}
+const progressByPhase = buildProgressByPhase()
 
 export type SellOrderOptions = {
   failStage?: MockFailureStage

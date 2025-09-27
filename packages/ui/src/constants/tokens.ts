@@ -23,7 +23,7 @@ export const TOKENS: TokenMetadata[] = [
     name: 'Ether',
     symbol: 'ETH',
     decimals: 18,
-    address: "0x2867f32eb41fca8cdd8d7021714397dd6fde07c49d125492e876957e74c3998a",
+    address: "0x2efce0bce4e3cbe89646d8ff7698f14ebd9468f85cf19d6d9552228abc3a7879",
     palette: {
       background: 'linear-gradient(135deg, #6274ff 0%, #54ffe6 100%)',
       foreground: 'rgba(15, 17, 25, 0.92)',
@@ -33,7 +33,7 @@ export const TOKENS: TokenMetadata[] = [
     name: 'USD Coin',
     symbol: 'USDC',
     decimals: 6,
-    address: "0x1b622e0d708f452c0407007cca4f4ec21354b3cff102de295a14488aa8d5c692",
+    address: "0x04d0ddc9e801aa0a24a8987e5537b9973e3f255f84ffc6791d6b912215cc6588",
     palette: {
       background: 'linear-gradient(135deg, #3671ff 0%, #8fb5ff 100%)',
       foreground: '#ffffff',
@@ -43,7 +43,7 @@ export const TOKENS: TokenMetadata[] = [
     name: 'Aztec',
     symbol: 'AZT',
     decimals: 18,
-    address: "0x24a3475b9517f194bf71d3eb681c415b61b43361905a0402f133f5d55124dbf0",
+    address: "0x10277becf1810a1ea0a15861e9f6fb553acc886901c89d2ab66814102439a0bf",
     palette: {
       background: 'linear-gradient(135deg, #8d4bff 0%, #ff80d0 100%)',
       foreground: '#ffffff',
@@ -53,7 +53,7 @@ export const TOKENS: TokenMetadata[] = [
     name: 'Wrapped ZCash',
     symbol: 'wZEC',
     decimals: 6,
-    address: "0x1a9aa76ac9f7d629ce48a8d55fee7d0c78b6feb0b2ed5a1ccbbd0faeb19ff23d",
+    address: "0x2ec277147a6895f35ad1a8eebfb8c44754c4477244d38b90be28f36d8bd3117f",
     palette: {
       background: 'linear-gradient(135deg, #00c6ff 0%, #0072ff 100%)',
       foreground: '#ffffff',
@@ -63,7 +63,7 @@ export const TOKENS: TokenMetadata[] = [
     name: 'Chainlink',
     symbol: 'LINK',
     decimals: 18,
-    address: "0x18399a2f2b304e92f2b4c45f62f4f9cc136e91329404d965c101289771b8de0f",
+    address: "0x2a96327dbf0a40f9b75be67d12e0d408e6f1f7be6bbaac1b2f11271bfe67d80b",
     palette: {
       background: 'linear-gradient(135deg, #ff9a44 0%, #ff4c6a 100%)',
       foreground: '#1a192b',

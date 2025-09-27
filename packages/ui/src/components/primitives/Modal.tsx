@@ -12,6 +12,9 @@ type ModalProps = {
   showCloseButton?: boolean
   closeButtonDisabled?: boolean
   closeButtonLabel?: string
+  dismissOnOverlayClick?: boolean
+  dismissOnEscape?: boolean
+  contentClassName?: string
 }
 
 const Modal = ({
@@ -23,6 +26,9 @@ const Modal = ({
   showCloseButton = false,
   closeButtonDisabled = false,
   closeButtonLabel = 'Close dialog',
+  dismissOnOverlayClick = true,
+  dismissOnEscape = true,
+  contentClassName = '',
 }: ModalProps) => {
   const overlayRef = useRef<HTMLDivElement | null>(null)
   const dialogRef = useRef<HTMLDivElement | null>(null)
@@ -32,7 +38,7 @@ const Modal = ({
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
+      if (event.key === 'Escape' && dismissOnEscape) {
         onClose()
       }
     }
@@ -63,6 +69,9 @@ const Modal = ({
   }
 
   const handleOverlayClick = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (!dismissOnOverlayClick) {
+      return
+    }
     if (event.target === overlayRef.current) {
       onClose()
     }
@@ -105,7 +114,7 @@ const Modal = ({
       ref={overlayRef}
     >
       <div
-        className="ui-modal"
+        className={`ui-modal${contentClassName ? ` ${contentClassName}` : ''}`}
         role="dialog"
         aria-modal="true"
         aria-labelledby={title ? titleId : undefined}
