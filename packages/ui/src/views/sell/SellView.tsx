@@ -8,6 +8,7 @@ import useIsMobile from '../../hooks/useIsMobile'
 import { clampDecimalInput, formatBaseUnits, parseDecimalAmount } from '../../utils/tokenAmount'
 import useTokenBalance from '../../hooks/useTokenBalance'
 import Spinner from '../../components/primitives/Spinner'
+import SwapCircle from '../../components/icons/SwapCircle'
 import './SellView.css'
 
 const SELL_DEFAULT = 'ETH'
@@ -177,6 +178,24 @@ const SellViewContent = () => {
               {sellError ? <span className="sell-view__field-error">{sellError}</span> : null}
             </label>
           </fieldset>
+
+          <div className="sell-view__switch">
+            <button
+              type="button"
+              className="sell-view__switch-button"
+              onClick={() => {
+                setSellToken(buyToken)
+                setBuyToken(sellToken)
+                setSellAmount(buyAmount)
+                setBuyAmount(sellAmount)
+                setSellError(null)
+                setBuyError(null)
+              }}
+              disabled={isProcessing}
+            >
+              <SwapCircle className="sell-view__switch-icon" />
+            </button>
+          </div>
 
           <fieldset className="sell-view__field" disabled={isProcessing}>
             <TokenSelector

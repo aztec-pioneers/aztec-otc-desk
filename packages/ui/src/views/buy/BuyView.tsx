@@ -16,6 +16,7 @@ import useIsMobile from '../../hooks/useIsMobile'
 import { clampDecimalInput, formatBaseUnits, parseDecimalAmount } from '../../utils/tokenAmount'
 import useTokenBalance from '../../hooks/useTokenBalance'
 import Spinner from '../../components/primitives/Spinner'
+import SwapCircle from '../../components/icons/SwapCircle'
 import './BuyView.css'
 
 const SELL_DEFAULT = 'USDC'
@@ -243,6 +244,24 @@ const updatingSetter = (
               </label>
             </div>
           </fieldset>
+
+          <div className="buy-view__switch">
+            <button
+              type="button"
+              className="buy-view__switch-button"
+              onClick={() => {
+                setSellToken(buyToken)
+                setBuyToken(sellToken)
+                setSellMin(buyMin)
+                setSellMax(buyMax)
+                setBuyMin(sellMin)
+                setBuyMax(sellMax)
+              }}
+              disabled={isProcessing}
+            >
+              <SwapCircle className="buy-view__switch-icon" />
+            </button>
+          </div>
 
           <fieldset className="buy-view__field" disabled={isProcessing}>
             <TokenSelector
