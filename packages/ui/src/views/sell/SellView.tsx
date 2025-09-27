@@ -167,8 +167,7 @@ const SellViewContent = () => {
               <input
                 id="sell-amount"
                 type="text"
-                inputMode="numeric"
-                pattern="[0-9]*"
+                inputMode="decimal"
                 value={sellAmount}
                 onChange={handleSellAmountChange}
                 disabled={isProcessing}
@@ -209,8 +208,7 @@ const SellViewContent = () => {
               <input
                 id="buy-amount"
                 type="text"
-                inputMode="numeric"
-                pattern="[0-9]*"
+                inputMode="decimal"
                 value={buyAmount}
                 onChange={handleBuyAmountChange}
                 disabled={isProcessing}

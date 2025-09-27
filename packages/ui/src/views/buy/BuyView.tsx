@@ -213,8 +213,7 @@ const updatingSetter = (
                 <input
                   id="sell-min"
                   type="text"
-                  inputMode="numeric"
-                  pattern="[0-9]*"
+                  inputMode="decimal"
                   value={sellMin.value}
                   onChange={handleSellMinChange}
                   disabled={isProcessing}
@@ -230,8 +229,7 @@ const updatingSetter = (
                 <input
                   id="sell-max"
                   type="text"
-                  inputMode="numeric"
-                  pattern="[0-9]*"
+                  inputMode="decimal"
                   value={sellMax.value}
                   onChange={handleSellMaxChange}
                   disabled={isProcessing}
@@ -276,8 +274,7 @@ const updatingSetter = (
                 <input
                   id="buy-min"
                   type="text"
-                  inputMode="numeric"
-                  pattern="[0-9]*"
+                  inputMode="decimal"
                   value={buyMin.value}
                   onChange={handleBuyMinChange}
                   disabled={isProcessing}
@@ -293,8 +290,7 @@ const updatingSetter = (
                 <input
                   id="buy-max"
                   type="text"
-                  inputMode="numeric"
-                  pattern="[0-9]*"
+                  inputMode="decimal"
                   value={buyMax.value}
                   onChange={handleBuyMaxChange}
                   disabled={isProcessing}
