@@ -90,6 +90,9 @@ export default defineConfig(({ mode }) => {
         },
       }),
     ],
+    optimizeDeps: {
+      exclude: ['@aztec/noir-noirc_abi', '@aztec/noir-acvm_js'],
+    },
     resolve: {
       alias: {
         colorette: path.resolve(projectRoot, 'src/polyfills/colorette.ts'),

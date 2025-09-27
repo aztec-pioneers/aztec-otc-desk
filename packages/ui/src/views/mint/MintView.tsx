@@ -12,7 +12,7 @@ import './MintView.css'
 
 const MintViewContent = () => {
   const [selectedToken, setSelectedToken] = useState(DEFAULT_TOKEN_SYMBOL)
-  const { amount, status, error, refresh, setLocalBalance } = useTokenBalance(selectedToken)
+  const { amount, status, error, ensure, refresh, setLocalBalance } = useTokenBalance(selectedToken)
   const { status: mintStatus, mint, reset: resetMint } = useMint()
   const { pushToast } = useToast()
   const [mintValue, setMintValue] = useState('')
@@ -27,6 +27,12 @@ const MintViewContent = () => {
       maximumFractionDigits: 6,
     }).format(amount)
   }, [amount])
+
+  useEffect(() => {
+    if (amount === undefined && status === 'idle') {
+      void ensure()
+    }
+  }, [amount, status, ensure])
 
   const balancePending = status === 'loading' || (status === 'idle' && amount === undefined)
   const mintPending = mintStatus === 'pending'

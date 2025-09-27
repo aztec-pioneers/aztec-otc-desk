@@ -1,4 +1,4 @@
-import { useContext, useEffect, useMemo } from 'react'
+import { useContext, useMemo } from 'react'
 import TokenContext from '../context/token/TokenContext'
 
 const useTokenBalance = (symbol: string) => {
@@ -11,21 +11,16 @@ const useTokenBalance = (symbol: string) => {
   const { balances, ensureBalance, refreshBalance, setLocalBalance } = context
   const state = balances[symbol] ?? { amount: undefined, status: 'idle' as const, error: undefined }
 
-  useEffect(() => {
-    if (state.amount === undefined && state.status !== 'loading') {
-      void ensureBalance(symbol)
-    }
-  }, [symbol, state.amount, state.status, ensureBalance])
-
   return useMemo(
     () => ({
       amount: state.amount,
       status: state.status,
       error: state.error,
+      ensure: () => ensureBalance(symbol),
       refresh: () => refreshBalance(symbol),
       setLocalBalance: (updater: (prev: number) => number) => setLocalBalance(symbol, updater),
     }),
-    [state.amount, state.status, state.error, refreshBalance, setLocalBalance, symbol],
+    [state.amount, state.status, state.error, ensureBalance, refreshBalance, setLocalBalance, symbol],
   )
 }
 

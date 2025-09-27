@@ -148,3 +148,11 @@ This repository hosts the Aztec OTC Desk front-end, built with Vite and TypeScri
 - [x] Run `bun run tsc --noEmit` (and any fast lint command if necessary) to confirm type safety after refactor.
 - [ ] Manually retest the mint flow (balance display, refresh button, optimistic update) to confirm expected behaviour with mocked balances.
 - [x] Update documentation (agents checklist and optionally README) to reflect the merged token context architecture and new hooks.
+
+## Wallet Session Persistence Notes
+
+- Capture user intent to reconnect (e.g., "remember me" flag) alongside the last-used provider (`'embedded' | 'extension'`) and the active account address; store these lightweight values in `localStorage`.
+- On bootstrap inside `WalletProvider`, read the stored metadata before rendering children; if the flag is set, call `connect(provider)` immediately and, after `refreshAccounts()` resolves, restore the previously active account if it still exists.
+- Clear the persistence flag and stored metadata whenever the user explicitly disconnects, so refreshing after a manual disconnect does not auto-login.
+- Keep in mind extension wallets may still require user interaction; surface a prompt if auto-connect is not permitted.
+- Do not persist sensitive material—the embedded wallet already stores keys in IndexedDB via `WalletDB`, so the reconnect flow only needs those metadata hints.

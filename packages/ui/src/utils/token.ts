@@ -11,9 +11,19 @@ export const fetchTokenBalance = async (
     if (!tokenAddress) {
         throw new Error(`Token with symbol ${symbol} not found`);
     }
+    console.log("Fetching balance for token at address:", tokenAddress);
     const contract = await TokenContract.at(AztecAddress.fromString(tokenAddress), wallet);
+    console.log("got instance")
     const address = AztecAddress.fromString(activeAccount);
-    return await contract.methods.balance_of_private(address).simulate({ from: address });
+    console.log("got address")
+    let x;
+    try {
+        x = await contract.methods.balance_of_private(address).simulate({ from: address });
+    } catch (error) {
+        console.error("Error fetching token balance:", error);
+        throw new Error(`Failed to fetch token balance for ${symbol}`);
+    }
+    return x;
 }
 
 export const mintTokens = async (
