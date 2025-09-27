@@ -156,3 +156,9 @@ This repository hosts the Aztec OTC Desk front-end, built with Vite and TypeScri
 - Clear the persistence flag and stored metadata whenever the user explicitly disconnects, so refreshing after a manual disconnect does not auto-login.
 - Keep in mind extension wallets may still require user interaction; surface a prompt if auto-connect is not permitted.
 - Do not persist sensitive material—the embedded wallet already stores keys in IndexedDB via `WalletDB`, so the reconnect flow only needs those metadata hints.
+
+## WASM Load Optimisation Ideas
+
+- The Aztec Noir runtimes ship large WASM binaries; when Vite pre-bundles them it rewrites URLs under `node_modules/.vite/deps`, which breaks `WebAssembly.instantiate`. We now exclude `@aztec/noir-noirc_abi` and `@aztec/noir-acvm_js` from `optimizeDeps` so the original `@fs/...` URLs are served.
+- For faster interactive flows, proactively download those WASM assets during bootstrap: import the `.wasm` files once at startup or trigger a fetch/prefetch so the browser caches them (they will still load through the SDK later, but the response comes from cache).
+- In production builds, replace `@fs` URLs with the emitted asset URLs (using Vite’s import return value) if you set up explicit preload links.

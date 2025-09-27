@@ -80,7 +80,10 @@ const MintViewContent = () => {
       if (result.success) {
         setLocalBalance((prev) => prev + parsedAmount)
         setMintValue('')
-        pushToast({ message: result.message, variant: 'success' })
+        pushToast({
+          message: `Minted ${parsedAmount} ${selectedToken}. Tx: ${result.txHash}`,
+          variant: 'success',
+        })
       }
     } catch (err) {
       setMintError(err instanceof Error ? err.message : 'Mint failed')

@@ -49,6 +49,7 @@ export class EmbeddedWallet extends BaseWallet {
     const configWithContracts = {
       ...config,
       l1Contracts,
+      proverEnabled: false
     } as PXEServiceConfig
 
     const pxeLogger = createLogger('wallet:pxe')
@@ -58,6 +59,7 @@ export class EmbeddedWallet extends BaseWallet {
         pxe: pxeLogger,
         prover: createLogger('wallet:prover'),
       },
+      
     })
 
     const walletLogger = createLogger('wallet:data:idb')
