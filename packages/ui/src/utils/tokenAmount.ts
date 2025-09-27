@@ -22,15 +22,16 @@ export const formatBaseUnits = (symbol: string, amount: bigint): string => {
   const whole = amount / multiplier
   const fraction = amount % multiplier
 
-  if (fraction === BigInt(0)) {
-    return whole.toString()
-  }
+  const baseFraction = (() => {
+    if (decimals === 0) {
+      return '0'.repeat(FRACTION_DIGITS)
+    }
+    const padded = fraction.toString().padStart(decimals, '0')
+    if (decimals >= FRACTION_DIGITS) {
+      return padded.slice(0, FRACTION_DIGITS)
+    }
+    return (padded + '0'.repeat(FRACTION_DIGITS - decimals)).slice(0, FRACTION_DIGITS)
+  })()
 
-  const fractionStr = fraction
-    .toString()
-    .padStart(decimals, '0')
-    .slice(0, FRACTION_DIGITS)
-    .replace(/0+$/, '')
-
-  return fractionStr ? `${whole.toString()}.${fractionStr}` : whole.toString()
+  return `${whole.toString()}.${baseFraction}`
 }
