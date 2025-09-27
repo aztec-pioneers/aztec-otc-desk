@@ -203,3 +203,42 @@
     width: 100%;
   }
 }
+.sell-view__balance {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.sell-view__balance-value {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.sell-view__balance-loading {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.sell-view__balance-error {
+  color: var(--danger-600);
+}
+
+.sell-view__balance-refresh {
+  background: none;
+  border: none;
+  padding: 0;
+  color: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.sell-view__balance-refresh:disabled {
+  text-decoration: none;
+  cursor: not-allowed;
+  opacity: 0.6;
+}

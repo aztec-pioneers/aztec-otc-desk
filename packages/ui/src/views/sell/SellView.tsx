@@ -5,7 +5,9 @@ import { TOKENS } from '../../data/tokens'
 import useSellOrder from '../../hooks/useSellOrder'
 import useWallet from '../../hooks/useWallet'
 import useIsMobile from '../../hooks/useIsMobile'
-import { toBaseUnits } from '../../utils/tokenAmount'
+import { toBaseUnits, formatBaseUnits } from '../../utils/tokenAmount'
+import useTokenBalance from '../../hooks/useTokenBalance'
+import Spinner from '../../components/primitives/Spinner'
 import './SellView.css'
 
 const MAX_AMOUNT = 999_999_999
@@ -41,6 +43,8 @@ const SellViewContent = () => {
   const [buyAmount, setBuyAmount] = useState('')
   const [sellError, setSellError] = useState<string | null>(null)
   const [buyError, setBuyError] = useState<string | null>(null)
+
+  const sellBalance = useTokenBalance(sellToken)
 
   const { phase, progress, error: workflowError, initiateSale } = useSellOrder()
 
@@ -154,6 +158,30 @@ const SellViewContent = () => {
               onChange={setSellToken}
               tokens={sellTokens}
             />
+            <div className="sell-view__balance">
+              <span className="sell-view__balance-label">Available:</span>
+              <div className="sell-view__balance-value">
+                {sellBalance.status === 'loading' || (sellBalance.status === 'idle' && sellBalance.amount === undefined) ? (
+                  <span className="sell-view__balance-loading">
+                    <Spinner size="sm" label="Fetching balance" />
+                    <span>Fetching…</span>
+                  </span>
+                ) : sellBalance.status === 'error' ? (
+                  <span className="sell-view__balance-error">{sellBalance.error ?? 'Unavailable'}</span>
+                ) : (
+                  <span>{sellBalance.amount !== undefined ? formatBaseUnits(sellToken, sellBalance.amount) : '—'}</span>
+                )}
+                {(sellBalance.status === 'success' || sellBalance.status === 'error') && (
+                  <button
+                    type="button"
+                    className="sell-view__balance-refresh"
+                    onClick={() => sellBalance.refresh()}
+                  >
+                    refresh
+                  </button>
+                )}
+              </div>
+            </div>
             <label className="sell-view__amount" htmlFor="sell-amount">
               <span>Sell amount</span>
               <input

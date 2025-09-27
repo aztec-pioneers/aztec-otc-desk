@@ -13,7 +13,9 @@ import { TOKENS } from '../../data/tokens'
 import useWallet from '../../hooks/useWallet'
 import useBuyOrder from '../../hooks/useBuyOrder'
 import useIsMobile from '../../hooks/useIsMobile'
-import { toBaseUnits } from '../../utils/tokenAmount'
+import { toBaseUnits, formatBaseUnits } from '../../utils/tokenAmount'
+import useTokenBalance from '../../hooks/useTokenBalance'
+import Spinner from '../../components/primitives/Spinner'
 import './BuyView.css'
 
 const MAX_AMOUNT = 999_999_999
@@ -80,6 +82,9 @@ const BuyViewContent = () => {
   const [buyMax, setBuyMax] = useState<AmountField>(createAmountField)
 
   const { phase, progress, error: workflowError, initiateBuy } = useBuyOrder()
+
+  const sellTokenBalance = useTokenBalance(sellToken)
+  const buyTokenBalance = useTokenBalance(buyToken)
 
   const updatingSetter = (setter: Dispatch<SetStateAction<AmountField>>) =>
     (event: ChangeEvent<HTMLInputElement>) => {
@@ -180,6 +185,34 @@ const BuyViewContent = () => {
               onChange={setSellToken}
               tokens={sellTokens}
             />
+            <div className="buy-view__balance">
+              <span className="buy-view__balance-label">Available:</span>
+              <div className="buy-view__balance-value">
+                {sellTokenBalance.status === 'loading' || (sellTokenBalance.status === 'idle' && sellTokenBalance.amount === undefined) ? (
+                  <span className="buy-view__balance-loading">
+                    <Spinner size="sm" label="Fetching balance" />
+                    <span>Fetching…</span>
+                  </span>
+                ) : sellTokenBalance.status === 'error' ? (
+                  <span className="buy-view__balance-error">{sellTokenBalance.error ?? 'Unavailable'}</span>
+                ) : (
+                  <span>
+                    {sellTokenBalance.amount !== undefined
+                      ? formatBaseUnits(sellToken, sellTokenBalance.amount)
+                      : '—'}
+                  </span>
+                )}
+                {(sellTokenBalance.status === 'success' || sellTokenBalance.status === 'error') && (
+                  <button
+                    type="button"
+                    className="buy-view__balance-refresh"
+                    onClick={() => sellTokenBalance.refresh()}
+                  >
+                    refresh
+                  </button>
+                )}
+              </div>
+            </div>
             <div className="buy-view__range">
               <label className="buy-view__amount" htmlFor="sell-min">
                 <span>Min amount</span>
@@ -225,6 +258,34 @@ const BuyViewContent = () => {
               onChange={setBuyToken}
               tokens={buyTokens}
             />
+            <div className="buy-view__balance">
+              <span className="buy-view__balance-label">Available:</span>
+              <div className="buy-view__balance-value">
+                {buyTokenBalance.status === 'loading' || (buyTokenBalance.status === 'idle' && buyTokenBalance.amount === undefined) ? (
+                  <span className="buy-view__balance-loading">
+                    <Spinner size="sm" label="Fetching balance" />
+                    <span>Fetching…</span>
+                  </span>
+                ) : buyTokenBalance.status === 'error' ? (
+                  <span className="buy-view__balance-error">{buyTokenBalance.error ?? 'Unavailable'}</span>
+                ) : (
+                  <span>
+                    {buyTokenBalance.amount !== undefined
+                      ? formatBaseUnits(buyToken, buyTokenBalance.amount)
+                      : '—'}
+                  </span>
+                )}
+                {(buyTokenBalance.status === 'success' || buyTokenBalance.status === 'error') && (
+                  <button
+                    type="button"
+                    className="buy-view__balance-refresh"
+                    onClick={() => buyTokenBalance.refresh()}
+                  >
+                    refresh
+                  </button>
+                )}
+              </div>
+            </div>
             <div className="buy-view__range">
               <label className="buy-view__amount" htmlFor="buy-min">
                 <span>Min amount</span>
