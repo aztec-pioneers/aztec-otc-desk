@@ -11,7 +11,7 @@ import { useNavigate } from 'react-router-dom'
 import TokenSelector from '../../components/token/TokenSelector'
 import { TOKENS } from '../../constants/tokens'
 import useWallet from '../../hooks/useWallet'
-import useBuyOrder from '../../hooks/useBuyOrder'
+import useBuyOrder, { BUY_ORDER_STATUS } from '../../hooks/useBuyOrder'
 import useIsMobile from '../../hooks/useIsMobile'
 import { clampDecimalInput, formatBaseUnits, parseDecimalAmount } from '../../utils/tokenAmount'
 import useTokenBalance from '../../hooks/useTokenBalance'
@@ -120,20 +120,16 @@ const updatingSetter = (
   const confirmDisabled = isProcessing || sellRangeInvalid || buyRangeInvalid
 
   const progressLabel = useMemo(() => {
-    switch (phase) {
-      case 'idle':
-        return 'Ready to submit order'
-      case 'signing':
-        return 'Awaiting order signature…'
-      case 'waitingConfirmation':
-        return 'Confirming order…'
-      case 'success':
-        return 'Buy order placed'
-      case 'error':
-        return workflowError ?? 'Order failed'
-      default:
-        return 'Processing order…'
+    if (phase === 'idle') {
+      return 'Ready to submit order'
     }
+    if (phase === 'success') {
+      return 'Buy order placed'
+    }
+    if (phase === 'error') {
+      return workflowError ?? 'Order failed'
+    }
+    return BUY_ORDER_STATUS[phase] ?? 'Processing order…'
   }, [phase, workflowError])
 
   const handleSubmit: FormEventHandler<HTMLFormElement> = async (event) => {
@@ -314,6 +310,12 @@ const updatingSetter = (
                 <span className="buy-view__progress-fill" style={{ width: `${progress}%` }} />
               </div>
               <span className="buy-view__progress-label">{progressLabel}</span>
+            </div>
+          ) : null}
+
+          {phase === 'error' && workflowError ? (
+            <div className="buy-view__error" role="alert">
+              {workflowError}
             </div>
           ) : null}
         </form>

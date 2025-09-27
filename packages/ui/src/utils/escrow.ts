@@ -1,8 +1,9 @@
-import { AztecAddress, deriveKeys, Fr, TxReceipt, type Wallet } from "@aztec/aztec.js";
-import { OTCEscrowContract } from "@aztec-otc-desk/contracts";
-import { computePartialAddress } from "@aztec/stdlib/contract";
+import { AuthWitness, AztecAddress, deriveKeys, Fr, TxReceipt, type Wallet } from "@aztec/aztec.js";
+import { OTCEscrowContract, OTCEscrowContractArtifact } from "@aztec-otc-desk/contracts";
+import { computePartialAddress, ContractInstanceWithAddressSchema } from "@aztec/stdlib/contract";
 import type { EmbeddedWallet } from "../wallet/embeddedWallet";
 import { prepareForFeePayment } from "./sponsoredFPC";
+import type { Order } from "./api";
 
 export const deployEscrow = async (
     wallet: EmbeddedWallet,
@@ -65,4 +66,53 @@ export const depositToEscrow = async (
             fee: { paymentMethod }
         })
         .wait();
+}
+
+export const fillOTCOrder = async(
+    wallet: Wallet,
+    activeAccount: string,
+    order: Order,
+    authwit: AuthWitness,
+    nonce: Fr
+): Promise<TxReceipt> => {
+    const escrow = await escrowInstanceFromOrder(wallet as EmbeddedWallet, activeAccount, order);
+    const paymentMethod = await prepareForFeePayment(wallet);
+    return await escrow
+        .withWallet(wallet)
+        .methods
+        .fill_order(nonce)
+        .send({
+            from: AztecAddress.fromString(activeAccount),
+            fee: { paymentMethod },
+            authWitnesses: [authwit],
+        })
+        .wait();
+}
+
+const escrowInstanceFromOrder = async (
+    wallet: EmbeddedWallet,
+    activeAccount: string,
+    order: Order,
+): Promise<OTCEscrowContract> => {
+    // parse order data
+    const escrowContractInstance = ContractInstanceWithAddressSchema.parse(
+        JSON.parse(order.contractInstance)
+    );
+    const escrowSecretKey = Fr.fromString(order.secretKey);
+    const escrowPartialAddress = Fr.fromString(order.partialAddress);
+    const escrowAddress = AztecAddress.fromString(order.escrowAddress);
+    // register contract & contract account
+    await wallet.registerContract({
+        instance: escrowContractInstance,
+        artifact: OTCEscrowContractArtifact
+    });
+    // register escrow secret key
+    await wallet.registerAccountWithPXE(escrowSecretKey, escrowPartialAddress);
+    await wallet.registerSender(escrowAddress, `Escrow:${order.orderId}`);
+    // instantiate contract & sync
+    const escrow = await OTCEscrowContract.at(escrowAddress, wallet);
+    await escrow.methods.sync_private_state().simulate({
+        from: AztecAddress.fromString(activeAccount),
+    });
+    return escrow;
 }

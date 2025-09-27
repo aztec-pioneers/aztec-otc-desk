@@ -189,6 +189,13 @@
   text-align: center;
 }
 
+.buy-view__error {
+  margin-top: var(--space-sm);
+  color: var(--danger-500);
+  text-align: center;
+  font-size: var(--font-size-sm);
+}
+
 @media (max-width: 960px) {
   .buy-view__panel {
     padding: var(--space-lg);

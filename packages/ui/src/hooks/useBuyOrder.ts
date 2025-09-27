@@ -1,8 +1,20 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import useToast from './useToast'
+import WalletContext from '../context/wallet/WalletContext'
 import { formatBaseUnits } from '../utils/tokenAmount'
+import { closeOrder, requestOTCMatch } from '../utils/api'
+import { TOKENS } from '../constants/tokens'
+import { privateTransferAuthwit } from '../utils/token'
+import { fillOTCOrder } from '../utils/escrow'
 
-type BuyOrderPhase = 'idle' | 'signing' | 'waitingConfirmation' | 'success' | 'error'
+export type BuyOrderPhase =
+  | 'idle'
+  | 'matchingOrder'
+  | 'creatingTransferAuthwit'
+  | 'executingOTCOrder'
+  | 'closingOrderInOTCDesk'
+  | 'success'
+  | 'error'
 
 type AmountRange = {
   min: bigint
@@ -18,18 +30,35 @@ type BuyOrderPayload = {
 
 type MockFailureStage = 'signature' | 'transaction'
 
-const progressByPhase: Record<BuyOrderPhase, number> = {
-  idle: 0,
-  signing: 0,
-  waitingConfirmation: 50,
-  success: 100,
-  error: 0,
+export const BUY_ORDER_PHASES: BuyOrderPhase[] = [
+  'matchingOrder',
+  'creatingTransferAuthwit',
+  'executingOTCOrder',
+  'closingOrderInOTCDesk',
+]
+
+const buildProgressByPhase = (): Record<BuyOrderPhase, number> => {
+  const segments = BUY_ORDER_PHASES.length + 1
+  const entries = BUY_ORDER_PHASES.reduce<Record<BuyOrderPhase, number>>((acc, phase, idx) => {
+    acc[phase] = ((idx + 1) / segments) * 100
+    return acc
+  }, {} as Record<BuyOrderPhase, number>)
+  return {
+    idle: 0,
+    ...entries,
+    success: 100,
+    error: 0,
+  }
 }
 
-const signatureDelay = 650
-const transactionDelay = 1100
+export const BUY_ORDER_STATUS: Record<Exclude<BuyOrderPhase, 'idle' | 'success' | 'error'>, string> = {
+  matchingOrder: 'Finding a matching sell order…',
+  creatingTransferAuthwit: 'Preparing transfer authorisation…',
+  executingOTCOrder: 'Executing matched order…',
+  closingOrderInOTCDesk: 'Closing order with OTC desk…',
+}
 
-const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+const progressByPhase = buildProgressByPhase()
 
 export type UseBuyOrderResult = {
   phase: BuyOrderPhase
@@ -40,6 +69,12 @@ export type UseBuyOrderResult = {
 }
 
 const useBuyOrder = (): UseBuyOrderResult => {
+  const walletContext = useContext(WalletContext)
+  if (!walletContext) {
+    throw new Error('Wallet context needed for sell order')
+  }
+
+  const { wallet, activeAccount } = walletContext
   const [phase, setPhase] = useState<BuyOrderPhase>('idle')
   const [progress, setProgress] = useState(progressByPhase.idle)
   const [error, setError] = useState<string | null>(null)
@@ -77,26 +112,62 @@ const useBuyOrder = (): UseBuyOrderResult => {
       if (phase !== 'idle') {
         return false
       }
+      if (!wallet || !wallet.instance || !activeAccount) {
+        const message = 'Wallet not connected'
+        setError(message)
+        pushToast({ message, variant: 'error' })
+        return false
+      }
 
       setError(null)
-      applyPhase('signing')
+      applyPhase('matchingOrder')
 
       try {
-        await wait(signatureDelay)
-        if (options?.failStage === 'signature') {
-          throw new Error('Order signature rejected')
-        }
+        const sellTokenAddress = TOKENS.find(t => t.symbol === sellToken)?.address!
+        const buyTokenAddress = TOKENS.find(t => t.symbol === buyToken)?.address!
 
-        applyPhase('waitingConfirmation')
-
-        await wait(transactionDelay)
-        if (options?.failStage === 'transaction') {
-          throw new Error('Order transaction reverted')
+        const order = await requestOTCMatch(
+          sellTokenAddress,
+          buyTokenAddress,
+          buyAmountRange.min, // swapped because we are the buyer
+          buyAmountRange.max,
+          sellAmountRange.min,
+          sellAmountRange.max,
+        );
+        if (!order) {
+          const message =
+            'The requested order was not able to be matched - try adjusting your buy offer or creating a sell offer!'
+          setError(message)
+          applyPhase('error')
+          pushToast({ message, variant: 'error' })
+          scheduleReset(1200)
+          return false
         }
+        applyPhase('creatingTransferAuthwit')
+
+        const { authwit, nonce } = await privateTransferAuthwit(
+          wallet.instance,
+          activeAccount.address,
+          sellTokenAddress,
+          order.buyTokenAmount as bigint,
+          order.escrowAddress,
+        )
+        applyPhase('executingOTCOrder')
+
+        const fillReceipt = await fillOTCOrder(
+          wallet.instance,
+          activeAccount.address,
+          order,
+          authwit,
+          nonce
+        );
+        applyPhase('closingOrderInOTCDesk')
+
+        await closeOrder(order.orderId);
 
         applyPhase('success')
         pushToast({
-          message: `Buy order placed: Sell ${sellToken} (${formatBaseUnits(sellToken, sellAmountRange.min)}-${formatBaseUnits(sellToken, sellAmountRange.max)}) for ${buyToken} (${formatBaseUnits(buyToken, buyAmountRange.min)}-${formatBaseUnits(buyToken, buyAmountRange.max)})`,
+          message: `Buy order placed: Sell ${sellToken} (${formatBaseUnits(sellToken, sellAmountRange.min)}-${formatBaseUnits(sellToken, sellAmountRange.max)}) for ${buyToken} (${formatBaseUnits(buyToken, buyAmountRange.min)}-${formatBaseUnits(buyToken, buyAmountRange.max)})\nTx hash: ${fillReceipt.txHash.toString()}`,
           variant: 'success',
         })
 
