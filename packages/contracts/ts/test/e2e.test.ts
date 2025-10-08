@@ -1,24 +1,16 @@
-import {
-    AccountWallet,
-    PXE,
-    Fr,
-    L1FeeJuicePortalManager,
-    FeeJuicePaymentMethodWithClaim,
-} from "@aztec/aztec.js";
-import { getInitialTestAccountsManagers, getInitialTestAccountsWallets } from "@aztec/accounts/testing";
+import { AccountWallet, PXE, Fr } from "@aztec/aztec.js";
+import { getInitialTestAccountsManagers } from "@aztec/accounts/testing";
 import {
     deployEscrowContract,
     deployTokenContractWithMinter,
     wad,
     depositToEscrow,
     createPXE,
-    getFeeJuicePortalManager,
     TOKEN_METADATA,
     fillOTCOrder,
     expectBalancePrivate,
     OTCEscrowContract,
     TokenContract,
-    setupAccountWithFeeClaim
 } from "../src";
 
 describe("Private Transfer Demo Test", () => {
@@ -35,49 +27,40 @@ describe("Private Transfer Demo Test", () => {
     let usdc: TokenContract;
     let eth: TokenContract;
 
-    let buyerFeeJuicePortalManager: L1FeeJuicePortalManager;
-
     const sellTokenAmount = wad(1000n, 6n);
     const buyTokenAmount = wad(1n);
     const sellerUSDCInitialBalance = wad(10000n, 6n);
     const buyerETHInitialBalance = wad(4n);
 
     beforeAll(async () => {
-        console.log("trying connect")
         // setup PXE connections
-        sellerPXE = await createPXE();
-        buyerPXE = await createPXE(1);
+        sellerPXE = await createPXE(1);
+        buyerPXE = await createPXE(2);
+        console.log("PXEs connected");
 
         // get PXE 1 accounts
-        const wallets = await Promise.all(
+        const walletsPXE1 = await Promise.all(
             (await getInitialTestAccountsManagers(sellerPXE)).map(m => m.register())
         );
-        minter = wallets[0];
-        seller = wallets[1];
+        minter = walletsPXE1[0];
+        seller = walletsPXE1[1];
+        // get PXE 2 account
+        const walletsPXE2 = await Promise.all(
+            (await getInitialTestAccountsManagers(buyerPXE)).map(m => m.register())
+        );
+        buyer = walletsPXE2[2];
 
-        // deploy PXE2 account
-        // NOTE: must allow two transactions to pass before claiming
-        buyerFeeJuicePortalManager = await getFeeJuicePortalManager(buyerPXE);
-        const {
-            claim: buyerClaim,
-            wallet: buyerWallet,
-            account: buyerAccount
-        } = await setupAccountWithFeeClaim(buyerPXE, buyerFeeJuicePortalManager);
-        buyer = buyerWallet;
+        
         // deploy token contract
         usdc = await deployTokenContractWithMinter(TOKEN_METADATA.usdc, minter);
         eth = await deployTokenContractWithMinter(TOKEN_METADATA.eth, minter);
 
-        // claim fee juice for buyer and deploy
-        const claimAndPay = new FeeJuicePaymentMethodWithClaim(buyer, buyerClaim);
-        await buyerAccount.deploy({ fee: { paymentMethod: claimAndPay } }).wait();
-
         // register accounts and contracts in each PXE
-        await sellerPXE.registerSender(buyer.getAddress());
-        await buyerPXE.registerSender(minter.getAddress());
-        await buyerPXE.registerSender(seller.getAddress());
-        await buyerPXE.registerContract(usdc);
-        await buyerPXE.registerContract(eth);
+        await seller.registerSender(buyer.getAddress());
+        await buyer.registerSender(minter.getAddress());
+        await buyer.registerSender(seller.getAddress());
+        await buyer.registerContract(usdc);
+        await buyer.registerContract(eth);
 
         // mint tokens
         await eth
@@ -87,7 +70,7 @@ describe("Private Transfer Demo Test", () => {
                 buyer.getAddress(),
                 wad(4n, 18n)
             )
-            .send()
+            .send({ from: minter.getAddress() })
             .wait();
 
         await usdc
@@ -97,7 +80,7 @@ describe("Private Transfer Demo Test", () => {
                 seller.getAddress(),
                 wad(10000n, 6n)
             )
-            .send()
+            .send({ from: minter.getAddress() })
             .wait();
     });
 
@@ -116,7 +99,7 @@ describe("Private Transfer Demo Test", () => {
         const sellerDefinition = await escrow
             .withWallet(seller)
             .methods.get_definition()
-            .simulate();
+            .simulate({ from: seller.getAddress() });
         // expect(sellerDefinition.owner).toEqual(escrow.address.toBigInt());
         expect(sellerDefinition.owner).not.toEqual(0n);
 
@@ -129,17 +112,17 @@ describe("Private Transfer Demo Test", () => {
             await escrow
                 .withWallet(buyer)
                 .methods.get_definition()
-                .simulate();
+                .simulate({ from: buyer.getAddress() });
         }).toThrow()
 
         // add account to buyer pxe
         await buyerPXE.registerAccount(escrowMasterKey, await escrow.partialAddress);
-        await escrow.withWallet(buyer).methods.sync_private_state().simulate();
+        await escrow.withWallet(buyer).methods.sync_private_state().simulate({ from: buyer.getAddress() });
         const buyerDefinition = await escrow
             .withWallet(buyer)
             .methods
             .get_definition()
-            .simulate();
+            .simulate({ from: buyer.getAddress() });
         // expect(buyerDefinition.owner).toEqual(escrow.address.toBigInt());
         expect(buyerDefinition.owner).not.toEqual(0n);
     });
@@ -186,7 +169,7 @@ describe("Private Transfer Demo Test", () => {
         // give buyer knowledge of the escrow
         await buyerPXE.registerAccount(escrowMasterKey, await escrow.partialAddress);
         await buyerPXE.registerContract(escrow);
-        await escrow.withWallet(buyer).methods.sync_private_state().simulate();
+        await escrow.withWallet(buyer).methods.sync_private_state().simulate({ from: buyer.getAddress() });
 
         // transfer tokens back out
         await fillOTCOrder(escrow, buyer, eth, buyTokenAmount);

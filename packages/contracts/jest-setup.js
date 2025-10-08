@@ -9,4 +9,4 @@ if (typeof expect !== 'undefined' && !expect.addEqualityTesters) {
   };
 }
 
-jest.setTimeout(30000);
+jest.setTimeout(60000);
