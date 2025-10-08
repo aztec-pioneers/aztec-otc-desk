@@ -132,10 +132,10 @@ export class SQLiteDatabase implements IDatabase {
     const rows = stmt.all(
       orderRequest.sellTokenAddress,
       orderRequest.buyTokenAddress,
-      orderRequest.minSize.toString(),
-      orderRequest.maxSize.toString(),
-      orderRequest.minPrice.toString(),
-      orderRequest.maxPrice.toString()
+      orderRequest.sellTokenMinAmount.toString(),
+      orderRequest.sellTokenMaxAmount.toString(),
+      orderRequest.buyTokenMinAmount.toString(),
+      orderRequest.buyTokenMaxAmount.toString()
     ) as any[];
     
     if (rows.length === 0) return null;

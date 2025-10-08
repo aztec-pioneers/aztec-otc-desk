@@ -212,15 +212,15 @@ export function createOrderHandlers(database: IDatabase) {
     try {
       // Parse the request body
       const rawData = await req.json();
-      
+      console.log("raw data")
       // Convert string amounts to BigInt
       const otcRequest: OTCRequest = {
         sellTokenAddress: rawData.sellTokenAddress,
         buyTokenAddress: rawData.buyTokenAddress,
-        minSize: BigInt(rawData.minSize),
-        maxSize: BigInt(rawData.maxSize),
-        minPrice: BigInt(rawData.minPrice),
-        maxPrice: BigInt(rawData.maxPrice)
+        sellTokenMinAmount: BigInt(rawData.buyTokenMinAmount),
+        sellTokenMaxAmount: BigInt(rawData.buyTokenMaxAmount),
+        buyTokenMinAmount: BigInt(rawData.sellTokenMinAmount),
+        buyTokenMaxAmount: BigInt(rawData.sellTokenMaxAmount)
       };
       
       // Find a matching order in the database
