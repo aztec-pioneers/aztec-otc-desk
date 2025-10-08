@@ -1,5 +1,5 @@
 {
-  "name": "@aztec-otc-desk/cli",
+  "name": "@aztec-pioneers/otc-desk-cli",
   "module": "index.ts",
   "type": "module",
   "private": true,
@@ -11,7 +11,7 @@
       "@aztec/ethereum": "catalog:",
       "@aztec/stdlib": "catalog:",
       "@aztec/noir-contracts.js": "catalog:",
-      "@aztec-otc-desk/contracts": "workspace:*",
+      "@aztec-pioneers/otc-desk-contracts": "workspace:*",
       "dotenv": "catalog:"
   },
   "peerDependencies": {

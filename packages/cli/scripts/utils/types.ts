@@ -1,2 +1,2 @@
-import { type Order } from "../../../orderflow-service/src/types/api";
+import { type Order } from "../../../api/src/types/api";
 export type OrderAPIResponse = { success: boolean, message: string, data: Order[] };

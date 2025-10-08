@@ -48,6 +48,10 @@ async function main() {
     if (!options.skipSubmodules) {
       console.log("Updating git submodules...");
       await execCommand("git", ["submodule", "update", "--init", "--recursive"]);
+      console.log("Fetching tags in aztec-standards...");
+      await execCommand("git", ["fetch", "--tags"], "deps/aztec-standards");
+      console.log("Checking out aztec-standards v2.0.3...");
+      await execCommand("git", ["checkout", "v2.0.3"], "deps/aztec-standards");
     } else {
       console.log("Skipping submodule update, removing target directory...");
       const targetPath = "deps/aztec-standards/target";
@@ -58,6 +62,9 @@ async function main() {
 
     console.log("Compiling token contract...");
     await execCommand("aztec-nargo", ["compile", "--package", "token_contract"], "deps/aztec-standards");
+
+    console.log("Postprocessing contract...");
+    await execCommand("aztec-postprocess-contract");
 
     console.log("Generating TypeScript bindings...");
     await execCommand("aztec", [
@@ -72,7 +79,7 @@ async function main() {
     if (!existsSync(targetDir)) {
       await mkdir(targetDir, { recursive: true });
     }
-    
+
     await execCommand("cp", [
       "deps/aztec-standards/target/token_contract-Token.json",
       "packages/contracts/target/"

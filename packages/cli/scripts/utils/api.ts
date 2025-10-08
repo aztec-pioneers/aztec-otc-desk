@@ -7,7 +7,7 @@ import {
 } from "@aztec/aztec.js";
 import { ContractInstanceWithAddressSchema } from "@aztec/stdlib/contract";
 import { OTCEscrowContract, getEscrowContract } from "@aztec-otc-desk/contracts";
-import type { Order } from "../../../orderflow-service/src/types/api";
+import type { Order } from "../../../api/src/types/api";
 import {
     eth as ethDeployment,
     usdc as usdcDeployment

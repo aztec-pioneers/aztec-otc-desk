@@ -1,5 +1,5 @@
 {
-  "name": "@aztec-otc-desk/contracts",
+  "name": "@aztec-pioneers/otc-desk-contracts",
   "devDependencies": {
       "@types/bun": "catalog:",
       "@types/jest": "catalog:",
@@ -23,7 +23,7 @@
     "test": "bun run test:nr && bun test",
     "test:nr": "LOG_LEVEL=debug aztec test",
     "deploy-token": "bun run ./scripts/deploy_token.ts",
-    "compile": "aztec-nargo compile",
+    "compile": "aztec-nargo compile && aztec-postprocess-contract",
     "codegen": "aztec codegen target --outdir artifacts",
     "copy-artifacts": "bun run scripts/add_artifacts.ts",
     "build": "bun run compile && bun run codegen -f && bun run copy-artifacts",
