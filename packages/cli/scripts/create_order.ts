@@ -29,7 +29,7 @@ if (!API_URL) {
 
 const main = async () => {
 
-    const pxe = await createPXE();
+    const pxe = await createPXE(1);
 
     // get accounts
     const { seller } = await getOTCAccounts(pxe);
@@ -43,7 +43,7 @@ const main = async () => {
     await getTokenContract(pxe, seller, usdcAddress, L2_NODE_URL);
 
     // if testnet, get send/ wait opts optimized for waiting and high gas
-    const opts = await getTestnetSendWaitOptions(pxe);
+    const opts = await getTestnetSendWaitOptions(pxe, seller.getAddress());
 
     // build deploy
     const { contract: escrowContract, secretKey } = await deployEscrowContract(pxe,

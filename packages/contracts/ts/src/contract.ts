@@ -42,7 +42,7 @@ export async function deployEscrowContract(
     sellTokenAmount: bigint,
     buyTokenAddress: AztecAddress,
     buyTokenAmount: bigint,
-    opts: { deploy: DeployOptions, wait?: WaitOpts } = { deploy: { from: deployer.getAddress() } }
+    opts: { send: SendMethodOptions, wait?: WaitOpts } = { send: { from: deployer.getAddress() } }
 ): Promise<{ contract: OTCEscrowContract, secretKey: Fr }> {
     // get keys for contract
     const contractSecretKey = Fr.random();
@@ -63,7 +63,7 @@ export async function deployEscrowContract(
     await pxe.registerAccount(contractSecretKey, partialAddress);
     // deploy contract
     const contract = await contractDeployment
-        .send(opts.deploy)
+        .send(opts.send)
         .deployed(opts.wait);
     return {
         contract: contract as OTCEscrowContract,
@@ -81,7 +81,7 @@ export async function deployEscrowContract(
 export async function deployTokenContractWithMinter(
     tokenMetadata: { name: string; symbol: string; decimals: number },
     deployer: AccountWallet,
-    opts: { deploy: DeployOptions, wait?: WaitOpts } = { deploy: { from: deployer.getAddress() } }
+    opts: { send: SendMethodOptions, wait?: WaitOpts } = { send: { from: deployer.getAddress() } }
 ): Promise<TokenContract> {
     const contract = await Contract.deploy(
         deployer,
@@ -95,7 +95,7 @@ export async function deployTokenContractWithMinter(
         ],
         "constructor_with_minter",
     )
-        .send(opts.deploy)
+        .send(opts.send)
         .deployed(opts.wait);
     return contract as TokenContract;
 }

@@ -24,37 +24,37 @@ import { getSchnorrAccount } from '@aztec/accounts/schnorr';
 import { deriveSigningKey } from '@aztec/stdlib/keys';
 import { wad } from './utils';
 
-// export async function getSponsoredFPCInstance(): Promise<ContractInstanceWithAddress> {
-//   return await getContractInstanceFromInstantiationParams(SponsoredFPCContract.artifact, {
-//     salt: new Fr(SPONSORED_FPC_SALT),
-//   });
-// }
+export async function getSponsoredFPCInstance(): Promise<ContractInstanceWithAddress> {
+  return await getContractInstanceFromInstantiationParams(SponsoredFPCContract.artifact, {
+    salt: new Fr(SPONSORED_FPC_SALT),
+  });
+}
 
-// export async function getSponsoredFPCAddress() {
-//   return (await getSponsoredFPCInstance()).address;
-// }
+export async function getSponsoredFPCAddress() {
+  return (await getSponsoredFPCInstance()).address;
+}
 
-// export async function setupSponsoredFPC(deployer: Wallet, log?: LogFn) {
-//   const deployed = await SponsoredFPCContract.deploy(deployer)
-//     .send({ contractAddressSalt: new Fr(SPONSORED_FPC_SALT), universalDeploy: true })
-//     .deployed();
+export async function setupSponsoredFPC(deployer: Wallet, log?: LogFn) {
+  const deployed = await SponsoredFPCContract.deploy(deployer)
+    .send({ contractAddressSalt: new Fr(SPONSORED_FPC_SALT), universalDeploy: true, from: deployer.getAddress() })
+    .deployed();
 
-//   log ? log(`SponsoredFPC: ${deployed.address}`) : null;
-// }
+  log ? log(`SponsoredFPC: ${deployed.address}`) : null;
+}
 
-// export async function getDeployedSponsoredFPCAddress(pxe: PXE) {
-//   const fpc = await getSponsoredFPCAddress();
-//   const contracts = await pxe.getContracts();
-//   if (!contracts.find(c => c.equals(fpc))) {
-//     throw new Error('SponsoredFPC not deployed.');
-//   }
-//   return fpc;
-// }
+export async function getDeployedSponsoredFPCAddress(pxe: PXE) {
+  const fpc = await getSponsoredFPCAddress();
+  const contracts = await pxe.getContracts();
+  if (!contracts.find(c => c.equals(fpc))) {
+    throw new Error('SponsoredFPC not deployed.');
+  }
+  return fpc;
+}
 
-// export async function getSponsoredFeePaymentMethod(pxe: PXE) {
-//   const paymentContract = await getDeployedSponsoredFPCAddress(pxe)
-//   return new SponsoredFeePaymentMethod(paymentContract)
-// }
+export async function getSponsoredFeePaymentMethod(pxe: PXE) {
+  const paymentContract = await getDeployedSponsoredFPCAddress(pxe)
+  return new SponsoredFeePaymentMethod(paymentContract)
+}
 
 export async function getFeeJuicePortalManager(
   pxe: PXE,

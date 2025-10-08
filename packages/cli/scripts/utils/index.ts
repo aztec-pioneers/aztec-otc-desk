@@ -1,6 +1,6 @@
 import { getSchnorrAccount, SchnorrAccountContractArtifact } from "@aztec/accounts/schnorr";
 import { wad, isTestnet, getPriorityFeeOptions, getSponsoredFeePaymentMethod } from "@aztec-otc-desk/contracts";
-import { AccountWalletWithSecretKey, Fr, type PXE, type SendMethodOptions, type WaitOpts } from "@aztec/aztec.js";
+import { AccountWalletWithSecretKey, AztecAddress, Fr, type PXE, type SendMethodOptions, type WaitOpts } from "@aztec/aztec.js";
 import accounts from "../data/accounts.json";
 import { deriveSigningKey } from "@aztec/stdlib/keys";
 import { getInitialTestAccountsManagers } from "@aztec/accounts/testing";
@@ -20,12 +20,13 @@ export const testnetInterval = 3; // seconds between polling for tx
  */
 export const getTestnetSendWaitOptions = async (
     pxe: PXE,
-    withFPC: boolean = false
+    sender: AztecAddress,
+    withFPC: boolean = false,
 ): Promise<{
     send: SendMethodOptions,
     wait: WaitOpts
 }> => {
-    let sendOptions: SendMethodOptions = {};
+    let sendOptions: SendMethodOptions = { from: sender };
     let waitOptions: WaitOpts = {};
     if (await isTestnet(pxe)) {
         let fee = await getPriorityFeeOptions(
@@ -37,7 +38,7 @@ export const getTestnetSendWaitOptions = async (
             const paymentMethod = await getSponsoredFeePaymentMethod(pxe);
             fee = { ...fee, paymentMethod };
         }
-        sendOptions = { fee };
+        sendOptions = { ...sendOptions, fee };
         waitOptions = { timeout: testnetTimeout, interval: testnetInterval };
     }
     return { send: sendOptions, wait: waitOptions };

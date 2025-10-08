@@ -9,13 +9,13 @@ import { getTestnetSendWaitOptions, getOTCAccounts } from "./utils";
 
 // Deploys Ether and USD Coin token contracts
 const main = async () => {
-    const pxe = await createPXE();
+    const pxe = await createPXE(1);
 
     // get accounts
     const { seller } = await getOTCAccounts(pxe);
 
     // if testnet, get send/ wait opts optimized for waiting and high gas
-    const opts = await getTestnetSendWaitOptions(pxe);
+    const opts = await getTestnetSendWaitOptions(pxe, seller.getAddress());
 
     // deploy token contracts
     console.log("Deploying Wrapped Ether token contract");
