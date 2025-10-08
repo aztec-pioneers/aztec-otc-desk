@@ -138,7 +138,7 @@ pub unconstrained fn deploy_token_contract(
             owner,
             AztecAddress::zero()
         );
-    env.deploy("../../deps/aztec-standards/Token")
+    env.deploy("Token")
         .with_public_initializer(owner, initializer_call_interface)
 }
 

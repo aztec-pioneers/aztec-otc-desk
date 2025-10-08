@@ -21,16 +21,16 @@
   },
   "scripts": {
     "test": "bun run test:nr && bun test",
-    "test:nr": "LOG_LEVEL=debug aztec test",
+    "test:nr": "aztec test",
     "deploy-token": "bun run ./scripts/deploy_token.ts",
     "compile": "aztec-nargo compile && aztec-postprocess-contract",
     "codegen": "aztec codegen target --outdir artifacts",
     "copy-artifacts": "bun run scripts/add_artifacts.ts",
     "build": "bun run compile && bun run codegen -f && bun run copy-artifacts",
-    "sandbox": "VERSION=1.2.1 aztec start --sandbox",
-    "pxe:local": "LOG_LEVEL=info VERSION=1.2.1 aztec start --pxe --pxe.nodeUrl http://localhost:8080 --pxe.proverEnabled false",
+    "sandbox": "VERSION=2.0.3 aztec start --sandbox",
+    "pxe:local": "LOG_LEVEL=info VERSION=2.0.3 aztec start --pxe --pxe.nodeUrl http://localhost:8080 --pxe.proverEnabled false",
     "pxe:local:1": "bun run pxe:local --port 8081 --p2p.p2pPort 40401",
-    "pxe:testnet": "VERSION=1.2.1 aztec start --pxe --pxe.nodeUrl=https://aztec-alpha-testnet-fullnode.zkv.xyz --l1-rpc-urls=https://eth-sepolia.public.blastapi.io --l1-chain-id 11155111",
+    "pxe:testnet": "VERSION=2.0.3 aztec start --pxe --pxe.nodeUrl=https://aztec-alpha-testnet-fullnode.zkv.xyz --l1-rpc-urls=https://eth-sepolia.public.blastapi.io --l1-chain-id 11155111",
     "pxe:testnet:1": "bun run pxe:testnet --port 8081 --p2p.p2pPort 40401"
   }
 }

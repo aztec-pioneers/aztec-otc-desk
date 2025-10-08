@@ -82,7 +82,7 @@ async function main() {
 
     await execCommand("cp", [
       "deps/aztec-standards/target/token_contract-Token.json",
-      "packages/contracts/target/"
+      "packages/contracts/target/otc_escrow-Token.json"
     ]);
 
     console.log("Token contract build completed successfully!");

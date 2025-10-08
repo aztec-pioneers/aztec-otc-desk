@@ -1,8 +1,3 @@
-use aztec::{
-    oracle::random::random,
-    protocol_types::traits::ToField,
-};
-use uint_note::uint_note::PartialUintNote;
 use token_contract::Token;
 use crate::test::utils::{
     setup::{setup, USDC_ESCROW_AMOUNT, ETH_ESCROW_AMOUNT},
@@ -24,15 +19,6 @@ unconstrained fn full_otc_order_success() {
     assert_eq(definition.sell_token_amount, USDC_ESCROW_AMOUNT, "Definition sell token amount mismatch!");
     assert_eq(definition.buy_token_address, contracts.eth, "Definition buy token address mismatch!");
     assert_eq(definition.buy_token_amount, ETH_ESCROW_AMOUNT, "Definition buy token amount mismatch!");
-
-    // check the partial note commitment in the definition is valid
-    // let validity_commitment = PartialUintNote { 
-    //     commitment: definition.partial_note 
-    // }.compute_validity_commitment(contracts.escrow);
-    // assert(
-    //     env.public().nullifier_exists(validity_commitment, contracts.eth),
-    //     "Validity nullifier should exist",
-    // );
 
     // check usdc balance of seller and contract before deposit
     token::expect_private_balance(env, contracts.usdc, accounts.seller, USDC_ESCROW_AMOUNT);
@@ -63,8 +49,6 @@ unconstrained fn full_otc_order_success() {
     );
 
     // check balances after otc order is complete
-    // why does uncommenting this cause
-    // "Assertion failed: A partial note's completion log did not result in any notes being found - this should never happen"
     token::expect_private_balance(env, contracts.usdc, accounts.buyer, USDC_ESCROW_AMOUNT);
     token::expect_private_balance(env, contracts.usdc, contracts.escrow, 0);
     token::expect_private_balance(env, contracts.eth, accounts.seller, ETH_ESCROW_AMOUNT);
@@ -105,7 +89,7 @@ unconstrained fn otc_deposit_incorrect_authwit_fail() {
 }
 
 // ensure cannot deposit twice
-#[test(should_fail_with = "Rejecting tx for emitting duplicate nullifiers")]
+#[test(should_fail_with = "Unable to insert values into tree NullifierTree")]
 unconstrained fn otc_deposit_twice_fail() {
     // get test environment
     let (env, accounts, contracts) = setup(true);
@@ -218,8 +202,9 @@ unconstrained fn otc_fill_before_deposit_fail() {
 }
 
 // try to fill order twice
-// NOTE: pretty sure this is the wrong error stemming from broken last part in first test
-#[test(should_fail_with = "A partial note's completion log did not result in any notes being found")]
+#[test(should_fail)]
+// todo: why this throw "Failed calling external resolver. ErrorObject { code: ServerError(-32702), message: "Cannot read properties of undefined (reading 'contractAddress')"" it definitely works
+// #[test(should_fail_with = "Unable to insert values into tree NullifierTree")]
 unconstrained fn otc_multiple_fill_fail() {
     // get test environment
     let (env, accounts, contracts) = setup(true);

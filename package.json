@@ -1,5 +1,5 @@
 {
-  "name": "aztec-otc-desk-monorepo",
+  "name": "@aztec-pioneers/otc-desk",
   "workspaces": {
     "packages": [
       "packages/*"

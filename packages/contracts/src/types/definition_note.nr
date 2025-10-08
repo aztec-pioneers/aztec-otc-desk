@@ -41,8 +41,9 @@ impl DefinitionNote {
         }
     }
 
-    pub fn get_nullifier(self) -> Field {
-        let preimage = self.serialize();
-        Poseidon2::hash(preimage, 7)
+    pub fn get_nullifier(self, deposit: bool) -> Field {
+        let serialized = self.serialize();
+        let preimage = serialized.concat([deposit as Field]);
+        Poseidon2::hash(preimage, 8)
     }
 }

@@ -83,7 +83,7 @@ pub contract OTCEscrow {
             .call(&mut context);
 
         // emit nullifier to prevent multiple deposits
-        let deposit_nullifier = definition.get_nullifier();
+        let deposit_nullifier = definition.get_nullifier(true);
         context.push_nullifier(deposit_nullifier);
     }
 
@@ -126,6 +126,10 @@ pub contract OTCEscrow {
                 0
             )
             .call(&mut context);
+
+        // emit nullifier to prevent multiple fills
+        let fill_nullifier = definition.get_nullifier(false);
+        context.push_nullifier(fill_nullifier);
     }
 
     #[utility]
