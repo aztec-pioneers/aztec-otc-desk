@@ -35,12 +35,12 @@ async function main() {
     console.log("Moving escrow artifacts...");
     // Move the escrow artifacts
     await copyFileWithLog(
-      "./target/otc_escrow-OTCEscrowContract.json",
-      "./ts/src/artifacts/escrow/OTCEscrowContract.json"
+      "./target/otc_escrow-OTCEscrow.json",
+      "./ts/src/artifacts/escrow/OTCEscrow.json"
     );
     await copyFileWithLog(
-      "./artifacts/OTCEscrowContract.ts",
-      "./ts/src/artifacts/escrow/OTCEscrowContract.ts"
+      "./artifacts/OTCEscrow.ts",
+      "./ts/src/artifacts/escrow/OTCEscrow.ts"
     );
 
     console.log("Moving token artifacts...");
@@ -57,9 +57,9 @@ async function main() {
     console.log("Fixing imports...");
     // Fix imports using string replacement instead of sed
     await replaceInFile(
-      "./ts/src/artifacts/escrow/OTCEscrowContract.ts",
-      "../target/otc_escrow-OTCEscrowContract.json",
-      "./OTCEscrowContract.json"
+      "./ts/src/artifacts/escrow/OTCEscrow.ts",
+      "../target/otc_escrow-OTCEscrow.json",
+      "./OTCEscrow.json"
     );
 
     await replaceInFile(

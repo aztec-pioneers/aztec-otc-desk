@@ -1,0 +1,93 @@
+
+services:
+  # Anvil - Local L1 Ethereum node
+  anvil:
+    image: aztecprotocol/aztec:latest
+    ports:
+      - "8545:8545"
+    entrypoint: ["/bin/bash", "-c"]
+    command:
+      - |
+        anvil --host 0.0.0.0 --silent
+    restart: unless-stopped
+    networks:
+      - aztec-network
+
+  # Aztec Sandbox Node (without PXE)
+  aztec-sandbox:
+    image: aztecprotocol/aztec:latest
+    ports:
+      - "8080:8080"      # Node API
+      - "40400:40400"    # P2P TCP
+      - "40400:40400/udp" # P2P UDP
+    environment:
+      # Node configuration
+      - ARCHIVER_POLLING_INTERVAL_MS=500
+      - P2P_BLOCK_CHECK_INTERVAL_MS=500
+      - SEQ_TX_POLLING_INTERVAL_MS=500
+      - WS_BLOCK_CHECK_INTERVAL_MS=500
+      - ARCHIVER_VIEM_POLLING_INTERVAL_MS=500
+      - LOG_LEVEL=info
+      - DEPLOY_AZTEC_CONTRACTS_SALT=${DEPLOY_AZTEC_CONTRACTS_SALT:-12345}
+
+      # L1 connection
+      - L1_CHAIN_ID=31337
+      - ETHEREUM_HOSTS=http://anvil:8545
+
+      # Node ports
+      - AZTEC_PORT=8080
+      - P2P_PORT=40400
+
+      # Disable PXE on node
+      - NO_PXE=true
+    entrypoint: ["/bin/bash", "-c"]
+    command:
+      - |
+        node --no-warnings /usr/src/yarn-project/aztec/dest/bin/index.js start --sandbox
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/status"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    depends_on:
+      - anvil
+    restart: unless-stopped
+    networks:
+      - aztec-network
+
+  # Aztec PXE - Private Execution Environment in Server
+  aztec-pxe:
+    image: aztecprotocol/aztec:latest
+    ports:
+      - "8081-8082:8080"  # PXE API
+    environment:
+      # PXE configuration
+      - AZTEC_PORT=8080
+      - AZTEC_NODE_URL=http://aztec-sandbox:8080
+      - LOG_LEVEL=info
+
+      # Optional: Enable proving in PXE
+      - PXE_PROVER_ENABLED=${PXE_PROVER_ENABLED:-false}
+    entrypoint: ["/bin/bash", "-c"]
+    command:
+      - |
+        node --no-warnings /usr/src/yarn-project/aztec/dest/bin/index.js start --pxe
+    depends_on:
+      aztec-sandbox:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/status"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    restart: unless-stopped
+    networks:
+      - aztec-network
+    deploy:
+      replicas: 2
+
+networks:
+  aztec-network:
+    driver: bridge

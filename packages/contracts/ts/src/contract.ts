@@ -10,6 +10,7 @@ import {
     createAztecNodeClient,
     SendMethodOptions,
     WaitOpts,
+    SimulateMethodOptions,
 } from "@aztec/aztec.js";
 import { computePartialAddress, ContractInstanceWithAddress } from "@aztec/stdlib/contract";
 import {
@@ -41,7 +42,7 @@ export async function deployEscrowContract(
     sellTokenAmount: bigint,
     buyTokenAddress: AztecAddress,
     buyTokenAmount: bigint,
-    opts: { deploy?: DeployOptions, wait?: WaitOpts } = {}
+    opts: { deploy: DeployOptions, wait?: WaitOpts } = { deploy: { from: deployer.getAddress() } }
 ): Promise<{ contract: OTCEscrowContract, secretKey: Fr }> {
     // get keys for contract
     const contractSecretKey = Fr.random();
@@ -80,7 +81,7 @@ export async function deployEscrowContract(
 export async function deployTokenContractWithMinter(
     tokenMetadata: { name: string; symbol: string; decimals: number },
     deployer: AccountWallet,
-    opts: { deploy?: DeployOptions, wait?: WaitOpts } = {}
+    opts: { deploy: DeployOptions, wait?: WaitOpts } = { deploy: { from: deployer.getAddress() } }
 ): Promise<TokenContract> {
     const contract = await Contract.deploy(
         deployer,
@@ -116,7 +117,7 @@ export async function depositToEscrow(
     caller: AccountWallet,
     sellToken: TokenContract,
     sellTokenAmount: bigint,
-    opts: { deploy?: DeployOptions, wait?: WaitOpts } = {}
+    opts: { send: SendMethodOptions, wait?: WaitOpts } = { send: { from: caller.getAddress() } }
 ): Promise<TxHash> {
     escrow = escrow.withWallet(caller);
     // create authwit
@@ -136,7 +137,7 @@ export async function depositToEscrow(
         .methods
         .deposit_tokens(nonce)
         .with({ authWitnesses: [authwit], })
-        .send(opts.deploy)
+        .send(opts.send)
         .wait(opts.wait);
     return receipt.txHash;
 }
@@ -155,7 +156,7 @@ export async function fillOTCOrder(
     caller: AccountWallet,
     token: TokenContract,
     amount: bigint,
-    opts: { deploy?: DeployOptions, wait?: WaitOpts } = {}
+    opts: { send: SendMethodOptions, wait?: WaitOpts } = { send: { from: caller.getAddress() } }
 ): Promise<TxHash> {
     escrow = escrow.withWallet(caller);
 
@@ -176,7 +177,7 @@ export async function fillOTCOrder(
         .methods
         .fill_order(nonce)
         .with({ authWitnesses: [authwit] })
-        .send(opts.deploy)
+        .send(opts.send)
         .wait(opts.wait);
     return receipt.txHash;
 }
@@ -191,12 +192,13 @@ export async function fillOTCOrder(
 export async function expectBalancePrivate(
     token: TokenContract,
     address: AztecAddress,
-    expectedBalance: bigint
+    expectedBalance: bigint,
+    opts: SimulateMethodOptions = { from: address }
 ): Promise<boolean> {
     const empiricalBalance = await token
         .methods
         .balance_of_private(address)
-        .simulate();
+        .simulate(opts);
     return empiricalBalance === expectedBalance;
 }
 
@@ -205,7 +207,8 @@ export const getTokenContract = async (
     pxe: PXE,
     caller: AccountWallet,
     tokenAddress: AztecAddress,
-    aztecRpcUrl: string = "http://localhost:8080"
+    aztecRpcUrl: string = "http://localhost:8080",
+    opts: SimulateMethodOptions = { from: caller.getAddress() }
 ): Promise<TokenContract> => {
     const node = createAztecNodeClient(aztecRpcUrl);
     const contractInstance = await node.getContract(tokenAddress);
@@ -217,7 +220,7 @@ export const getTokenContract = async (
         artifact: TokenContractArtifact
     });
     const token = await TokenContract.at(tokenAddress, caller);
-    await token.methods.sync_private_state().simulate();
+    await token.methods.sync_private_state().simulate(opts);
     return token;
 };
 
@@ -227,7 +230,8 @@ export const getEscrowContract = async (
     escrowAddress: AztecAddress,
     contractInstance: ContractInstanceWithAddress,
     escrowSecretKey: Fr,
-    escrowPartialAddress: Fr
+    escrowPartialAddress: Fr,
+    opts: SimulateMethodOptions = { from: caller.getAddress() }
 ): Promise<OTCEscrowContract> => {
     // register contract & contract account
     await pxe.registerContract({
@@ -237,6 +241,6 @@ export const getEscrowContract = async (
     await pxe.registerAccount(escrowSecretKey, escrowPartialAddress);
     await pxe.registerSender(escrowAddress);
     const escrow = await OTCEscrowContract.at(escrowAddress, caller);
-    await escrow.methods.sync_private_state().simulate();
+    await escrow.methods.sync_private_state().simulate(opts);
     return escrow;
 };
