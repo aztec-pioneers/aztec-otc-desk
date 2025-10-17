@@ -6,6 +6,7 @@ import {
 } from "@aztec-otc-desk/contracts"
 import { writeFileSync } from "node:fs"
 import { getTestnetSendWaitOptions, getOTCAccounts } from "./utils";
+import { createAztecNodeClient } from "@aztec/stdlib/interfaces/client";
 
 // Deploys Ether and USD Coin token contracts
 const main = async () => {
@@ -13,7 +14,8 @@ const main = async () => {
 
     // get accounts
     const { seller } = await getOTCAccounts(pxe);
-
+    const node = createAztecNodeClient(process.env.L2_NODE_URL!);
+    let x = await node.getProtocolContractAddresses();
     // if testnet, get send/ wait opts optimized for waiting and high gas
     const opts = await getTestnetSendWaitOptions(pxe, seller.getAddress());
 

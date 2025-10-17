@@ -28,15 +28,17 @@ if (!L2_NODE_URL) {
 // Fund 2 accounts
 const main = async () => {
     // Create PXE and FeeJuicePortalManager instances
-    const pxe = await createPXE();
+    const pxe = await createPXE(1);
+    console.log("A")
     const feeJuicePortalManager = await getFeeJuicePortalManager(
         pxe,
         [L1_RPC_URL],
         MNEMONIC
     );
-
+    console.log("B")
     // create two accounts & make claims (can't do concurrently)
     const sellerSetup = await setupAccountWithFeeClaim(pxe, feeJuicePortalManager);
+    console.log("C")
     const buyerSetup = await setupAccountWithFeeClaim(pxe, feeJuicePortalManager);
 
     console.log("SELLER CLAIM: ", sellerSetup.claim);

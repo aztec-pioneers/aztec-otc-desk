@@ -21,7 +21,7 @@ export const testnetInterval = 3; // seconds between polling for tx
 export const getTestnetSendWaitOptions = async (
     pxe: PXE,
     sender: AztecAddress,
-    withFPC: boolean = false,
+    withFPC: boolean = true,
 ): Promise<{
     send: SendMethodOptions,
     wait: WaitOpts
