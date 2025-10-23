@@ -9,7 +9,7 @@ inputs:
   start-sandbox:
     description: 'Whether to start the Aztec Sandbox'
     required: false
-    default: 'true'
+    default: 'false'
   start-api:
     description: 'Whether to start the Orderflow API'
     required: false
