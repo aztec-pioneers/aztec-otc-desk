@@ -2,6 +2,10 @@ name: 'Common Aztec OTC Desk Setup'
 description: 'Sets up Bun, Aztec, compiles, and optionally runs Sandbox & 2 PXEs'
 
 inputs:
+  node-version:
+    description: 'Node.js version to use'
+    required: false
+    default: '22.20.0'
   start-sandbox:
     description: 'Whether to start the Aztec Sandbox'
     required: false
@@ -22,7 +26,7 @@ runs:
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '22.22.0'
+        node-version: ${{ inputs.node-version }}
 
     - name: Install Bun
       run: curl -fsSL https://bun.sh/install | bash
