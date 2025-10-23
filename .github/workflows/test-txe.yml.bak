@@ -14,11 +14,10 @@ jobs:
     setup-and-run:
       strategy:
         matrix:
-          os: [ubuntu-latest-m]
+          os: [ubuntu-latest]
           threads: [12]
 
-      runs-on: 
-        labels: ${{ matrix.os }}
+      runs-on: ${{ matrix.os }}
       timeout-minutes: 60
 
       concurrency:
@@ -37,6 +36,9 @@ jobs:
 
         - name: Install Bun
           run: curl -fsSL https://bun.sh/install | bash
+
+        - name: Update path for Bun
+          run: echo "$HOME/.bun/bin" >> $GITHUB_PATH
   
         - name: Set up Docker
           uses: docker/setup-buildx-action@v2

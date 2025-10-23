@@ -64,7 +64,7 @@ jobs:
         
         - name: Start sandbox
           run: |
-            cd packages/contracts && bun run sandbox
+            cd packages/contracts && bun run sandbox &
 
         - name: Install project dependencies
           run: bun install
