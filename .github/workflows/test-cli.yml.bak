@@ -1,4 +1,4 @@
-name: PXE Tests for Aztec OTC Desk
+name: CLI/ API Tests for Aztec OTC Desk
 
 on:
     push:
@@ -25,17 +25,23 @@ jobs:
         cancel-in-progress: false
 
       steps:
-        - name: Checkout repository
-          uses: actions/checkout@v3
-          with:
-            fetch-depth: 0
-            submodules: recursive
-    
         - name: Common Aztec Setup
           uses: ./.github/actions/aztec-setup
           with:
             start-sandbox: 'true'
 
-        - name: Run pxe tests
-          run: cd packages/contracts && bun test
+        - name: Run orderflow api
+          run: cd packages/api && bun run start &
+        
+        - name: Deploy token contracts
+          run: cd packages/cli && bun run setup:deploy
+        
+        - name: Mint tokens
+          run: cd packages/cli && bun run setup:mint
+        
+        - name: Create OTC Order
+          run: cd packages/cli && bun run order:create
+        
+        - name: Fill OTC Order
+          run: cd packages/cli && bun run order:fill
   
