@@ -10,6 +10,7 @@
       "typescript": "^5.0.0",
       "@aztec/aztec.js": "2.0.3",
       "@aztec/accounts": "2.0.3",
+      "@aztec/constants": "2.0.3",
       "@aztec/ethereum": "2.0.3",
       "@aztec/stdlib": "2.0.3",
       "@aztec/entrypoints": "2.0.3",
