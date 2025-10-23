@@ -30,24 +30,23 @@ Aztec Noir smart contracts implementing the core OTC escrow functionality.
 
 **Usage:**
 ```bash
-cd packages/contracts
+# Terminal 1: Start Aztec Sandbox
+bun run sandbox
 
-# Install dependencies and build
+# Terminal 2: Build and run tests
+cd packages/contracts
 bun install
 bun run build
 
-# Run tests (requires sandbox)
-# Terminal 1: Start Aztec sandbox
-bun run sandbox
-
-# Terminal 2: Start secondary PXE
-bun run pxe:local:1
-
-# Terminal 3: Run tests
+## Run the TXE tests
+bun run test:nr
+## Run the PXE tests
 bun test
+## Run both tests
+bun run test
 ```
 
-### 2. 🖥️ CLI Demo (`packages/nodejs-demo`)
+### 2. 🖥️ CLI Demo (`packages/cli`)
 
 A command-line interface demonstrating the complete OTC trading workflow with two parties: a seller and a buyer.
 
@@ -65,39 +64,52 @@ A command-line interface demonstrating the complete OTC trading workflow with tw
 
 **Complete Workflow:**
 
-**⚠️ Prerequisites: Build contracts and make sure the orderflow service is running in the background!**
+**⚠️ Prerequisites: Build contracts and make sure PXE's & Orderflow API are running in the background!**
 
 ```bash
-# Build contracts first (REQUIRED)
-cd packages/contracts
-bun install
-bun run build
+# Run the PXE's and Orderflow API
+# Use a separate terminal (or add ` -d` to the end of the command!)
 
-# Start orderflow service (in a separate terminal)
-cd packages/orderflow-service
-bun install && bun run start
+# Sandbox PXE
+bun run sandbox
+
+# Testnet PXE
+bun run testnet
 ```
 
 ```bash
-cd packages/nodejs-demo
-
-# 1. Setup environment (run once per sandbox session)
+# Build contracts
 bun install
+cd packages/contracts
+bun run build
+cd -
+```
+
+```bash
+cd packages/cli
+
+# 0. Setup .env
+cat .env.example > .env # edit to the testnet values if using testnet!
+
+# 1. IF USING TESTNET, ADD ACCOUNT
+# TODO: TESTNET IS CURRENTLY DOWN AND NEED TO ADD FPC
+
+# 2. Setup environment (run once per sandbox session)
 bun run setup:deploy
 bun run setup:mint     # Mint tokens to trading accounts
 bun run balances       # Check balances after minting
 
-# 2. Create an OTC order (seller perspective)
+# 3. Create an OTC order (seller perspective)
 bun run order:create
 
-# 3. Fill the order (buyer perspective)
+# 4. Fill the order (buyer perspective)
 bun run order:fill
 
-# 4. Check final balances
+# 5. Check final balances
 bun run balances
 ```
 
-### 3. 🌐 Orderflow Service (`packages/orderflow-service`)
+### 3. 🌐 Orderflow Service (`api`)
 
 A RESTful HTTP service that provides order management and discovery capabilities, facilitating the creation, retrieval, and management of private OTC orders.
 
@@ -141,8 +153,22 @@ GET /order?buy_token_address=0x9abc...
 ```
 
 **Usage:**
+You can run the orderflow api in docker:
 ```bash
-cd packages/orderflow-service
+# Bundled service with sandbox node & 2 PXE's
+bun run sandbox
+
+# Bundled service with 2 PXE's connected to testnet
+bun run testnet
+
+# Run docker container directly
+docker build -t otc-orderflow-api ./packages/api
+docker run -p 3000:3000 -v $(pwd)/data:/data otc-orderflow-api
+```
+
+Or locally run it:
+```bash
+cd packages/api
 
 # Install and start
 bun install
@@ -172,50 +198,30 @@ cd aztec-otc-desk
 
 # Install dependencies for all packages
 bun install
-
-# Install dependencies for each package individually
-cd packages/contracts && bun install && cd ../..
-cd packages/nodejs-demo && bun install && cd ../..
-cd packages/orderflow-service && bun install && cd ../..
 ```
 
 ### Development Setup
 
 **⚠️ Important: You MUST run the orderflow service for the demo to work properly!**
 
-#### Step-by-Step Setup (4 Terminals Required)
+#### Step-by-Step Setup (2)
 
 **⚠️ Prerequisites: Build contracts first!**
 ```bash
-cd packages/contracts
 bun install
+cd packages/contracts
 bun run build      # REQUIRED: Build contracts before starting services
+cd -
 ```
 
 1. **Terminal 1 - Start Aztec Sandbox:**
 ```bash
-cd packages/contracts
-bun run sandbox    # Start Aztec sandbox
-```
-
-2. **Terminal 2 - Start Secondary PXE** (wait for sandbox to be ready):
-```bash
-cd packages/contracts
-bun run pxe:local:1      # Start buyer's PXE
-```
-*Wait for message like "Cannot enqueue vote cast signal 0 for address zero at slot 8" indicating sandbox is ready*
-
-3. **Terminal 3 - Start Orderflow Service** ⭐ **REQUIRED**:
-```bash
-cd packages/orderflow-service
-bun install
-bun run start      # Starts on http://localhost:3000
+bun run sandbox
 ```
 
 4. **Terminal 4 - Deploy Contracts & Run Demo:**
 ```bash
-cd packages/nodejs-demo
-bun install
+cd packages/cli
 bun run setup:deploy    # Deploy token contracts
 bun run setup:mint      # Mint tokens to trading accounts ⭐ REQUIRED
 bun run balances        # Check balances after minting
@@ -238,10 +244,12 @@ bun run build
 ```bash
 # Contract tests (requires running sandbox)
 cd packages/contracts
-bun test
+bun test                # Run JS (PXE) tests
+bun run test:nr         # Run Noir (TXE) tests
+bun run test            # Run all contract tests
 
 # Orderflow service tests
-cd packages/orderflow-service
+cd packages/api
 bun test
 
 # All tests can be run independently
@@ -256,12 +264,11 @@ aztec-otc-desk/
 │   │   ├── src/
 │   │   │   ├── main.nr     # OTC Escrow Contract
 │   │   │   └── types/      # Custom types and notes
-│   │   ├── artifacts/      # Compiled contract artifacts
-│   │   └── ts/             # TypeScript bindings
-│   ├── nodejs-demo/         # CLI demonstration
+│   │   └── ts/             # Contract artifacts and TS libraries for calling the OTC contracts
+│   ├── cli/                # CLI demonstration
 │   │   ├── scripts/        # Demo scripts
 │   │   └── data/           # Test data and deployments
-│   └── orderflow-service/   # HTTP orderflow service
+│   └── api/                # HTTP orderflow service
 │       ├── src/            # API implementation
 │       └── tests/          # Comprehensive test suite
 ├── deps/

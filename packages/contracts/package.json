@@ -28,7 +28,5 @@
     "codegen": "aztec codegen target --outdir ts/src/artifacts/escrow -f && rm ts/src/artifacts/escrow/Token.ts",
     "copy-artifacts": "bun run scripts/add_artifacts.ts",
     "build": "bun run compile && bun run codegen && bun run copy-artifacts",
-    "sandbox": "docker compose -f docker-compose.sandbox.yml up",
-    "testnet": "docker compose -f docker-compose.testnet.yml up"
   }
 }

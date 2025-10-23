@@ -35,13 +35,11 @@ jobs:
           uses: ./.github/actions/aztec-setup
           with:
             start-sandbox: 'true'
+            start-api: 'true'
         
         - name: Add sandbox .env
           run: cd packages/cli && cat .env.example > .env
 
-        - name: Run orderflow api
-          run: cd packages/api && bun run start &
-        
         - name: Deploy token contracts
           run: cd packages/cli && bun run setup:deploy
         

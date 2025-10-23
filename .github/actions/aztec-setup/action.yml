@@ -2,14 +2,14 @@ name: 'Common Aztec OTC Desk Setup'
 description: 'Sets up Bun, Aztec, compiles, and optionally runs Sandbox & 2 PXEs'
 
 inputs:
-  node-version:
-    description: 'Node.js version to use'
-    required: false
-    default: '22.20.0'
   start-sandbox:
-    description: 'Whether to start the sandbox'
+    description: 'Whether to start the Aztec Sandbox'
     required: false
     default: 'true'
+  start-api:
+    description: 'Whether to start the Orderflow API'
+    required: false
+    default: 'false'
 
 outputs:
   aztec-version:
@@ -22,7 +22,7 @@ runs:
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: ${{ inputs.node-version }}
+        node-version: '22.22.0'
 
     - name: Install Bun
       run: curl -fsSL https://bun.sh/install | bash
@@ -58,10 +58,16 @@ runs:
         VERSION=${{ steps.aztec-version.outputs.version }} aztec-up
       shell: bash
     
-    - name: Start sandbox
-      if: inputs.start-sandbox == 'true'
+    - name: Start Sandbox
+      if: inputs.start-sandbox == 'true' && inputs.start-api == 'false'
       run: |
-        cd packages/contracts && bun run sandbox &
+        bun run scripts/docker.ts sandbox
+      shell: bash
+    
+    - name: Start Sandbox and Orderflow API
+      if: inputs.start-sandbox == 'true' && inputs.start-api == 'true'
+      run: |
+        bun run sandbox
       shell: bash
     
     - name: Install project dependencies

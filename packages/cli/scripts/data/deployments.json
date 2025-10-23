@@ -1,8 +1,8 @@
 {
   "eth": {
-    "address": "0x00a4b02eac769969ade23d65136a032f629cd3ab21b4a21ec021b31520ee3edc"
+    "address": "0x0665f4e628888a7735ae8fee11302fddc2ef4067774d1390516a257b3fbddb7a"
   },
   "usdc": {
-    "address": "0x208c5498d7719815d6c19cd75c56c2f123f3daa7a92259efefe8662ad06a79f6"
+    "address": "0x07947236ab4ea154e3db8abceb0cb6a0ef3e797308e9fc998f8e6208e84b54b7"
   }
 }

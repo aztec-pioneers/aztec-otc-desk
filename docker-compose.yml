@@ -1,0 +1,116 @@
+x-pxe-base: &pxe-base
+  image: aztecprotocol/aztec:latest
+  ports:
+    - "8081-8082:8080"
+  entrypoint: ["/bin/bash", "-c"]
+  command:
+    - |
+      node --no-warnings /usr/src/yarn-project/aztec/dest/bin/index.js start --pxe
+  environment:
+    - AZTEC_PORT=8080
+    - LOG_LEVEL=info
+  healthcheck:
+    test: ["CMD", "curl", "-f", "http://localhost:8080/status"]
+    interval: 10s
+    timeout: 5s
+    retries: 10
+    start_period: 30s
+  restart: unless-stopped
+  networks:
+    - aztec-network
+
+services:
+  anvil:
+    container_name: anvil-ethereum-node
+    profiles:
+      - sandbox
+    image: aztecprotocol/aztec:latest
+    ports:
+      - "8545:8545"
+    entrypoint: ["/bin/bash", "-c"]
+    command:
+      - |
+        anvil --host 0.0.0.0 --silent
+    restart: unless-stopped
+    networks:
+      - aztec-network
+
+  aztec-sandbox-node:
+    container_name: aztec-sandbox-node
+    profiles:
+      - sandbox
+    image: aztecprotocol/aztec:latest
+    ports:
+      - "8080:8080"
+      - "40400:40400"
+      - "40400:40400/udp"
+    environment:
+      - L1_CHAIN_ID=31337
+      - ETHEREUM_HOSTS=http://anvil:8545
+      - AZTEC_PORT=8080
+      - P2P_PORT=40400
+      - NO_PXE=true
+    entrypoint: ["/bin/bash", "-c"]
+    command:
+      - |
+        node --no-warnings /usr/src/yarn-project/aztec/dest/bin/index.js start --sandbox
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/status"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    depends_on:
+      - anvil
+    restart: unless-stopped
+    networks:
+      - aztec-network
+  aztec-sandbox-pxe:
+    <<: *pxe-base
+    profiles:
+      - sandbox
+    environment:
+      - AZTEC_NODE_URL=http://aztec-sandbox-node:8080
+      - ETHEREUM_HOSTS=http://anvil:8545
+      - PXE_PROVER_ENABLED=false
+    depends_on:
+      aztec-sandbox-node:
+        condition: service_healthy
+    deploy:
+      replicas: 2
+  aztec-testnet-pxe:
+    <<: *pxe-base
+    profiles:
+      - testnet
+    environment:
+      - AZTEC_NODE_URL=https://aztec-alpha-testnet-fullnode.zkv.xyz
+      - ETHEREUM_HOSTS=https://eth-sepolia.public.blastapi.io
+      - L1_CHAIN_ID=11155111
+      - ROLLUP_VERSION=1714840162
+      - PXE_PROVER_ENABLED=true
+    deploy:
+      replicas: 2
+  api:
+    container_name: orderflow-api
+    profiles:
+      - api
+    build:
+      context: ./packages/api
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./data:/data 
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    restart: unless-stopped
+    networks:
+      - aztec-network
+
+networks:
+  aztec-network:
+    driver: bridge
