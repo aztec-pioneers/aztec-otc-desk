@@ -43,7 +43,6 @@ export async function setupSponsoredFPC(deployer: Wallet, log?: LogFn) {
 export async function getDeployedSponsoredFPCAddress(pxe: PXE) {
   const fpc = await getSponsoredFPCAddress();
   const contracts = await pxe.getContracts();
-  console.log("Deployed contracts: ", contracts.map(c => c.toString()).join(", "));
   if (!contracts.find(c => c.equals(fpc))) {
     throw new Error('SponsoredFPC not deployed.');
   }
@@ -127,13 +126,10 @@ export const setupAccountWithFeeClaim = async (
         Fr.random() // salt
     );
     const wallet = await account.getWallet();
-    console.log("help")
     const claim = await feeJuicePortalManager.bridgeTokensPublic(
         account.getAddress(),
         wad(1000n),
         false
     );
-    console.log('yay')
-
     return { account, wallet, claim };
 }
