@@ -5,6 +5,7 @@
       "@types/jest": "catalog:",
       "@aztec/aztec.js": "catalog:",
       "@aztec/accounts": "catalog:",
+      "@aztec/constants": "catalog:",
       "@aztec/ethereum": "catalog:",
       "@aztec/entrypoints": "catalog:",
       "@aztec/stdlib": "catalog:",

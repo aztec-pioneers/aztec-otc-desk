@@ -64,7 +64,7 @@ async function main() {
 
     await replaceInFile(
       "./ts/src/artifacts/token/Token.ts",
-      "../target/token_contract-Token.json",
+      "../target/otc_escrow-Token.json",
       "./Token.json"
     );
 
