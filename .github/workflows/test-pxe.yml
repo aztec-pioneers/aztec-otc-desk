@@ -36,6 +36,9 @@ jobs:
 
         - name: Install Bun
           run: curl -fsSL https://bun.sh/install | bash
+
+        - name: Update path for Bun
+          run: echo "$HOME/.bun/bin" >> $GITHUB_PATH
   
         - name: Set up Docker
           uses: docker/setup-buildx-action@v2
