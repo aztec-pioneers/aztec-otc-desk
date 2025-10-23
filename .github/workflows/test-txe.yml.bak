@@ -1,4 +1,4 @@
-name: PXE Tests for Aztec OTC Desk
+name: TXE Tests for Aztec OTC Desk
 
 on:
     push:
@@ -14,10 +14,11 @@ jobs:
     setup-and-run:
       strategy:
         matrix:
-          os: [ubuntu-latest]
+          os: [ubuntu-latest-m]
           threads: [12]
 
-      runs-on: ${{ matrix.os }}
+      runs-on: 
+        labels: ${{ matrix.os }}
       timeout-minutes: 60
 
       concurrency:
@@ -32,7 +33,7 @@ jobs:
   
         - uses: actions/setup-node@v4
           with:
-            node-version: "22.20.0"
+            node-version: "22.17.0"
 
         - name: Install Bun
           run: curl -fsSL https://bun.sh/install | bash
@@ -59,15 +60,12 @@ jobs:
           run: |
             VERSION=${{ steps.aztec-version.outputs.version }} aztec-up
         
-        - name: Start sandbox
-          run: |
-            cd packages/contracts && bun run sandbox
-
         - name: Install project dependencies
-          run: bun install
+          run: bun install --frozen-lockfile
   
         - name: Compile
-          run: bun run build
+          run: bun run compile
 
-        - name: Run js tests
-          run: cd packages/contracts && bun test
+        - name: Run nr tests
+          run: |
+            script -e -c "aztec test --test-threads ${{ matrix.threads }}"
