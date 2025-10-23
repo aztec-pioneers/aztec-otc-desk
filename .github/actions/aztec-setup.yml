@@ -1,0 +1,78 @@
+name: 'Common Aztec Setup'
+description: 'Sets up Aztec CLI and environment for workflows'
+
+inputs:
+  node-version:
+    description: 'Node.js version to use'
+    required: false
+    default: '22.20.0'
+  start-sandbox:
+    description: 'Whether to start the sandbox'
+    required: false
+    default: 'true'
+
+outputs:
+  aztec-version:
+    description: 'Detected Aztec version'
+    value: ${{ steps.aztec-version.outputs.version }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+        submodules: recursive
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ inputs.node-version }}
+      shell: bash
+
+    - name: Install Bun
+      run: curl -fsSL https://bun.sh/install | bash
+      shell: bash
+
+    - name: Update path for Bun
+      run: echo "$HOME/.bun/bin" >> $GITHUB_PATH
+      shell: bash
+
+    - name: Set up Docker
+      uses: docker/setup-buildx-action@v2
+
+    - name: Detect Aztec version
+      id: aztec-version
+      run: |
+        AZTEC_VERSION=$(node -p "require('./package.json').config.aztecVersion")
+        echo "version=$AZTEC_VERSION" >> "$GITHUB_OUTPUT"
+        echo "Aztec version is $AZTEC_VERSION"
+      shell: bash
+
+    - name: Install Aztec CLI
+      run: |
+        curl -s https://install.aztec.network > tmp.sh
+        bash tmp.sh <<< yes "yes"
+      shell: bash
+
+    - name: Update path for Aztec
+      run: echo "/home/runner/.aztec/bin" >> $GITHUB_PATH
+      shell: bash
+
+    - name: Set Aztec version
+      run: |
+        VERSION=${{ steps.aztec-version.outputs.version }} aztec-up
+      shell: bash
+    
+    - name: Start sandbox
+      if: inputs.start-sandbox == 'true'
+      run: |
+        cd packages/contracts && bun run sandbox &
+      shell: bash
+    
+    - name: Install project dependencies
+      run: bun install
+  
+    - name: Compile
+      run: cd packages/contracts && bun run build
