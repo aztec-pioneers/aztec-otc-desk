@@ -109,7 +109,7 @@ bun run order:fill
 bun run balances
 ```
 
-### 3. 🌐 Orderflow Service (`api`)
+### 3. 🌐 Orderflow Service (`packages/api`)
 
 A RESTful HTTP service that provides order management and discovery capabilities, facilitating the creation, retrieval, and management of private OTC orders.
 
@@ -204,7 +204,7 @@ bun install
 
 **⚠️ Important: You MUST run the orderflow service for the demo to work properly!**
 
-#### Step-by-Step Setup (2)
+#### Step-by-Step Setup (2 Terminals Required)
 
 **⚠️ Prerequisites: Build contracts first!**
 ```bash
@@ -219,7 +219,7 @@ cd -
 bun run sandbox
 ```
 
-4. **Terminal 4 - Deploy Contracts & Run Demo:**
+4. **Terminal 2 - Deploy Contracts & Run Demo:**
 ```bash
 cd packages/cli
 bun run setup:deploy    # Deploy token contracts
