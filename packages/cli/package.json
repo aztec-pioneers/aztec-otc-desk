@@ -11,7 +11,7 @@
       "@aztec/ethereum": "catalog:",
       "@aztec/stdlib": "catalog:",
       "@aztec/noir-contracts.js": "catalog:",
-      "@aztec-pioneers/otc-desk-contracts": "workspace:*",
+      "@aztec-otc-desk/contracts": "workspace:*",
       "dotenv": "catalog:"
   },
   "peerDependencies": {

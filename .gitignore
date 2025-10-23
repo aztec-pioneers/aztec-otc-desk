@@ -24,3 +24,6 @@ cache
 pxe-data
 pxe
 data
+
+# Local GitHub Actions testing
+.actrc
