@@ -38,6 +38,7 @@
       "devDependencies": {
         "@aztec/accounts": "catalog:",
         "@aztec/aztec.js": "catalog:",
+        "@aztec/constants": "catalog:",
         "@aztec/entrypoints": "catalog:",
         "@aztec/ethereum": "catalog:",
         "@aztec/noir-contracts.js": "catalog:",
@@ -54,6 +55,7 @@
   "catalog": {
     "@aztec/accounts": "2.0.3",
     "@aztec/aztec.js": "2.0.3",
+    "@aztec/constants": "2.0.3",
     "@aztec/entrypoints": "2.0.3",
     "@aztec/ethereum": "2.0.3",
     "@aztec/noir-contracts.js": "2.0.3",
