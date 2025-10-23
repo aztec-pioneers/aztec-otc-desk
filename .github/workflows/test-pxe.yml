@@ -27,16 +27,9 @@ jobs:
       steps:
         - name: Common Aztec Setup
           uses: ./.github/actions/aztec-setup
-        
-        - name: Start sandbox
-          run: |
-            cd packages/contracts && bun run sandbox &
-
-        - name: Install project dependencies
-          run: bun install
-  
-        - name: Compile
-          run: cd packages/contracts && bun run build
+          with:
+            start-sandbox: 'true'
 
         - name: Run pxe tests
           run: cd packages/contracts && bun test
+  

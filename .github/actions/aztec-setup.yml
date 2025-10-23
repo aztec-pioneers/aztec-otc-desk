@@ -1,5 +1,5 @@
-name: 'Common Aztec Setup'
-description: 'Sets up Aztec CLI and environment for workflows'
+name: 'Common Aztec OTC Desk Setup'
+description: 'Sets up Bun, Aztec, compiles, and optionally runs Sandbox & 2 PXEs'
 
 inputs:
   node-version:

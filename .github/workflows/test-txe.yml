@@ -1,4 +1,4 @@
-name: PXE Tests for Aztec OTC Desk
+name: TXE Tests for Aztec OTC Desk
 
 on:
     push:
@@ -27,16 +27,9 @@ jobs:
       steps:
         - name: Common Aztec Setup
           uses: ./.github/actions/aztec-setup
-        
-        - name: Start sandbox
-          run: |
-            cd packages/contracts && bun run sandbox &
+          with:
+            start-sandbox: 'false'
 
-        - name: Install project dependencies
-          run: bun install
+        - name: Run txe tests
+          run: cd packages/contracts && bun run test:nr
   
-        - name: Compile
-          run: cd packages/contracts && bun run build
-
-        - name: Run pxe tests
-          run: cd packages/contracts && bun test
