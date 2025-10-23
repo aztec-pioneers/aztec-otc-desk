@@ -65,13 +65,13 @@ runs:
     - name: Start Sandbox
       if: inputs.start-sandbox == 'true' && inputs.start-api == 'false'
       run: |
-        bun run scripts/docker.ts sandbox
+        bun run scripts/docker.ts sandbox &
       shell: bash
     
     - name: Start Sandbox and Orderflow API
       if: inputs.start-sandbox == 'true' && inputs.start-api == 'true'
       run: |
-        bun run sandbox
+        bun run sandbox &
       shell: bash
     
     - name: Install project dependencies
