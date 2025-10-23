@@ -25,7 +25,13 @@ jobs:
         cancel-in-progress: false
 
       steps:
-        - name: Common Aztec Setup
+        - name: Checkout repository
+          uses: actions/checkout@v3
+          with:
+            fetch-depth: 0
+            submodules: recursive
+
+        - name: Environment Setup (Install Bun & Aztec, Build Project, Run Sandbox)
           uses: ./.github/actions/aztec-setup
           with:
             start-sandbox: 'true'
