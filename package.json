@@ -1,5 +1,5 @@
 {
-  "name": "@aztec-pioneers/otc-desk",
+  "name": "@aztec-pioneers/aztec-otc-desk",
   "workspaces": {
     "packages": [
       "packages/*"

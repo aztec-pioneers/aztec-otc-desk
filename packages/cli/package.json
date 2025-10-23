@@ -1,5 +1,5 @@
 {
-  "name": "@aztec-pioneers/otc-desk-cli",
+  "name": "@aztec-otc-desk/cli",
   "module": "index.ts",
   "type": "module",
   "private": true,
