@@ -23,7 +23,6 @@ runs:
       uses: actions/setup-node@v4
       with:
         node-version: ${{ inputs.node-version }}
-      # NO shell here - uses steps don't have shell
 
     - name: Install Bun
       run: curl -fsSL https://bun.sh/install | bash
@@ -35,7 +34,6 @@ runs:
 
     - name: Set up Docker
       uses: docker/setup-buildx-action@v2
-      # NO shell here - uses steps don't have shell
 
     - name: Detect Aztec version
       id: aztec-version
@@ -68,8 +66,8 @@ runs:
     
     - name: Install project dependencies
       run: bun install
-      shell: bash  # ADD shell here
+      shell: bash
   
     - name: Compile
       run: cd packages/contracts && bun run build
-      shell: bash  # ADD shell here
+      shell: bash
