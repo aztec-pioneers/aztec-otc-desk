@@ -25,5 +25,8 @@
   "dependencies": {
     "@aztec/entrypoints": "2.0.3",
     "dotenv": "^17.2.1"
+  },
+  "config": {
+    "aztecVersion": "2.0.3"
   }
 }
