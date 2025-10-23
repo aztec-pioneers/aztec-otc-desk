@@ -70,7 +70,7 @@ jobs:
           run: bun install
   
         - name: Compile
-          run: bun run build
+          run: cd packages/contracts && bun run build
 
         - name: Run js tests
           run: cd packages/contracts && bun test
