@@ -1,22 +1,24 @@
 use aztec::{
     macros::notes::note,
     oracle::random::random,
-    prelude::AztecAddress,
-    protocol_types::traits::{Deserialize, Serialize},
+    protocol_types::{
+        traits::{Deserialize, Serialize, Packable},
+        address::AztecAddress,
+    },  
 };
 use poseidon::poseidon2::Poseidon2;
 
 
+#[derive(Eq, Serialize, Deserialize, Packable)]
 #[note]
-#[derive(Eq, Serialize, Deserialize)]
 pub struct DefinitionNote {
-    owner: AztecAddress,
-    partial_note: Field,
-    sell_token_address: AztecAddress,
-    sell_token_amount: u128,
-    buy_token_address: AztecAddress,
-    buy_token_amount: u128,
-    randomness: Field,
+    pub owner: AztecAddress,
+    pub partial_note: Field,
+    pub sell_token_address: AztecAddress,
+    pub sell_token_amount: u128,
+    pub buy_token_address: AztecAddress,
+    pub buy_token_amount: u128,
+    pub randomness: Field,
 }
 
 impl DefinitionNote {
@@ -39,8 +41,9 @@ impl DefinitionNote {
         }
     }
 
-    pub fn get_nullifier(self) -> Field {
-        let preimage = self.serialize();
-        Poseidon2::hash(preimage, 7)
+    pub fn get_nullifier(self, deposit: bool) -> Field {
+        let serialized = self.serialize();
+        let preimage = serialized.concat([deposit as Field]);
+        Poseidon2::hash(preimage, 8)
     }
 }

@@ -14,7 +14,6 @@ import {
   type ContractInstanceWithAddress,
   type ContractMethod,
   type ContractStorageLayout,
-  type ContractNotes,
   decodeFromAbi,
   DeployMethod,
   EthAddress,
@@ -26,7 +25,6 @@ import {
   loadContractArtifact,
   loadContractArtifactForPublic,
   type NoirCompiledContract,
-  NoteSelector,
   Point,
   type PublicKey,
   PublicKeys,
@@ -34,7 +32,7 @@ import {
   type U128Like,
   type WrappedFieldLike,
 } from '@aztec/aztec.js';
-import TokenContractArtifactJson from '../target/token_contract-Token.json' with { type: 'json' };
+import TokenContractArtifactJson from '../../../deps/aztec-standards/target/token_contract-Token.json' with { type: 'json' };
 export const TokenContractArtifact = loadContractArtifact(TokenContractArtifactJson as NoirCompiledContract);
 
 
@@ -147,15 +145,6 @@ asset: {
       } as ContractStorageLayout<'name' | 'symbol' | 'decimals' | 'private_balances' | 'total_supply' | 'public_balances' | 'minter' | 'upgrade_authority' | 'asset'>;
     }
     
-
-  public static get notes(): ContractNotes<'UintNote'> {
-    return {
-      UintNote: {
-          id: new NoteSelector(0),
-        }
-    } as ContractNotes<'UintNote'>;
-  }
-  
 
   /** Type-safe wrappers for the public methods exposed by the contract. */
   public declare methods: {

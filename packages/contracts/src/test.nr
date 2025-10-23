@@ -1,2 +1,2 @@
-mod utils;
+pub(crate) mod utils;
 pub mod escrow;

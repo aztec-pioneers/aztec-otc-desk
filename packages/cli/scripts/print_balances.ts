@@ -20,7 +20,7 @@ if (!L2_NODE_URL) {
 // Get balances for users
 const main = async () => {
     // Create PXE and FeeJuicePortalManager instances
-    const pxe = await createPXE();
+    const pxe = await createPXE(1);
     const { seller, buyer } = await getOTCAccounts(pxe)
     
     // get tokens
@@ -35,12 +35,12 @@ const main = async () => {
         .withWallet(seller)
         .methods
         .balance_of_private(seller.getAddress())
-        .simulate();
+        .simulate({from: seller.getAddress()});
     const sellerUSDCBalance = await usdc
         .withWallet(seller)
         .methods
         .balance_of_private(seller.getAddress())
-        .simulate();
+        .simulate({from: seller.getAddress()});
     
     // check balances for buyer
     await eth
@@ -55,12 +55,12 @@ const main = async () => {
         .withWallet(buyer)
         .methods
         .balance_of_private(buyer.getAddress())
-        .simulate();
+        .simulate({from: buyer.getAddress()});
     const buyerUSDCBalance = await usdc
         .withWallet(buyer)
         .methods
         .balance_of_private(buyer.getAddress())
-        .simulate();
+        .simulate({from: buyer.getAddress()});
 
     // if testnet, check available funds
     if (await isTestnet(pxe)) {
@@ -70,14 +70,10 @@ const main = async () => {
         console.log(`FeeJuice balance for seller: ${feeJuiceBalanceSeller}`);
         console.log(`FeeJuice balance for buyer: ${feeJuiceBalanceBuyer}`);
     }
-    console.log(`eth balance for seller: ${sellerethBalance}`);
+    console.log(`ETH balance for seller: ${sellerethBalance}`);
     console.log(`USDC balance for seller: ${sellerUSDCBalance}`);
-    console.log(`eth balance for buyer: ${buyerethBalance}`);
+    console.log(`ETH balance for buyer: ${buyerethBalance}`);
     console.log(`USDC balance for buyer: ${buyerUSDCBalance}`);
-
-    const fpcAddress = await getSponsoredFPCAddress();
-    const feeJuiceBalanceFPC = await getFeeJuicePublicBalance(pxe, fpcAddress);
-    console.log(`FeeJuice balance for FPC: ${feeJuiceBalanceFPC}`);
 }
 
 main();

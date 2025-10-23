@@ -23,17 +23,18 @@ bun run build
 
 ## 🧪 Running Tests
 
-**Prerequisites:** Tests require a running Aztec sandbox and secondary PXE.
+**Prerequisites:** Tests require a running Aztec sandbox and secondary PXE - this is provided with a docker compose script.
 
 ```bash
-# Terminal 1: Start Aztec sandbox
+# Terminal 1: Start Aztec sandbox & two PXE clients
 bun run sandbox
 
-# Terminal 2: Start secondary PXE (wait for sandbox to be ready)
-bun run pxe:local:1
-
-# Terminal 3: Run tests
+# Terminal 2
+# Run PXE tests
 bun test
+
+# Run TXE tests
+bun run test:nr
 ```
 
 ## 🏗️ Project Structure

@@ -1,36 +1,22 @@
 use aztec::{
-    oracle::{
-        random::random,
-        execution::get_contract_address,
-    },
-    prelude::AztecAddress,
-    protocol_types::contract_instance::ContractInstance,
-    test::helpers::{
-        test_environment::TestEnvironment,
-        cheatcodes,
-        authwit as authwit_cheatcodes
-    }
+    oracle::random::random,
+    protocol_types::address::AztecAddress,
+    test::helpers::test_environment::TestEnvironment,
 };
 use crate::{
-    OTCEscrowContract,
+    OTCEscrow,
     types::definition_note::DefinitionNote,
-    test::utils::token::{private_transfer_authwit, mint_to_private}
+    test::utils::token::{private_transfer_authwit}
 };
 
 pub unconstrained fn get_escrow_definition(
+    env: &mut TestEnvironment,
     escrow_address: AztecAddress
 ) -> DefinitionNote {
-    // set cheatcode address to escrow
-    let current_contract_address = get_contract_address();
-    cheatcodes::set_contract_address(escrow_address);
-
-    // read definition
-    let definition = OTCEscrowContract::get_definition();
-
-    // set cheatcode address back to original
-    cheatcodes::set_contract_address(current_contract_address);
-
-    definition
+    env.simulate_utility(
+        OTCEscrow::at(escrow_address)
+            .get_definition()
+    )
 }
 
 pub unconstrained fn deposit_to_escrow(
@@ -52,18 +38,14 @@ pub unconstrained fn deposit_to_escrow(
     );
     
     // increment nonce to make authwit invalid
-    if malicious_authwit {
-        nonce = nonce + 1;
-    }
+    nonce += malicious_authwit as Field;
 
     // call deposit
-    env.impersonate(seller_address);
-    OTCEscrowContract::at(escrow_address)
-        .deposit_tokens(nonce)
-        .call(&mut env.private());
-    
-    // advance block
-    env.advance_block_by(1);
+    env.call_private(
+        seller_address,
+        OTCEscrow::at(escrow_address)
+            .deposit_tokens(nonce)
+    )
 }
 
 pub unconstrained fn fill_otc_order(
@@ -85,16 +67,12 @@ pub unconstrained fn fill_otc_order(
     );
 
     // increment nonce to make authwit invalid
-    if malicious_authwit {
-        nonce = nonce + 1;
-    }
+    nonce += malicious_authwit as Field;
 
     // call fulfill
-    env.impersonate(buyer_address);
-    OTCEscrowContract::at(escrow_address)
-        .fill_order(nonce)
-        .call(&mut env.private());
-
-    // advance block
-    env.advance_block_by(1);
+    env.call_private(
+        buyer_address,
+        OTCEscrow::at(escrow_address)
+            .fill_order(nonce)
+    )
 }

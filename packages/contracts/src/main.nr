@@ -4,20 +4,20 @@ pub mod types;
 pub mod test;
 
 #[aztec]
-pub contract OTCEscrowContract {
-    // aztec library imports
+pub contract OTCEscrow {
+    // imports
     use aztec::{
         macros::{
             functions::{initializer, private, utility},
             storage::storage
         },
-        prelude::{AztecAddress, PrivateImmutable, PrivateMutable},
         messages::logs::note::encode_and_encrypt_note,
-        protocol_types::traits::ToField,
+        protocol_types::address::AztecAddress,
+        state_vars::PrivateImmutable
     };
+    use token_contract::Token;
     use crate::types::definition_note::DefinitionNote;
 
-    use token_contract::Token;
 
     #[storage]
     struct Storage<Context> {
@@ -55,7 +55,6 @@ pub contract OTCEscrowContract {
         
         storage.definition.initialize(definition).emit(encode_and_encrypt_note(
             &mut context,
-            self_address,
             self_address
         ));
     }
@@ -84,7 +83,7 @@ pub contract OTCEscrowContract {
             .call(&mut context);
 
         // emit nullifier to prevent multiple deposits
-        let deposit_nullifier = definition.get_nullifier();
+        let deposit_nullifier = definition.get_nullifier(true);
         context.push_nullifier(deposit_nullifier);
     }
 
@@ -127,10 +126,14 @@ pub contract OTCEscrowContract {
                 0
             )
             .call(&mut context);
+
+        // emit nullifier to prevent multiple fills
+        let fill_nullifier = definition.get_nullifier(false);
+        context.push_nullifier(fill_nullifier);
     }
 
     #[utility]
-    pub unconstrained fn get_definition() -> DefinitionNote {
+    unconstrained fn get_definition() -> DefinitionNote {
         storage.definition.view_note()
     }
 }

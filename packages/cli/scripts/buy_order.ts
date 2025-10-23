@@ -29,24 +29,24 @@ const main = async () => {
     console.log("Found a matching order to fill");
 
     // setup PXE
-    const pxe = await createPXE(1);
+    const pxe = await createPXE(2);
     const { buyer } = await getOTCAccounts(pxe);
 
     // instantiate token contracts
     const ethAddress = AztecAddress.fromString(ethDeployment.address);
     const eth = await getTokenContract(pxe, buyer, ethAddress, L2_NODE_URL);
-    await eth.methods.sync_private_state().simulate();
+    await eth.methods.sync_private_state().simulate({from: buyer.getAddress()});
 
     // get USDC token
     const usdcAddress = AztecAddress.fromString(usdcDeployment.address);
     const usdc = await getTokenContract(pxe, buyer, usdcAddress, L2_NODE_URL);
-    await usdc.methods.sync_private_state().simulate();
+    await usdc.methods.sync_private_state().simulate({from: buyer.getAddress()});
 
     // register escrow contract and account then get deployed instance
     const escrow = await escrowInstanceFromOrder(pxe, buyer, orderToFill);
 
     // if testnet, get send/ wait opts optimized for waiting and high gas
-    const opts = await getTestnetSendWaitOptions(pxe);
+    const opts = await getTestnetSendWaitOptions(pxe, buyer.getAddress());
 
     // fill the otc order
     console.log("Attempting to fill order");

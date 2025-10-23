@@ -12,7 +12,7 @@ if (!L2_NODE_URL) {
 // - Mints 1 Eth to Buyer of the OTC
 // - Mints 5000 USDC to Buyer of the OTC
 const main = async () => {
-    const pxe = await createPXE();
+    const pxe = await createPXE(1);
 
     // get accounts
     const { seller, buyer } = await getOTCAccounts(pxe);
@@ -22,7 +22,7 @@ const main = async () => {
     const eth = await getTokenContract(pxe, seller, ethAddress, L2_NODE_URL);
 
     // if testnet, get send/ wait opts optimized for waiting and high gas
-    const opts = await getTestnetSendWaitOptions(pxe);
+    const opts = await getTestnetSendWaitOptions(pxe, seller.getAddress());
 
     // mint eth
     console.log("Minting eth to seller account");

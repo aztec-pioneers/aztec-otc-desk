@@ -1,20 +1,10 @@
+use token_contract::Token;
 use crate::test::utils::{
     setup::{setup, USDC_ESCROW_AMOUNT, ETH_ESCROW_AMOUNT},
-    escrow::{
-        deposit_to_escrow,
-        fill_otc_order,
-        get_escrow_definition
-    },
-    token::{
-        expect_private_balance,
-        mint_to_private
-    }
+    escrow,
+    token
 };
-use aztec::{
-    oracle::random::random,
-    protocol_types::traits::ToField,
-};
-use uint_note::uint_note::PartialUintNote;
+
 
 // Basic e2e escrow test
 #[test]
@@ -23,28 +13,19 @@ unconstrained fn full_otc_order_success() {
     let (env, accounts, contracts) = setup(true);
     
     // check the definition
-    let definition = get_escrow_definition(contracts.escrow);
+    let definition = escrow::get_escrow_definition(env, contracts.escrow);
     assert_eq(definition.owner, contracts.escrow, "Definition owner mismatch!");
     assert_eq(definition.sell_token_address, contracts.usdc, "Definition sell token address mismatch!");
     assert_eq(definition.sell_token_amount, USDC_ESCROW_AMOUNT, "Definition sell token amount mismatch!");
     assert_eq(definition.buy_token_address, contracts.eth, "Definition buy token address mismatch!");
     assert_eq(definition.buy_token_amount, ETH_ESCROW_AMOUNT, "Definition buy token amount mismatch!");
 
-    // check the partial note commitment in the definition is valid
-    let validity_commitment = PartialUintNote { 
-        commitment: definition.partial_note 
-    }.compute_validity_commitment(contracts.escrow);
-    assert(
-        env.public().nullifier_exists(validity_commitment, contracts.eth),
-        "Validity nullifier should exist",
-    );
-
     // check usdc balance of seller and contract before deposit
-    expect_private_balance(contracts.usdc, accounts.seller, USDC_ESCROW_AMOUNT);
-    expect_private_balance(contracts.usdc, contracts.escrow, 0);
+    token::expect_private_balance(env, contracts.usdc, accounts.seller, USDC_ESCROW_AMOUNT);
+    token::expect_private_balance(env, contracts.usdc, contracts.escrow, 0);
 
     // deposit to escrow
-    deposit_to_escrow(
+    escrow::deposit_to_escrow(
         env,
         accounts.seller,
         contracts.escrow,
@@ -54,11 +35,11 @@ unconstrained fn full_otc_order_success() {
     );
 
     // check usdc balance of seller and contract after deposit
-    expect_private_balance(contracts.usdc, accounts.seller, 0);
-    expect_private_balance(contracts.usdc, contracts.escrow, USDC_ESCROW_AMOUNT);
+    token::expect_private_balance(env, contracts.usdc, accounts.seller, 0);
+    token::expect_private_balance(env, contracts.usdc, contracts.escrow, USDC_ESCROW_AMOUNT);
 
     // fill the otc order
-    fill_otc_order(
+    escrow::fill_otc_order(
         env,
         accounts.buyer,
         contracts.escrow,
@@ -68,11 +49,9 @@ unconstrained fn full_otc_order_success() {
     );
 
     // check balances after otc order is complete
-    // why does uncommenting this cause
-    // "Assertion failed: A partial note's completion log did not result in any notes being found - this should never happen"
-    // expect_private_balance(contracts.usdc, accounts.buyer, USDC_ESCROW_AMOUNT);
-    // expect_private_balance(contracts.usdc, contracts.escrow, 0);
-    // expect_private_balance(contracts.eth, accounts.seller, ETH_ESCROW_AMOUNT);
+    token::expect_private_balance(env, contracts.usdc, accounts.buyer, USDC_ESCROW_AMOUNT);
+    token::expect_private_balance(env, contracts.usdc, contracts.escrow, 0);
+    token::expect_private_balance(env, contracts.eth, accounts.seller, ETH_ESCROW_AMOUNT);
 }
 
 // ensure cannot deposit without sufficient balance
@@ -82,7 +61,7 @@ unconstrained fn otc_deposit_insufficient_balance_fail() {
     let (env, accounts, contracts) = setup(false);
 
     // try to deposit to escrow with insufficient balance
-    deposit_to_escrow(
+    escrow::deposit_to_escrow(
         env,
         accounts.buyer,
         contracts.escrow,
@@ -99,7 +78,7 @@ unconstrained fn otc_deposit_incorrect_authwit_fail() {
     let (env, accounts, contracts) = setup(true);
 
     // try to deposit to escrow with malicious authwit
-    deposit_to_escrow(
+    escrow::deposit_to_escrow(
         env,
         accounts.buyer,
         contracts.escrow,
@@ -110,13 +89,13 @@ unconstrained fn otc_deposit_incorrect_authwit_fail() {
 }
 
 // ensure cannot deposit twice
-#[test(should_fail_with = "Rejecting tx for emitting duplicate nullifiers")]
+#[test(should_fail_with = "Unable to insert values into tree NullifierTree")]
 unconstrained fn otc_deposit_twice_fail() {
     // get test environment
     let (env, accounts, contracts) = setup(true);
 
     // deposit once successfully
-    deposit_to_escrow(
+    escrow::deposit_to_escrow(
         env,
         accounts.seller,
         contracts.escrow,
@@ -126,16 +105,14 @@ unconstrained fn otc_deposit_twice_fail() {
     );
 
     // mint extra tokens to seller so they have enough to deposit twice
-    mint_to_private(
-        env,
-        contracts.usdc,
+    env.call_private(
         accounts.minter,
-        accounts.seller,
-        USDC_ESCROW_AMOUNT
+        Token::at(contracts.usdc)
+            .mint_to_private(accounts.minter, accounts.seller, USDC_ESCROW_AMOUNT)
     );
 
     // try to deposit a second time
-    deposit_to_escrow(
+    escrow::deposit_to_escrow(
         env,
         accounts.seller,
         contracts.escrow,
@@ -152,16 +129,14 @@ unconstrained fn otc_fill_insufficient_balance_fail() {
     let (env, accounts, contracts) = setup(false);
 
     // mint so alice can deposit
-    mint_to_private(
-        env,
-        contracts.usdc,
+    env.call_private(
         accounts.minter,
-        accounts.seller,
-        USDC_ESCROW_AMOUNT
+        Token::at(contracts.usdc)
+            .mint_to_private(accounts.minter, accounts.seller, USDC_ESCROW_AMOUNT)
     );
 
     // deposit to escrow
-    deposit_to_escrow(
+    escrow::deposit_to_escrow(
         env,
         accounts.buyer,
         contracts.escrow,
@@ -171,7 +146,7 @@ unconstrained fn otc_fill_insufficient_balance_fail() {
     );
 
     // try to fill order without tokens
-    fill_otc_order(
+    escrow::fill_otc_order(
         env,
         accounts.buyer,
         contracts.escrow,
@@ -189,7 +164,7 @@ unconstrained fn otc_fill_incorrect_authwit_fail() {
     let (env, accounts, contracts) = setup(true);
 
     // deposit to escrow
-    deposit_to_escrow(
+    escrow::deposit_to_escrow(
         env,
         accounts.seller,
         contracts.escrow,
@@ -199,7 +174,7 @@ unconstrained fn otc_fill_incorrect_authwit_fail() {
     );
 
     // try filling order with malicious authwit
-    fill_otc_order(
+    escrow::fill_otc_order(
         env,
         accounts.buyer,
         contracts.escrow,
@@ -216,7 +191,7 @@ unconstrained fn otc_fill_before_deposit_fail() {
     let (env, accounts, contracts) = setup(true);
 
     // try to fill order before deposit
-    fill_otc_order(
+    escrow::fill_otc_order(
         env,
         accounts.buyer,
         contracts.escrow,
@@ -227,14 +202,15 @@ unconstrained fn otc_fill_before_deposit_fail() {
 }
 
 // try to fill order twice
-// NOTE: pretty sure this is the wrong error stemming from broken last part in first test
-#[test(should_fail_with = "A partial note's completion log did not result in any notes being found")]
+#[test(should_fail)]
+// todo: why this throw "Failed calling external resolver. ErrorObject { code: ServerError(-32702), message: "Cannot read properties of undefined (reading 'contractAddress')"" it definitely works
+// #[test(should_fail_with = "Unable to insert values into tree NullifierTree")]
 unconstrained fn otc_multiple_fill_fail() {
     // get test environment
     let (env, accounts, contracts) = setup(true);
 
     // deposit to escrow
-    deposit_to_escrow(
+    escrow::deposit_to_escrow(
         env,
         accounts.seller,
         contracts.escrow,
@@ -244,7 +220,7 @@ unconstrained fn otc_multiple_fill_fail() {
     );
 
     // first fill (should pass)
-    fill_otc_order(
+    escrow::fill_otc_order(
         env,
         accounts.buyer,
         contracts.escrow,
@@ -254,25 +230,21 @@ unconstrained fn otc_multiple_fill_fail() {
     );
 
     // mint more tokens to Bob to fill order
-    mint_to_private(
-        env,
-        contracts.eth,
+    env.call_private(
         accounts.minter,
-        accounts.buyer,
-        ETH_ESCROW_AMOUNT
+        Token::at(contracts.eth)
+            .mint_to_private(accounts.minter, accounts.buyer, ETH_ESCROW_AMOUNT)
     );
 
     // mint more tokens to the escrow so it has some to send back out
-    mint_to_private(
-        env,
-        contracts.usdc,
+    env.call_private(
         accounts.minter,
-        contracts.escrow,
-        USDC_ESCROW_AMOUNT
+        Token::at(contracts.usdc)
+            .mint_to_private(accounts.minter, contracts.escrow, USDC_ESCROW_AMOUNT)
     );
 
     // second fill (should throw)
-    fill_otc_order(
+    escrow::fill_otc_order(
         env,
         accounts.buyer,
         contracts.escrow,

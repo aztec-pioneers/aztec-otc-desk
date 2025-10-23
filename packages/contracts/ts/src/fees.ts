@@ -11,7 +11,7 @@ import {
   SponsoredFeePaymentMethod,
   type Wallet,
   createLogger,
-  getContractInstanceFromDeployParams,
+  getContractInstanceFromInstantiationParams,
 } from '@aztec/aztec.js';
 import type { LogFn } from '@aztec/foundation/log';
 import { SponsoredFPCContract } from '@aztec/noir-contracts.js/SponsoredFPC';
@@ -24,19 +24,17 @@ import { getSchnorrAccount } from '@aztec/accounts/schnorr';
 import { deriveSigningKey } from '@aztec/stdlib/keys';
 import { wad } from './utils';
 
-export async function getSponsoredFPCInstance(): Promise<ContractInstanceWithAddress> {
-  return await getContractInstanceFromDeployParams(SponsoredFPCContract.artifact, {
-    salt: new Fr(SPONSORED_FPC_SALT),
-  });
-}
 
 export async function getSponsoredFPCAddress() {
-  return (await getSponsoredFPCInstance()).address;
+  const sponsoredFPCInstance = await getContractInstanceFromInstantiationParams(SponsoredFPCContract.artifact, {
+    salt: new Fr(SPONSORED_FPC_SALT),
+  });
+  return sponsoredFPCInstance.address;
 }
 
 export async function setupSponsoredFPC(deployer: Wallet, log?: LogFn) {
   const deployed = await SponsoredFPCContract.deploy(deployer)
-    .send({ contractAddressSalt: new Fr(SPONSORED_FPC_SALT), universalDeploy: true })
+    .send({ contractAddressSalt: new Fr(SPONSORED_FPC_SALT), universalDeploy: true, from: deployer.getAddress() })
     .deployed();
 
   log ? log(`SponsoredFPC: ${deployed.address}`) : null;
@@ -130,9 +128,8 @@ export const setupAccountWithFeeClaim = async (
     const wallet = await account.getWallet();
     const claim = await feeJuicePortalManager.bridgeTokensPublic(
         account.getAddress(),
-        wad(1n),
-        true
+        wad(1000n),
+        false
     );
-
     return { account, wallet, claim };
 }

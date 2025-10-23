@@ -1,5 +1,5 @@
 {
-  "name": "aztec-otc-desk-monorepo",
+  "name": "@aztec-pioneers/aztec-otc-desk",
   "workspaces": {
     "packages": [
       "packages/*"
@@ -8,22 +8,23 @@
       "@types/bun": "latest",
       "@types/jest": "^30.0.0",
       "typescript": "^5.0.0",
-      "@aztec/aztec.js": "^1.2.1",
-      "@aztec/accounts": "^1.2.1",
-      "@aztec/ethereum": "^1.2.1",
-      "@aztec/stdlib": "^1.2.1",
-      "@aztec/entrypoints": "^1.2.1",
-      "@aztec/noir-contracts.js": "1.2.1",
+      "@aztec/aztec.js": "2.0.3",
+      "@aztec/accounts": "2.0.3",
+      "@aztec/constants": "2.0.3",
+      "@aztec/ethereum": "2.0.3",
+      "@aztec/stdlib": "2.0.3",
+      "@aztec/entrypoints": "2.0.3",
+      "@aztec/noir-contracts.js": "2.0.3",
       "dotenv": "^17.2.1",
       "@jest/globals": "^30.0.5",
       "jest": "^30.0.5"
     }
   },
   "scripts": {
-    "build-token": "bun run scripts/token.ts"
+    "postinstall": "bun run scripts/token.ts"
   },
   "dependencies": {
-    "@aztec/entrypoints": "^1.2.1",
+    "@aztec/entrypoints": "2.0.3",
     "dotenv": "^17.2.1"
   }
 }
