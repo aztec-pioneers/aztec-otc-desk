@@ -1,0 +1,56 @@
+name: CLI/ API Tests for Aztec OTC Desk
+
+on:
+    push:
+      branches:
+        - main
+    pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+    setup-and-run:
+      strategy:
+        matrix:
+          os: [ubuntu-latest]
+          threads: [12]
+
+      runs-on: ${{ matrix.os }}
+      timeout-minutes: 60
+
+      concurrency:
+        group: job-${{ github.workflow }}-${{ github.ref_name }}-${{ matrix.os }}-${{ matrix.threads }}
+        cancel-in-progress: false
+
+      steps:
+        - name: Checkout repository
+          uses: actions/checkout@v3
+          with:
+            fetch-depth: 0
+            submodules: recursive
+
+        - name: Environment Setup (Install Bun & Aztec, Build Project, Run Sandbox)
+          uses: ./.github/actions/aztec-setup
+          with:
+            start-sandbox: 'true'
+        
+        - name: Add sandbox .env
+          run: cd packages/cli && cat .env.example > .env
+
+        - name: Run orderflow api
+          run: cd packages/api && bun run start &
+        
+        - name: Deploy token contracts
+          run: cd packages/cli && bun run setup:deploy
+        
+        - name: Mint tokens
+          run: cd packages/cli && bun run setup:mint
+        
+        - name: Create OTC Order
+          run: cd packages/cli && bun run order:create
+        
+        - name: Fill OTC Order
+          run: cd packages/cli && bun run order:fill
+  

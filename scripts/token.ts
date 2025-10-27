@@ -2,6 +2,8 @@
 
 import { spawn } from "bun";
 import { existsSync } from "fs";
+import { writeFile } from "fs/promises";
+import { readFile } from "fs/promises";
 import { mkdir, rm } from "fs/promises";
 import { join } from "path";
 
@@ -25,6 +27,17 @@ function parseArgs(): ScriptOptions {
   }
 
   return { skipSubmodules };
+}
+
+async function replaceInFile(filePath: string, searchText: string, replaceText: string): Promise<void> {
+  try {
+    const content = await readFile(filePath, "utf-8");
+    const updatedContent = content.replace(new RegExp(searchText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), replaceText);
+    await writeFile(filePath, updatedContent, "utf-8");
+    console.log(`Updated imports in: ${filePath}`);
+  } catch (error) {
+    throw new Error(`Failed to update file ${filePath}: ${error}`);
+  }
 }
 
 async function execCommand(command: string, args: string[] = [], cwd?: string): Promise<void> {
@@ -70,20 +83,37 @@ async function main() {
     await execCommand("aztec", [
       "codegen",
       "./target/token_contract-Token.json",
-      "-o", "../../packages/contracts/artifacts",
+      "-o", "./target",
       "-f"
     ], "deps/aztec-standards");
 
-    console.log("Copying artifact to target directory...");
-    const targetDir = "packages/contracts/target";
-    if (!existsSync(targetDir)) {
-      await mkdir(targetDir, { recursive: true });
+    console.log("Copy token artifacts to ts library");
+    await execCommand("cp", [
+      "./target/token_contract-Token.json",
+      "../../packages/contracts/ts/src/artifacts/token/Token.json"
+    ], "deps/aztec-standards");
+
+    await execCommand("cp", [
+      "./target/Token.ts",
+      "../../packages/contracts/ts/src/artifacts/token/Token.ts"
+    ], "deps/aztec-standards");
+
+    console.log("Fixing import paths...");
+    await replaceInFile(
+      "./packages/contracts/ts/src/artifacts/token/Token.ts",
+      "./token_contract-Token.json",
+      "./Token.json"
+    );
+
+    console.log("Copying token artifact to imported in TXE...")
+    if (!existsSync("packages/contracts/target")) {
+      await mkdir("packages/contracts/target", { recursive: true });
     }
 
     await execCommand("cp", [
-      "deps/aztec-standards/target/token_contract-Token.json",
-      "packages/contracts/target/otc_escrow-Token.json"
-    ]);
+      "./target/token_contract-Token.json",
+      "../../packages/contracts/target/otc_escrow-Token.json"
+    ], "deps/aztec-standards");
 
     console.log("Token contract build completed successfully!");
 
