@@ -38,6 +38,7 @@ pub unconstrained fn expect_private_balance(
  * @param nonce - the authwit nonce
  */
 pub unconstrained fn private_transfer_authwit(
+    env: TestEnvironment,
     token_address: AztecAddress,
     caller: AztecAddress,
     from: AztecAddress,
@@ -47,6 +48,7 @@ pub unconstrained fn private_transfer_authwit(
     let call_interface = Token::at(token_address)
         .transfer_private_to_private(from, caller, amount, nonce);
     add_private_authwit_from_call_interface(
+        env,
         from,
         caller,
         call_interface

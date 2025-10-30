@@ -90,7 +90,6 @@ pub unconstrained fn setup(mint: bool) -> (
         env.call_private(
             test_accounts.minter,
             Token::at(usdc).mint_to_private(
-                test_accounts.minter,
                 test_accounts.seller,
                 USDC_ESCROW_AMOUNT
             )
@@ -99,7 +98,6 @@ pub unconstrained fn setup(mint: bool) -> (
         env.call_private(
             test_accounts.minter,
             Token::at(eth).mint_to_private(
-                test_accounts.minter,
                 test_accounts.buyer,
                 ETH_ESCROW_AMOUNT
             )

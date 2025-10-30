@@ -1,7 +1,7 @@
 use aztec::macros::aztec;
 
 pub mod types;
-// pub mod test;
+pub mod test;
 
 #[aztec]
 pub contract OTCEscrow {
