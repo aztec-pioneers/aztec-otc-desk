@@ -1,1 +1,1 @@
-pub(crate) mod definition_note;
+pub(crate) mod config_note;

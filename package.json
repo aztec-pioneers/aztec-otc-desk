@@ -8,13 +8,13 @@
       "@types/bun": "latest",
       "@types/jest": "^30.0.0",
       "typescript": "^5.0.0",
-      "@aztec/aztec.js": "2.0.3",
-      "@aztec/accounts": "2.0.3",
-      "@aztec/constants": "2.0.3",
-      "@aztec/ethereum": "2.0.3",
-      "@aztec/stdlib": "2.0.3",
-      "@aztec/entrypoints": "2.0.3",
-      "@aztec/noir-contracts.js": "2.0.3",
+      "@aztec/aztec.js": "3.0.0-devnet.2",
+      "@aztec/accounts": "3.0.0-devnet.2",
+      "@aztec/constants": "3.0.0-devnet.2",
+      "@aztec/ethereum": "3.0.0-devnet.2",
+      "@aztec/stdlib": "3.0.0-devnet.2",
+      "@aztec/entrypoints": "3.0.0-devnet.2",
+      "@aztec/noir-contracts.js": "3.0.0-devnet.2",
       "dotenv": "^17.2.1",
       "@jest/globals": "^30.0.5",
       "jest": "^30.0.5"
@@ -25,11 +25,7 @@
     "sandbox": "bun run scripts/docker.ts sandbox api",
     "testnet": "bun run scripts/docker.ts testnet api"
   },
-  "dependencies": {
-    "@aztec/entrypoints": "2.0.3",
-    "dotenv": "^17.2.1"
-  },
   "config": {
-    "aztecVersion": "2.0.3"
+    "aztecVersion": "3.0.0-devnet.2"
   }
 }

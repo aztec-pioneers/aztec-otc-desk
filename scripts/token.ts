@@ -63,8 +63,8 @@ async function main() {
       await execCommand("git", ["submodule", "update", "--init", "--recursive"]);
       console.log("Fetching tags in aztec-standards...");
       await execCommand("git", ["fetch", "--tags"], "deps/aztec-standards");
-      console.log("Checking out aztec-standards v2.0.3...");
-      await execCommand("git", ["checkout", "v2.0.3"], "deps/aztec-standards");
+      console.log("Checking out aztec-standards v3.0.0-devnet.2...");
+      await execCommand("git", ["checkout", "chore/v3-devnet.2"], "deps/aztec-standards");
     } else {
       console.log("Skipping submodule update, removing target directory...");
       const targetPath = "deps/aztec-standards/target";
