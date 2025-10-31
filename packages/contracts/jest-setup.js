@@ -4,8 +4,6 @@ if (typeof expect !== 'undefined' && !expect.addEqualityTesters) {
     // Store testers for potential future use
     expect._customTesters = expect._customTesters || [];
     expect._customTesters.push(...testers);
-    
-    console.warn('addEqualityTesters partially implemented - some Jest functionality may not work');
   };
 }
 

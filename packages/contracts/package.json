@@ -1,24 +1,15 @@
 {
   "name": "@aztec-otc-desk/contracts",
-  "devDependencies": {
-      "@types/bun": "catalog:",
-      "@types/jest": "catalog:",
-      "@aztec/aztec.js": "catalog:",
-      "@aztec/accounts": "catalog:",
-      "@aztec/constants": "catalog:",
-      "@aztec/ethereum": "catalog:",
-      "@aztec/entrypoints": "catalog:",
-      "@aztec/stdlib": "catalog:",
-      "@aztec/noir-contracts.js": "catalog:",
-      "jest": "catalog:"
-  },
+  "type": "module",
   "main": "./ts/src/index.ts",
   "types": "./ts/src/index.ts",
   "exports": {
-    ".": "./ts/src/index.ts"
-  },
-  "peerDependencies": {
-    "typescript": "catalog:"
+    ".": "./ts/src/index.ts",
+    "./artifacts": "./ts/src/artifacts/index.ts",
+    "./constants": "./ts/src/constants.ts",
+    "./contract": "./ts/src/contract.ts",
+    "./fees": "./ts/src/fees.ts",
+    "./utils": "./ts/src/utils.ts"
   },
   "scripts": {
     "test": "bun run test:nr && bun test",
@@ -27,6 +18,27 @@
     "compile": "aztec-nargo compile && aztec-postprocess-contract",
     "codegen": "aztec codegen target --outdir ts/src/artifacts/escrow -f && rm ts/src/artifacts/escrow/Token.ts",
     "copy-artifacts": "bun run scripts/add_artifacts.ts",
-    "build": "bun run compile && bun run codegen && bun run copy-artifacts",
+    "build": "bun run compile && bun run codegen && bun run copy-artifacts"
+  },
+  "dependencies": {
+      "@aztec/aztec.js": "catalog:",
+      "@aztec/accounts": "catalog:",
+      "@aztec/constants": "catalog:",
+      "@aztec/ethereum": "catalog:",
+      "@aztec/entrypoints": "catalog:",
+      "@aztec/noir-contracts.js": "catalog:",
+      "@aztec/pxe": "catalog:",
+      "@aztec/stdlib": "catalog:",
+      "@aztec/test-wallet": "3.0.0-devnet.2"
+  },
+  "devDependencies": {
+      "@types/bun": "catalog:",
+      "@types/jest": "catalog:",
+      "jest": "catalog:",
+      "@jest/globals": "catalog:",
+      "dotenv": "catalog:"
+  },
+  "peerDependencies": {
+    "typescript": "catalog:"
   }
 }
