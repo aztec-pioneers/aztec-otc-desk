@@ -23,7 +23,7 @@
     }
   },
   "scripts": {
-    "postinstall": "bun run scripts/postinstall.sh",
+    "postinstall": "bun run scripts/token.ts",
     "sandbox": "bun run scripts/docker.ts sandbox api",
     "testnet": "bun run scripts/docker.ts testnet api"
   },
