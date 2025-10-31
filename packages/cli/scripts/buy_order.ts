@@ -1,15 +1,16 @@
 import "dotenv/config";
-import { createPXE, fillOTCOrder, getTokenContract } from "@aztec-otc-desk/contracts";
+import { fillOTCOrder, getTokenContract } from "@aztec-otc-desk/contracts/contract";
 import { eth as ethDeployment, usdc as usdcDeployment } from "./data/deployments.json"
-import { AztecAddress } from "@aztec/aztec.js";
+import { AztecAddress } from "@aztec/aztec.js/addresses";
 import {
     closeOrder,
     escrowInstanceFromOrder,
     getOrders,
     getOTCAccounts,
     getTestnetSendWaitOptions,
-    usdcMintAmount
+    USDC_SWAP_AMOUNT
 } from "./utils";
+import { createAztecNodeClient } from "@aztec/aztec.js/node";
 
 // get environment variables
 const { L2_NODE_URL, API_URL } = process.env;
@@ -28,19 +29,17 @@ const main = async () => {
     const orderToFill = orders[0]!;
     console.log("Found a matching order to fill");
 
-    // setup PXE
-    const pxe = await createPXE(2);
-    const { buyer } = await getOTCAccounts(pxe);
+    // setup wallets
+    const node = await createAztecNodeClient(L2_NODE_URL);
+    const { buyerWallet, buyerAddress } = await getOTCAccounts(node);
 
     // instantiate token contracts
     const ethAddress = AztecAddress.fromString(ethDeployment.address);
-    const eth = await getTokenContract(pxe, buyer, ethAddress, L2_NODE_URL);
-    await eth.methods.sync_private_state().simulate({from: buyer.getAddress()});
+    const eth = await getTokenContract(buyerWallet, buyerAddress, node, ethAddress);
 
     // get USDC token
     const usdcAddress = AztecAddress.fromString(usdcDeployment.address);
-    const usdc = await getTokenContract(pxe, buyer, usdcAddress, L2_NODE_URL);
-    await usdc.methods.sync_private_state().simulate({from: buyer.getAddress()});
+    const usdc = await getTokenContract(buyerWallet, buyerAddress, node, usdcAddress);
 
     // register escrow contract and account then get deployed instance
     const escrow = await escrowInstanceFromOrder(pxe, buyer, orderToFill);

@@ -20,7 +20,6 @@ export function createOrderHandlers(database: IDatabase) {
         escrowAddress: rawData.escrowAddress,
         contractInstance: rawData.contractInstance,
         secretKey: rawData.secretKey,
-        partialAddress: rawData.partialAddress,
         sellTokenAddress: rawData.sellTokenAddress,
         sellTokenAmount: BigInt(rawData.sellTokenAmount),
         buyTokenAddress: rawData.buyTokenAddress,

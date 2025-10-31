@@ -29,7 +29,6 @@ export class SQLiteDatabase implements IDatabase {
         escrowAddress TEXT NOT NULL UNIQUE,
         contractInstance TEXT NOT NULL,
         secretKey TEXT NOT NULL,
-        partialAddress TEXT NOT NULL,
         sellTokenAddress TEXT NOT NULL,
         sellTokenAmount TEXT NOT NULL,
         buyTokenAddress TEXT NOT NULL,
@@ -62,8 +61,8 @@ export class SQLiteDatabase implements IDatabase {
     }
 
     const stmt = this.db.prepare(`
-      INSERT INTO orders (orderId, escrowAddress, contractInstance, secretKey, partialAddress, sellTokenAddress, sellTokenAmount, buyTokenAddress, buyTokenAmount)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO orders (orderId, escrowAddress, contractInstance, secretKey, sellTokenAddress, sellTokenAmount, buyTokenAddress, buyTokenAmount)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
     try {
@@ -72,7 +71,6 @@ export class SQLiteDatabase implements IDatabase {
         order.escrowAddress,
         order.contractInstance,
         order.secretKey,
-        order.partialAddress,
         order.sellTokenAddress,
         order.sellTokenAmount.toString(), // Convert BigInt to string for storage
         order.buyTokenAddress,
@@ -218,7 +216,6 @@ export class SQLiteDatabase implements IDatabase {
       escrowAddress: row.escrowAddress,
       contractInstance: row.contractInstance,
       secretKey: row.secretKey,
-      partialAddress: row.partialAddress,
       sellTokenAddress: row.sellTokenAddress,
       sellTokenAmount: BigInt(row.sellTokenAmount), // Convert string back to BigInt
       buyTokenAddress: row.buyTokenAddress,

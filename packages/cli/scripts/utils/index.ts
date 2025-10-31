@@ -13,7 +13,9 @@ import { AztecAddress } from "@aztec/stdlib/aztec-address";
 import type { AztecNode } from "@aztec/aztec.js/node";
 
 export const ETH_MINT_AMOUNT = wad(10n);
+export const ETH_SWAP_AMOUNT = ETH_MINT_AMOUNT / 10n;
 export const USDC_MINT_AMOUNT = wad(50000n);
+export const USDC_SWAP_AMOUNT = USDC_MINT_AMOUNT / 10n;
 export const testnetBaseFeePadding = 100; // pad by 100%
 export const testnetPriorityFee = 10n; // multiply base fee allowance by 10x
 export const testnetTimeout = 3600; // seconds until timeout waiting for send
