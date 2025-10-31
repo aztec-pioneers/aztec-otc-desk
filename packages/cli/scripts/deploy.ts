@@ -5,10 +5,10 @@ import { writeFileSync } from "node:fs"
 import { getTestnetSendWaitOptions, getOTCAccounts } from "./utils";
 import { createAztecNodeClient } from "@aztec/aztec.js/node";
 
-// Deploys Ether and USD Coin token contracts
 const { L2_NODE_URL } = process.env;
 if (!L2_NODE_URL) throw new Error("L2_NODE_URL not set in env");
 
+// Deploys Ether and USD Coin token contracts
 const main = async () => {
     const node = createAztecNodeClient(L2_NODE_URL);
     console.log("Connected to Aztec node at ", L2_NODE_URL);
