@@ -6,7 +6,7 @@ import type {
     WaitOpts,
 } from "@aztec/aztec.js/contracts";
 import { Fr } from "@aztec/aztec.js/fields";
-import { createAztecNodeClient } from "@aztec/aztec.js/node";
+import type { AztecNode } from "@aztec/aztec.js/node";
 import { TxHash } from "@aztec/aztec.js/tx";
 import { BaseWallet } from "@aztec/aztec.js/wallet";
 import { AuthWitness } from "@aztec/stdlib/auth-witness";
@@ -17,7 +17,7 @@ import {
     TokenContract,
     TokenContractArtifact
 } from "./artifacts";
-import { EscrowConfig } from "./constants";
+import { type EscrowConfig } from "./constants";
 
 /**
  * Deploys a new instance of the OTC Escrow Contract
@@ -230,13 +230,11 @@ export async function expectBalancePrivate(
 export const getTokenContract = async (
     wallet: BaseWallet,
     from: AztecAddress,
+    node: AztecNode,
     tokenAddress: AztecAddress,
-    aztecRpcUrl: string = "http://localhost:8080",
-    opts: SimulateInteractionOptions = { from },
 ): Promise<TokenContract> => {
     
     // get public contract instance
-    const node = createAztecNodeClient(aztecRpcUrl);
     const contractInstance = await node.getContract(tokenAddress);
     if (!contractInstance) {
         throw new Error(`No instance for token contract at ${tokenAddress.toString()} found!`);
@@ -248,7 +246,7 @@ export const getTokenContract = async (
     });
     // return synced token contract
     const token = await TokenContract.at(tokenAddress, wallet);
-    await token.methods.sync_private_state().simulate(opts);
+    await token.methods.sync_private_state().simulate({ from });
     return token;
 };
 
@@ -258,7 +256,6 @@ export const getEscrowContract = async (
     escrowAddress: AztecAddress,
     contractInstance: ContractInstanceWithAddress,
     escrowSecretKey: Fr,
-    opts: SimulateInteractionOptions = { from },
 ): Promise<OTCEscrowContract> => {
     // register contract with secret key
     await wallet.registerContract(
@@ -269,6 +266,6 @@ export const getEscrowContract = async (
     await wallet.registerSender(escrowAddress);
     // return synced escrow contract
     const escrow = await OTCEscrowContract.at(escrowAddress, wallet);
-    await escrow.methods.sync_private_state().simulate(opts);
+    await escrow.methods.sync_private_state().simulate({ from });
     return escrow;
 };

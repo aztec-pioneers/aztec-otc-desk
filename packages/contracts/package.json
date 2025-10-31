@@ -29,7 +29,7 @@
       "@aztec/noir-contracts.js": "catalog:",
       "@aztec/pxe": "catalog:",
       "@aztec/stdlib": "catalog:",
-      "@aztec/test-wallet": "3.0.0-devnet.2"
+      "@aztec/test-wallet": "catalog:"
   },
   "devDependencies": {
       "@types/bun": "catalog:",

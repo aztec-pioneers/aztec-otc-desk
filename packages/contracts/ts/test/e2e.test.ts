@@ -6,7 +6,7 @@ import { Fr } from '@aztec/aztec.js/fields';
 import { createAztecNodeClient, type AztecNode } from "@aztec/aztec.js/node";
 import { TestWallet } from '@aztec/test-wallet/server';
 import { OTCEscrowContract, TokenContract } from "@aztec-otc-desk/contracts/artifacts";
-import { TOKEN_METADATA, EscrowConfig} from "@aztec-otc-desk/contracts/constants";
+import { TOKEN_METADATA } from "@aztec-otc-desk/contracts/constants";
 import {
     deployEscrowContract,
     deployTokenContract,
