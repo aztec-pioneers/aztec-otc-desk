@@ -4,6 +4,7 @@ import { TOKEN_METADATA } from "@aztec-otc-desk/contracts/constants";
 import { writeFileSync } from "node:fs"
 import { getTestnetSendWaitOptions, getOTCAccounts } from "./utils";
 import { createAztecNodeClient } from "@aztec/aztec.js/node";
+import { isTestnet } from "@aztec-otc-desk/contracts/utils";
 
 const { L2_NODE_URL } = process.env;
 if (!L2_NODE_URL) throw new Error("L2_NODE_URL not set in env");
@@ -13,14 +14,18 @@ const main = async () => {
     const node = createAztecNodeClient(L2_NODE_URL);
     console.log("Connected to Aztec node at ", L2_NODE_URL);
 
+
+    let pxeConfig = {};
+    if (await isTestnet(node)) pxeConfig = { rollupVersion: 1667575857, proverEnabled: true };
+
     // get accounts
     const {
         sellerWallet: deployerWallet,
         sellerAddress: deployerAddress
-    } = await getOTCAccounts(node);
-    // if testnet, get send/ wait opts optimized for waiting and high gas
-    const opts = await getTestnetSendWaitOptions(deployerWallet, deployerAddress);
+    } = await getOTCAccounts(node, pxeConfig);
 
+     // if testnet, get send/ wait opts optimized for waiting and high gas
+    const opts = await getTestnetSendWaitOptions(node, deployerAddress);
     // deploy token contracts
     console.log("Deploying Wrapped Ether token contract");
     const eth = await deployTokenContract(

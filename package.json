@@ -1,15 +1,14 @@
 {
   "name": "@aztec-pioneers/aztec-otc-desk",
   "workspaces": {
-    "packages": [
-      "packages/*"
-    ],
+    "packages": ["packages/*"],
     "catalog": {
       "@aztec/aztec.js": "3.0.0-devnet.2",
       "@aztec/accounts": "3.0.0-devnet.2",
       "@aztec/constants": "3.0.0-devnet.2",
       "@aztec/entrypoints": "3.0.0-devnet.2",
       "@aztec/ethereum": "3.0.0-devnet.2",
+      "@aztec/foundation": "3.0.0-devnet.2",
       "@aztec/noir-contracts.js": "3.0.0-devnet.2",
       "@aztec/pxe": "3.0.0-devnet.2",
       "@aztec/stdlib": "3.0.0-devnet.2",
