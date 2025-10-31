@@ -1,10 +1,7 @@
-// import {
-//     AccountWalletWithSecretKey,
-//     AztecAddress,
-//     type ContractInstanceWithAddress,
-//     Fr,
-// } from "@aztec/aztec.js";
-import type { ContractInstanceWithAddress } from "@aztec/stdlib/contract";
+import {
+    ContractInstanceWithAddressSchema,
+    type ContractInstanceWithAddress
+} from "@aztec/stdlib/contract";
 import { OTCEscrowContract } from "@aztec-otc-desk/contracts/artifacts";
 import { getEscrowContract } from "@aztec-otc-desk/contracts/contract";
 import type { Order } from "../../../api/src/types/api";
@@ -14,7 +11,8 @@ import {
 } from "../data/deployments.json"
 import type { OrderAPIResponse } from "./types";
 import { AztecAddress } from "@aztec/stdlib/aztec-address";
-import type { Fr } from "@aztec/aztec.js/fields";
+import { Fr } from "@aztec/aztec.js/fields";
+import type { BaseWallet } from "@aztec/aztec.js/wallet";
 
 /**
  * Fetch orders from the API
@@ -93,6 +91,8 @@ export const createOrder = async (
         buyTokenAddress: buyTokenAddress.toString(),
         buyTokenAmount: buyTokenAmount.toString()
     }
+
+    console.log("Payload: ", payload);
     // post request to add order to api
     try {
         const fullURL = `${apiUrl}/order`;
@@ -108,42 +108,40 @@ export const createOrder = async (
     }
 }
 
-// /**
-//  * Close an order once filled using the ID
-//  * 
-//  * @param id The ID of the order to close
-//  * @param apiUrl The base URL of the orderflow API
-//  */
-// export const closeOrder = async (id: string, apiUrl: string) => {
-//     try {
-//         const fullURL = `${apiUrl}/order?id=${id}`;
-//         const res = await fetch(fullURL, { method: "DELETE" });
-//         if (!res.ok) {
-//             throw new Error("Unknown error closing filled order");
-//         }
-//         console.log("Order closed in OTC order service")
-//     } catch (err) {
-//         throw new Error("Error closing order: " + (err as Error).message);
-//     }
-// }
+/**
+ * Close an order once filled using the ID
+ * 
+ * @param id The ID of the order to close
+ * @param apiUrl The base URL of the orderflow API
+ */
+export const closeOrder = async (id: string, apiUrl: string) => {
+    try {
+        const fullURL = `${apiUrl}/order?id=${id}`;
+        const res = await fetch(fullURL, { method: "DELETE" });
+        if (!res.ok) {
+            throw new Error("Unknown error closing filled order");
+        }
+        console.log("Order closed in OTC order service")
+    } catch (err) {
+        throw new Error("Error closing order: " + (err as Error).message);
+    }
+}
 
-// export const escrowInstanceFromOrder = async (
-//     pxe: PXE,
-//     caller: AccountWalletWithSecretKey,
-//     order: Order,
-// ): Promise<OTCEscrowContract> => {
-//     const escrowContractInstance = ContractInstanceWithAddressSchema.parse(
-//         JSON.parse(order.contractInstance)
-//     );
-//     const escrowSecretKey = Fr.fromString(order.secretKey);
-//     const escrowPartialAddress = Fr.fromString(order.partialAddress);
-//     const escrowAddress = AztecAddress.fromString(order.escrowAddress);
-//     return await getEscrowContract(
-//         pxe,
-//         caller,
-//         escrowAddress,
-//         escrowContractInstance,
-//         escrowSecretKey,
-//         escrowPartialAddress
-//     );
-// }
+export const escrowInstanceFromOrder = async (
+    wallet: BaseWallet,
+    from: AztecAddress,
+    order: Order,
+): Promise<OTCEscrowContract> => {
+    const escrowContractInstance = ContractInstanceWithAddressSchema.parse(
+        JSON.parse(order.contractInstance)
+    );
+    const escrowSecretKey = Fr.fromString(order.secretKey);
+    const escrowAddress = AztecAddress.fromString(order.escrowAddress);
+    return await getEscrowContract(
+        wallet,
+        from,
+        escrowAddress,
+        escrowContractInstance,
+        escrowSecretKey,
+    );
+}
