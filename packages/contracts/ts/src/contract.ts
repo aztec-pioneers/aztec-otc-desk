@@ -76,14 +76,14 @@ export async function deployEscrowContract(
  * @returns - the deployed Token Contract
  */
 export async function deployTokenContract(
-    tokenMetadata: { name: string; symbol: string; decimals: number },
-    deployer: BaseWallet,
+    wallet: BaseWallet,
     from: AztecAddress,
+    tokenMetadata: { name: string; symbol: string; decimals: number },
     opts: { send: SendInteractionOptions, wait?: WaitOpts } = { send: { from } }
 ): Promise<TokenContract> {
     // deploy contract
     const contract = await TokenContract.deployWithOpts(
-        { wallet: deployer, method: "constructor_with_minter" },
+        { wallet, method: "constructor_with_minter" },
         tokenMetadata.name,
         tokenMetadata.symbol,
         tokenMetadata.decimals,
@@ -106,9 +106,9 @@ export async function deployTokenContract(
  * @returns - the transaction hash of the deposit transaction
  */
 export async function depositToEscrow(
-    escrow: OTCEscrowContract,
     wallet: BaseWallet,
     from: AztecAddress,
+    escrow: OTCEscrowContract,
     token: TokenContract,
     amount: bigint,
     opts: { send: SendInteractionOptions, wait?: WaitOpts } = { send: { from } }
@@ -143,9 +143,9 @@ export async function depositToEscrow(
  * @returns - the transaction hash of the order fill transaction
  */
 export async function fillOTCOrder(
-    escrow: OTCEscrowContract,
     wallet: BaseWallet,
     from: AztecAddress,
+    escrow: OTCEscrowContract,
     token: TokenContract,
     amount: bigint,
     opts: { send: SendInteractionOptions, wait?: WaitOpts } = { send: { from } }
@@ -212,9 +212,9 @@ export async function getEscrowConfig(
  * @returns - true if balance matches expectations, and false otherwise
  */
 export async function expectBalancePrivate(
-    token: TokenContract,
     wallet: BaseWallet,
     from: AztecAddress,
+    token: TokenContract,
     expectedBalance: bigint,
     opts: SimulateInteractionOptions = { from }
 ): Promise<boolean> {

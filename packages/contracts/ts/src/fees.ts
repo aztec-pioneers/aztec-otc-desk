@@ -24,7 +24,6 @@
 // import { deriveSigningKey } from '@aztec/stdlib/keys';
 // import { wad } from './utils';
 
-
 // export async function getSponsoredFPCAddress() {
 //   const sponsoredFPCInstance = await getContractInstanceFromInstantiationParams(SponsoredFPCContract.artifact, {
 //     salt: new Fr(SPONSORED_FPC_SALT),
