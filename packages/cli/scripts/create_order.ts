@@ -30,22 +30,22 @@ if (!API_URL) {
 const main = async () => {
     // get accounts
     const node = await createAztecNodeClient(L2_NODE_URL);
-    const { sellerWallet, sellerAddress } = await getOTCAccounts(node);
+    const { wallet, sellerAddress } = await getOTCAccounts(node);
 
     // get tokens
     const ethAddress = AztecAddress.fromString(ethDeployment.address);
-    const eth = await getTokenContract(sellerWallet, sellerAddress, node, ethAddress);
+    const eth = await getTokenContract(wallet, sellerAddress, node, ethAddress);
     //// NOTE: need to get usdc token too to make sure PXE knows it exists
     ////       but we don't need to do anything with it
     const usdcAddress = AztecAddress.fromString(usdcDeployment.address);
-    await getTokenContract(sellerWallet, sellerAddress, node, usdcAddress);
+    await getTokenContract(wallet, sellerAddress, node, usdcAddress);
 
     // if testnet, get send/ wait opts optimized for waiting and high gas
-    const opts = await getTestnetSendWaitOptions(sellerWallet, sellerAddress);
+    const opts = await getTestnetSendWaitOptions(node, wallet, sellerAddress);
 
     // build deploy
     const { contract: escrowContract, secretKey } = await deployEscrowContract(
-        sellerWallet,
+        wallet,
         sellerAddress,
         ethAddress,
         ETH_SWAP_AMOUNT,
@@ -54,12 +54,11 @@ const main = async () => {
         opts
     );
 
-    console.log("Escrow contract deployed, address: ", escrowContract.address);
-    console.log("Escrow contract secret key: ", secretKey);
+    console.log(`Escrow contract deployed, address: ${escrowContract.address}, secret key: ${secretKey}`);
 
     console.log("Depositing eth to escrow");
     const receipt = await depositToEscrow(
-        sellerWallet,
+        wallet,
         sellerAddress,
         escrowContract,
         eth,

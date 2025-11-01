@@ -1,7 +1,7 @@
 import { TestWallet } from "@aztec/test-wallet/server";
 import { getInitialTestAccountsData } from "@aztec/accounts/testing";
 import { isTestnet, wad } from "@aztec-otc-desk/contracts/utils";
-import { getPriorityFeeOptions } from "@aztec-otc-desk/contracts/fees";
+import { getPriorityFeeOptions, getSponsoredPaymentMethod } from "@aztec-otc-desk/contracts/fees";
 import readline from "readline";
 import accounts from "../data/accounts.json";
 import type { SendInteractionOptions, WaitOpts } from "@aztec/aztec.js/contracts";
@@ -26,20 +26,21 @@ export const testnetInterval = 3; // seconds between polling for tx
  */
 export const getTestnetSendWaitOptions = async (
     node: AztecNode,
-    sender: AztecAddress,
+    wallet: TestWallet,
+    from: AztecAddress,
     withFPC: boolean = true,
 ): Promise<{
     send: SendInteractionOptions,
     wait: WaitOpts
 }> => {
-    let send: SendInteractionOptions = { from: sender };
+    let send: SendInteractionOptions = { from };
     let wait: WaitOpts = {};
     if (await isTestnet(node)) {
         let fee = await getPriorityFeeOptions(node, testnetPriorityFee);
-        // if (withFPC) {
-        //     const paymentMethod = await getSpon(pxe);
-        //     fee = { ...fee, paymentMethod };
-        // }
+        if (withFPC) {
+            const paymentMethod = await getSponsoredPaymentMethod(wallet);
+            fee = { ...fee, paymentMethod };
+        }
         send = { ...send, fee };
         wait = { timeout: testnetTimeout, interval: testnetInterval };
     }
@@ -50,38 +51,33 @@ export const getOTCAccounts = async (
     node: AztecNode,
     pxeConfig: Partial<PXEConfig> = {}
 ): Promise<{
-    sellerWallet: TestWallet,
+    wallet: TestWallet,
     sellerAddress: AztecAddress,
-    buyerWallet: TestWallet,
     buyerAddress: AztecAddress,
 }> => {
     // check if testnet
-    let sellerWallet = await TestWallet.create(node, pxeConfig);
-    let buyerWallet = await TestWallet.create(node, pxeConfig);
+    let wallet = await TestWallet.create(node, pxeConfig);
     let sellerAddress: AztecAddress;
     let buyerAddress: AztecAddress;
     if (await isTestnet(node)) {
+        // if testnet, get accounts from env (should run setup_accounts.ts first)
+        sellerAddress = await getAccountFromFs("seller", wallet);
+        buyerAddress = await getAccountFromFs("buyer", wallet);
+    } else {
         // if sandbox, get initialized test accounts
         const [sellerAccount, buyerAccount] = await getInitialTestAccountsData();
         if (!sellerAccount) throw new Error("Seller/ Minter not found");
         if (!buyerAccount) throw new Error("Buyer not found");
         // create accounts
-        await sellerWallet.createSchnorrAccount(sellerAccount.secret, sellerAccount.salt);
-        sellerAddress = await sellerWallet.getAccounts().then(accounts => accounts[0]!.item);
-        await buyerWallet.createSchnorrAccount(buyerAccount.secret, buyerAccount.salt);
-        buyerAddress = await buyerWallet.getAccounts().then(accounts => accounts[0]!.item);
-
-        // register accounts to eachother
-        await sellerWallet.registerSender(buyerAddress);
-        await buyerWallet.registerSender(sellerAddress);
-    } else {
-        // if testnet, get accounts from env (should run setup_accounts.ts first)
-        sellerAddress = await getAccountFromFs("seller", sellerWallet);
-        buyerAddress = await getAccountFromFs("buyer", buyerWallet);
-        await sellerWallet.registerSender(buyerAddress);
-        await buyerWallet.registerSender(sellerAddress);
+        await wallet.createSchnorrAccount(sellerAccount.secret, sellerAccount.salt);
+        sellerAddress = sellerAccount.address;
+        await wallet.createSchnorrAccount(buyerAccount.secret, buyerAccount.salt);
+        buyerAddress = buyerAccount.address;
     }
-    return { sellerWallet, sellerAddress, buyerWallet, buyerAddress };
+    // register accounts to eachother
+    await wallet.registerSender(buyerAddress);
+    await wallet.registerSender(sellerAddress);
+    return { wallet, sellerAddress, buyerAddress };
 }
 
 export const getAccountFromFs = async (

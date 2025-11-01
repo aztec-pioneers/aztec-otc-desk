@@ -9,7 +9,10 @@ import { GasSettings } from '@aztec/stdlib/gas';
 import type { TestWallet } from '@aztec/test-wallet/server';
 import { wad } from './utils';
 import type { AztecNode } from '@aztec/aztec.js/node';
-import { AccountManager } from '@aztec/aztec.js/wallet';
+import { AccountManager, BaseWallet } from '@aztec/aztec.js/wallet';
+import { SponsoredFeePaymentMethod } from '@aztec/aztec.js/fee';
+import { getContractInstanceFromInstantiationParams } from '@aztec/aztec.js/contracts';
+import { SponsoredFPCContractArtifact } from '@aztec/noir-contracts.js/SponsoredFPC';
 
 // export async function getSponsoredFPCAddress() {
 //   const sponsoredFPCInstance = await getContractInstanceFromInstantiationParams(SponsoredFPCContractArtifact, {
@@ -36,10 +39,14 @@ import { AccountManager } from '@aztec/aztec.js/wallet';
 //   return fpc;
 // }
 
-// export async function getSponsoredFeePaymentMethod(pxe: PXE) {
-//   const paymentContract = await getDeployedSponsoredFPCAddress(pxe)
-//   return new SponsoredFeePaymentMethod(paymentContract)
-// }
+export async function getSponsoredPaymentMethod(wallet: BaseWallet) {
+    const instance = await getContractInstanceFromInstantiationParams(
+        SponsoredFPCContractArtifact,
+        { salt: new Fr(0) },
+    );
+    await wallet.registerContract(instance, SponsoredFPCContractArtifact);
+    return new SponsoredFeePaymentMethod(instance.address)
+}
 
 export async function getFeeJuicePortalManager(
     node: AztecNode,

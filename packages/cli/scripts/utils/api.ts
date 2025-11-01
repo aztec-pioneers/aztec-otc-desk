@@ -92,7 +92,6 @@ export const createOrder = async (
         buyTokenAmount: buyTokenAmount.toString()
     }
 
-    console.log("Payload: ", payload);
     // post request to add order to api
     try {
         const fullURL = `${apiUrl}/order`;

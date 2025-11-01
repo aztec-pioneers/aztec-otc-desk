@@ -17,7 +17,7 @@ if (!L2_NODE_URL) {
 const main = async () => {
     // Create PXE and FeeJuicePortalManager instances
     const node = await createAztecNodeClient(L2_NODE_URL);
-    const { sellerWallet, sellerAddress, buyerWallet, buyerAddress } = await getOTCAccounts(node);
+    const { wallet, sellerAddress, buyerAddress } = await getOTCAccounts(node);
 
     // get tokens
     // const ethAddress = AztecAddress.fromString(ethDeployment.address);

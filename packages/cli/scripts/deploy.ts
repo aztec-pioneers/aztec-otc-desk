@@ -16,20 +16,17 @@ const main = async () => {
 
 
     let pxeConfig = {};
-    if (await isTestnet(node)) pxeConfig = { rollupVersion: 1667575857, proverEnabled: true };
+    if (await isTestnet(node)) pxeConfig = { rollupVersion: 1667575857, proverEnabled: false };
 
     // get accounts
-    const {
-        sellerWallet: deployerWallet,
-        sellerAddress: deployerAddress
-    } = await getOTCAccounts(node, pxeConfig);
+    const { wallet, sellerAddress: deployerAddress } = await getOTCAccounts(node, pxeConfig);
 
      // if testnet, get send/ wait opts optimized for waiting and high gas
-    const opts = await getTestnetSendWaitOptions(node, deployerAddress);
+    const opts = await getTestnetSendWaitOptions(node, wallet, deployerAddress);
     // deploy token contracts
     console.log("Deploying Wrapped Ether token contract");
     const eth = await deployTokenContract(
-        deployerWallet,
+        wallet,
         deployerAddress,
         TOKEN_METADATA.eth,
         opts
@@ -38,7 +35,7 @@ const main = async () => {
 
     console.log("Deploying USD Coin token contract");
     const usdc = await deployTokenContract(
-        deployerWallet,
+        wallet,
         deployerAddress,
         TOKEN_METADATA.usdc,
         opts
