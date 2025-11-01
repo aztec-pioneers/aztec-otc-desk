@@ -1,43 +1,20 @@
-import { type LogFn, createLogger } from '@aztec/foundation/log';
-import { Fr } from '@aztec/aztec.js/fields';
-import { AztecAddress } from '@aztec/stdlib/aztec-address';
+import { AztecAddress } from '@aztec/aztec.js/addresses';
+import {
+    getContractInstanceFromInstantiationParams,
+    type InteractionFeeOptions
+} from "@aztec/aztec.js/contracts";
 import { L1FeeJuicePortalManager, type L2AmountClaim } from "@aztec/aztec.js/ethereum";
-import { createEthereumChain, createExtendedL1Client, FeeJuiceContract } from '@aztec/ethereum';
-import { deriveStorageSlotInMap } from '@aztec/stdlib/hash';
-import type { InteractionFeeOptions } from "@aztec/aztec.js/contracts";
-import { GasSettings } from '@aztec/stdlib/gas';
-import type { TestWallet } from '@aztec/test-wallet/server';
-import { wad } from './utils';
+import { SponsoredFeePaymentMethod } from '@aztec/aztec.js/fee';
+import { Fr } from '@aztec/aztec.js/fields';
 import type { AztecNode } from '@aztec/aztec.js/node';
 import { AccountManager, BaseWallet } from '@aztec/aztec.js/wallet';
-import { SponsoredFeePaymentMethod } from '@aztec/aztec.js/fee';
-import { getContractInstanceFromInstantiationParams } from '@aztec/aztec.js/contracts';
+import { createEthereumChain, createExtendedL1Client } from '@aztec/ethereum';
+import { createLogger } from '@aztec/foundation/log';
 import { SponsoredFPCContractArtifact } from '@aztec/noir-contracts.js/SponsoredFPC';
-
-// export async function getSponsoredFPCAddress() {
-//   const sponsoredFPCInstance = await getContractInstanceFromInstantiationParams(SponsoredFPCContractArtifact, {
-//     salt: new Fr(SPONSORED_FPC_SALT),
-//   });
-//   return sponsoredFPCInstance.address;
-// }
-
-// export async function setupSponsoredFPC(deployer: BaseWallet, from: AztecAddress, log?: LogFn) {
-//   const deployed = await SponsoredFPCContract.deploy(deployer)
-//     .send({ contractAddressSalt: new Fr(SPONSORED_FPC_SALT), universalDeploy: true, from })
-//     .deployed();
-
-//   log ? log(`SponsoredFPC: ${deployed.address}`) : null;
-// }
-
-// export async function getDeployedSponsoredFPCAddress(wallet: BaseWallet) {
-//   const fpc = await getSponsoredFPCAddress();
-//   const node = createAztecNodeClient("");
-//   const contracts = await wallet.getChainInfo();
-//   if (!contracts.find(c => c.equals(fpc))) {
-//     throw new Error('SponsoredFPC not deployed.');
-//   }
-//   return fpc;
-// }
+import { GasSettings } from '@aztec/stdlib/gas';
+import { deriveStorageSlotInMap } from '@aztec/stdlib/hash';
+import type { TestWallet } from '@aztec/test-wallet/server';
+import { wad } from './utils';
 
 export async function getSponsoredPaymentMethod(wallet: BaseWallet) {
     const instance = await getContractInstanceFromInstantiationParams(
