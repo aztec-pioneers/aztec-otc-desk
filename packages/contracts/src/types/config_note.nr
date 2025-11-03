@@ -11,7 +11,7 @@ use poseidon::poseidon2::Poseidon2;
 
 #[derive(Eq, Serialize, Deserialize, Packable)]
 #[note]
-pub struct DefinitionNote {
+pub struct ConfigNote {
     pub owner: AztecAddress,
     pub partial_note: Field,
     pub sell_token_address: AztecAddress,
@@ -21,7 +21,7 @@ pub struct DefinitionNote {
     pub randomness: Field,
 }
 
-impl DefinitionNote {
+impl ConfigNote {
     pub fn new(
         owner: AztecAddress,
         partial_note: Field,
@@ -30,7 +30,7 @@ impl DefinitionNote {
         buy_token_address: AztecAddress,
         buy_token_amount: u128,
     ) -> Self {
-        DefinitionNote {
+        Self {
             owner,
             partial_note,
             sell_token_address,

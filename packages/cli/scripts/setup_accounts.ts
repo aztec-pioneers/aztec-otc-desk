@@ -1,13 +1,12 @@
 import "dotenv/config";
 import { writeFileSync } from "fs";
-import { FeeJuicePaymentMethodWithClaim } from "@aztec/aztec.js";
-import {
-    createPXE,
-    getFeeJuicePortalManager,
-    setupAccountWithFeeClaim
-} from "@aztec-otc-desk/contracts"
-import { waitForBlock } from "./utils";
-
+import { createAztecNodeClient } from "@aztec/aztec.js/node";
+import { TestWallet } from "@aztec/test-wallet/server";
+import { getTestnetSendWaitOptions, waitForBlock } from "./utils";
+import { isTestnet } from "@aztec-otc-desk/contracts/utils";
+import { AztecAddress } from "@aztec/aztec.js/addresses";
+import type { PXEConfig } from "@aztec/pxe/config";
+import { Fr } from "@aztec/aztec.js/fields";
 
 // get environment variables
 const {
@@ -27,61 +26,40 @@ if (!L2_NODE_URL) {
 
 // Fund 2 accounts
 const main = async () => {
-    // Create PXE and FeeJuicePortalManager instances
-    const pxe = await createPXE(1);
-    const feeJuicePortalManager = await getFeeJuicePortalManager(
-        pxe,
-        [L1_RPC_URL],
-        MNEMONIC
-    );
+    // Create Node & PXE Config Options
+    const node = createAztecNodeClient(L2_NODE_URL);
+    let pxeConfig: Partial<PXEConfig> = {};
+    if (await isTestnet(node)) 
+        pxeConfig = { rollupVersion: 1667575857, proverEnabled: false };
 
-    // create two accounts & make claims (can't do concurrently)
-    const sellerSetup = await setupAccountWithFeeClaim(pxe, feeJuicePortalManager);
-    const buyerSetup = await setupAccountWithFeeClaim(pxe, feeJuicePortalManager);
+    // deploy seller account
+    const sellerWallet = await TestWallet.create(node, pxeConfig);
+    const sellerSecret = Fr.random();
+    const sellerSalt = Fr.random();
+    const sellerManager = await sellerWallet.createSchnorrAccount(sellerSecret, sellerSalt);
+    const sellerOpts = await getTestnetSendWaitOptions(node, sellerWallet, AztecAddress.ZERO);
+    await sellerManager.getDeployMethod()
+        .then(deployMethod => deployMethod.send(sellerOpts.send).wait(sellerOpts.wait));
+    
+    // deploy buyer account
+    const buyerWallet = await TestWallet.create(node, pxeConfig);
+    const buyerSecret = Fr.random();
+    const buyerSalt = Fr.random();
+    const buyerManager = await buyerWallet.createSchnorrAccount(buyerSecret, buyerSalt);
+    const buyerOpts = await getTestnetSendWaitOptions(node, buyerWallet, AztecAddress.ZERO);
+    await buyerManager.getDeployMethod()
+        .then(deployMethod => deployMethod.send(buyerOpts.send).wait(buyerOpts.wait));
 
-    // write the accounts
+    // save the accounts to fs
     const accountData = {
-        seller: {
-            secretKey: sellerSetup.wallet.getSecretKey(),
-            salt: sellerSetup.wallet.salt,
-        },
-        buyer: {
-            secretKey: buyerSetup.wallet.getSecretKey(),
-            salt: buyerSetup.wallet.salt,
-        }
+        seller: { secretKey: sellerSecret, salt: sellerSalt },
+        buyer: { secretKey: buyerSecret, salt: buyerSalt },
     }
-    // save the accounts 
-
-    const accountFilePath = `${__dirname}/../accounts.json`;
+    const accountFilePath = `${__dirname}/data/accounts.json`;
     writeFileSync(accountFilePath, JSON.stringify(accountData, null, 2));
     console.log(`Wrote accounts to ${accountFilePath}`);
 
-    // get current block
-    const startingBlock = await pxe.getBlockNumber();
-    console.log(`Current block: ${startingBlock} - waiting until block ${startingBlock + 3}`);
-
-    const finalBlock = await waitForBlock(pxe, startingBlock + 3);
-    console.log(`Reached target block of ${finalBlock} - finalizing account deployment!`);
-
-    // deploy accounts
-    const sellerClaimAndPay = new FeeJuicePaymentMethodWithClaim(
-        sellerSetup.wallet,
-        sellerSetup.claim
-    );
-    const sellerDeployReceipt = await sellerSetup.account.deploy({
-        fee: { paymentMethod: sellerClaimAndPay },
-    }).wait({ timeout: 3600 });
-    console.log(`Seller account deployed to ${sellerSetup.wallet.getAddress()} in tx ${sellerDeployReceipt.txHash}`);
-
-    const buyerClaimAndPay = new FeeJuicePaymentMethodWithClaim(
-        buyerSetup.wallet,
-        buyerSetup.claim
-    );
-    const buyerDeployReceipt = await buyerSetup.account.deploy({
-        fee: { paymentMethod: buyerClaimAndPay }
-    }).wait({ timeout: 3600 });
-    console.log(`Buyer account deployed to ${buyerSetup.wallet.getAddress()} in tx ${buyerDeployReceipt.txHash}`);
-    console.log("Setup complete: accounts deployed to testnet with 1e of feejuice each");
+    console.log(`Account Setup complete!`);
 }
 
 main();

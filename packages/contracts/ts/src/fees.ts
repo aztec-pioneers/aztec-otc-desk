@@ -1,86 +1,56 @@
+import { AztecAddress } from '@aztec/aztec.js/addresses';
 import {
-  AccountManager,
-  AccountWallet,
-  AccountWalletWithSecretKey,
-  AztecAddress,
-  type ContractInstanceWithAddress,
-  Fr,
-  L1FeeJuicePortalManager,
-  L2AmountClaim,
-  type PXE,
-  SponsoredFeePaymentMethod,
-  type Wallet,
-  createLogger,
-  getContractInstanceFromInstantiationParams,
-} from '@aztec/aztec.js';
-import type { LogFn } from '@aztec/foundation/log';
-import { SponsoredFPCContract } from '@aztec/noir-contracts.js/SponsoredFPC';
-import { SPONSORED_FPC_SALT } from '@aztec/constants';
-import { createEthereumChain, createExtendedL1Client, FeeJuiceContract } from '@aztec/ethereum';
-import { deriveStorageSlotInMap } from '@aztec/stdlib/hash';
-import { UserFeeOptions } from '@aztec/entrypoints/interfaces';
+    getContractInstanceFromInstantiationParams,
+    type InteractionFeeOptions
+} from "@aztec/aztec.js/contracts";
+import { L1FeeJuicePortalManager, type L2AmountClaim } from "@aztec/aztec.js/ethereum";
+import { SponsoredFeePaymentMethod } from '@aztec/aztec.js/fee';
+import { Fr } from '@aztec/aztec.js/fields';
+import type { AztecNode } from '@aztec/aztec.js/node';
+import { AccountManager, BaseWallet } from '@aztec/aztec.js/wallet';
+import { createEthereumChain, createExtendedL1Client } from '@aztec/ethereum';
+import { createLogger } from '@aztec/foundation/log';
+import { SponsoredFPCContractArtifact } from '@aztec/noir-contracts.js/SponsoredFPC';
 import { GasSettings } from '@aztec/stdlib/gas';
-import { getSchnorrAccount } from '@aztec/accounts/schnorr';
-import { deriveSigningKey } from '@aztec/stdlib/keys';
+import { deriveStorageSlotInMap } from '@aztec/stdlib/hash';
+import type { TestWallet } from '@aztec/test-wallet/server';
 import { wad } from './utils';
 
-
-export async function getSponsoredFPCAddress() {
-  const sponsoredFPCInstance = await getContractInstanceFromInstantiationParams(SponsoredFPCContract.artifact, {
-    salt: new Fr(SPONSORED_FPC_SALT),
-  });
-  return sponsoredFPCInstance.address;
-}
-
-export async function setupSponsoredFPC(deployer: Wallet, log?: LogFn) {
-  const deployed = await SponsoredFPCContract.deploy(deployer)
-    .send({ contractAddressSalt: new Fr(SPONSORED_FPC_SALT), universalDeploy: true, from: deployer.getAddress() })
-    .deployed();
-
-  log ? log(`SponsoredFPC: ${deployed.address}`) : null;
-}
-
-export async function getDeployedSponsoredFPCAddress(pxe: PXE) {
-  const fpc = await getSponsoredFPCAddress();
-  const contracts = await pxe.getContracts();
-  if (!contracts.find(c => c.equals(fpc))) {
-    throw new Error('SponsoredFPC not deployed.');
-  }
-  return fpc;
-}
-
-export async function getSponsoredFeePaymentMethod(pxe: PXE) {
-  const paymentContract = await getDeployedSponsoredFPCAddress(pxe)
-  return new SponsoredFeePaymentMethod(paymentContract)
+export async function getSponsoredPaymentMethod(wallet: BaseWallet) {
+    const instance = await getContractInstanceFromInstantiationParams(
+        SponsoredFPCContractArtifact,
+        { salt: new Fr(0) },
+    );
+    await wallet.registerContract(instance, SponsoredFPCContractArtifact);
+    return new SponsoredFeePaymentMethod(instance.address)
 }
 
 export async function getFeeJuicePortalManager(
-  pxe: PXE,
-  l1RpcUrls: string[] = ["http://localhost:8545"],
-  mnemonic: string = "test test test test test test test test test test test junk"
+    node: AztecNode,
+    l1RpcUrls: string[] = ["http://localhost:8545"],
+    mnemonic: string = "test test test test test test test test test test test junk"
 ): Promise<L1FeeJuicePortalManager> {
-  const { l1ChainId } = await pxe.getNodeInfo();
-  const chain = createEthereumChain(l1RpcUrls, l1ChainId);
-  const l1Client = createExtendedL1Client(
-    chain.rpcUrls,
-    mnemonic,
-    chain.chainInfo
-  );
-  return await L1FeeJuicePortalManager.new(
-    pxe,
-    l1Client,
-    createLogger("no")
-  );
+    const { l1ChainId } = await node.getNodeInfo();
+    const chain = createEthereumChain(l1RpcUrls, l1ChainId);
+    const l1Client = createExtendedL1Client(
+        chain.rpcUrls,
+        mnemonic,
+        chain.chainInfo
+    );
+    return await L1FeeJuicePortalManager.new(
+        node,
+        l1Client,
+        createLogger("no")
+    );
 }
 
 export async function getFeeJuicePublicBalance(
-  pxe: PXE,
-  owner: AztecAddress
+    node: AztecNode,
+    from: AztecAddress,
 ): Promise<bigint> {
-  const { protocolContractAddresses } = await pxe.getPXEInfo();
-  const feeJuiceAddress = protocolContractAddresses.feeJuice;
-  const slot = await deriveStorageSlotInMap(new Fr(1), owner);
-  return (await pxe.getPublicStorageAt(feeJuiceAddress, slot)).toBigInt();
+    const { feeJuice } = await node.getProtocolContractAddresses();
+    const slot = await deriveStorageSlotInMap(new Fr(1), from);
+    return await node.getPublicStorageAt("latest", feeJuice, slot).then(res => res.toBigInt());
 }
 
 /**
@@ -89,16 +59,12 @@ export async function getFeeJuicePublicBalance(
  * @param feeMultiplier - multiplier for the base fee
  */
 export async function getPriorityFeeOptions(
-  pxe: PXE,
-  feePadding: number,
-  feeMultiplier: bigint
-): Promise<UserFeeOptions> {
-  return {
-    baseFeePadding: feePadding,
-    gasSettings: GasSettings.default({
-      maxFeesPerGas: (await pxe.getCurrentBaseFees()).mul(feeMultiplier),
-    }),
-  }
+    node: AztecNode,
+    feeMultiplier: bigint
+): Promise<InteractionFeeOptions> {
+    const maxFeesPerGas = await node.getCurrentBaseFees()
+        .then(res => res.mul(feeMultiplier));
+    return { gasSettings: GasSettings.default({ maxFeesPerGas }) };
 }
 
 /**
@@ -111,25 +77,26 @@ export async function getPriorityFeeOptions(
  *      - claim: the claim to make once enough blocks have passed
  */
 export const setupAccountWithFeeClaim = async (
-    pxe: PXE,
-    feeJuicePortalManager: L1FeeJuicePortalManager
+    wallet: TestWallet,
+    feeJuicePortalManager: L1FeeJuicePortalManager,
+    amount: bigint = wad(1000n)
 ): Promise<{
-    account: AccountManager,
-    wallet: AccountWalletWithSecretKey,
+    manager: AccountManager,
+    key: { secretKey: Fr, salt: Fr }
     claim: L2AmountClaim,
 }> => {
     const masterKey = Fr.random();
-    const account = await getSchnorrAccount(
-        pxe,
-        masterKey,
-        deriveSigningKey(masterKey),
-        Fr.random() // salt
-    );
-    const wallet = await account.getWallet();
+    const salt = Fr.random();
+    const account = await wallet.createSchnorrAccount(masterKey, salt);
+
     const claim = await feeJuicePortalManager.bridgeTokensPublic(
-        account.getAddress(),
-        wad(1000n),
-        false
+        account.address,
+        amount,
+        true
     );
-    return { account, wallet, claim };
+    return {
+        manager: account,
+        key: { secretKey: masterKey, salt },
+        claim
+    };
 }

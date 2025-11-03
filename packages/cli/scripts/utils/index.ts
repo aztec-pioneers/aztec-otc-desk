@@ -1,13 +1,19 @@
-import { getSchnorrAccount, SchnorrAccountContractArtifact } from "@aztec/accounts/schnorr";
-import { wad, isTestnet, getPriorityFeeOptions, getSponsoredFeePaymentMethod } from "@aztec-otc-desk/contracts";
-import { AccountWalletWithSecretKey, AztecAddress, Fr, type PXE, type SendMethodOptions, type WaitOpts } from "@aztec/aztec.js";
-import accounts from "../data/accounts.json";
-import { deriveSigningKey } from "@aztec/stdlib/keys";
-import { getInitialTestAccountsManagers } from "@aztec/accounts/testing";
+import { TestWallet } from "@aztec/test-wallet/server";
+import { getInitialTestAccountsData } from "@aztec/accounts/testing";
+import { isTestnet, wad } from "@aztec-otc-desk/contracts/utils";
+import { getPriorityFeeOptions, getSponsoredPaymentMethod } from "@aztec-otc-desk/contracts/fees";
 import readline from "readline";
+import accounts from "../data/accounts.json";
+import type { SendInteractionOptions, WaitOpts } from "@aztec/aztec.js/contracts";
+import { AztecAddress } from "@aztec/stdlib/aztec-address";
+import type { AztecNode } from "@aztec/aztec.js/node";
+import { Fr } from "@aztec/aztec.js/fields";
+import type { PXEConfig } from "@aztec/pxe/config"
 
-export const ethMintAmount = wad(1n);
-export const usdcMintAmount = wad(5000n);
+export const ETH_MINT_AMOUNT = wad(10n);
+export const ETH_SWAP_AMOUNT = ETH_MINT_AMOUNT / 10n;
+export const USDC_MINT_AMOUNT = wad(50000n);
+export const USDC_SWAP_AMOUNT = USDC_MINT_AMOUNT / 10n;
 export const testnetBaseFeePadding = 100; // pad by 100%
 export const testnetPriorityFee = 10n; // multiply base fee allowance by 10x
 export const testnetTimeout = 3600; // seconds until timeout waiting for send
@@ -19,79 +25,74 @@ export const testnetInterval = 3; // seconds between polling for tx
  * @returns send/ wait options optimized for testnet
  */
 export const getTestnetSendWaitOptions = async (
-    pxe: PXE,
-    sender: AztecAddress,
+    node: AztecNode,
+    wallet: TestWallet,
+    from: AztecAddress,
     withFPC: boolean = true,
 ): Promise<{
-    send: SendMethodOptions,
+    send: SendInteractionOptions,
     wait: WaitOpts
 }> => {
-    let sendOptions: SendMethodOptions = { from: sender };
-    let waitOptions: WaitOpts = {};
-    if (await isTestnet(pxe)) {
-        let fee = await getPriorityFeeOptions(
-            pxe,
-            testnetBaseFeePadding,
-            testnetPriorityFee
-        );
+    let send: SendInteractionOptions = { from };
+    let wait: WaitOpts = {};
+    if (await isTestnet(node)) {
+        let fee = await getPriorityFeeOptions(node, testnetPriorityFee);
         if (withFPC) {
-            const paymentMethod = await getSponsoredFeePaymentMethod(pxe);
+            const paymentMethod = await getSponsoredPaymentMethod(wallet);
             fee = { ...fee, paymentMethod };
         }
-        sendOptions = { ...sendOptions, fee };
-        waitOptions = { timeout: testnetTimeout, interval: testnetInterval };
+        send = { ...send, fee };
+        wait = { timeout: testnetTimeout, interval: testnetInterval };
     }
-    return { send: sendOptions, wait: waitOptions };
+    return { send, wait };
 }
 
-export const getOTCAccounts = async (pxe: PXE): Promise<{
-    seller: AccountWalletWithSecretKey,
-    buyer: AccountWalletWithSecretKey
+export const getOTCAccounts = async (
+    node: AztecNode,
+    pxeConfig: Partial<PXEConfig> = {}
+): Promise<{
+    wallet: TestWallet,
+    sellerAddress: AztecAddress,
+    buyerAddress: AztecAddress,
 }> => {
     // check if testnet
-    const testnet = await isTestnet(pxe);
-    let seller: AccountWalletWithSecretKey;
-    let buyer: AccountWalletWithSecretKey;
-    if (!testnet) {
-        // if sandbox, get initialized test accounts
-        const wallets = await Promise.all(
-            (await getInitialTestAccountsManagers(pxe)).map(m => m.register())
-        );
-        if (!wallets[0]) throw new Error("Seller/ Minter not found");
-        if (!wallets[1]) throw new Error("Buyer not found");
-        seller = await wallets[0];
-        buyer = await wallets[1];
-    } else {
+    let wallet = await TestWallet.create(node, pxeConfig);
+    let sellerAddress: AztecAddress;
+    let buyerAddress: AztecAddress;
+    if (await isTestnet(node)) {
         // if testnet, get accounts from env (should run setup_accounts.ts first)
-        seller = await getAccountFromFs("seller", pxe);
-        buyer = await getAccountFromFs("buyer", pxe);
-        await pxe.registerSender(seller.getAddress());
-        await pxe.registerSender(buyer.getAddress());
+        sellerAddress = await getAccountFromFs("seller", wallet);
+        buyerAddress = await getAccountFromFs("buyer", wallet);
+    } else {
+        // if sandbox, get initialized test accounts
+        const [sellerAccount, buyerAccount] = await getInitialTestAccountsData();
+        if (!sellerAccount) throw new Error("Seller/ Minter not found");
+        if (!buyerAccount) throw new Error("Buyer not found");
+        // create accounts
+        await wallet.createSchnorrAccount(sellerAccount.secret, sellerAccount.salt);
+        sellerAddress = sellerAccount.address;
+        await wallet.createSchnorrAccount(buyerAccount.secret, buyerAccount.salt);
+        buyerAddress = buyerAccount.address;
     }
-    return { seller, buyer };
+    // register accounts to eachother
+    await wallet.registerSender(buyerAddress);
+    await wallet.registerSender(sellerAddress);
+    return { wallet, sellerAddress, buyerAddress };
 }
 
 export const getAccountFromFs = async (
     accountType: "seller" | "buyer",
-    pxe: PXE
-): Promise<AccountWalletWithSecretKey> => {
+    wallet: TestWallet
+): Promise<AztecAddress> => {
     // reinstantiate the account
-    const account = accounts[accountType];
-    const secretKey = Fr.fromString(account.secretKey);
-    const signingKey = deriveSigningKey(secretKey);
-    const salt = Fr.fromString(account.salt);
-    const accountManager = await getSchnorrAccount(pxe, secretKey, signingKey, salt);
-    // ensure it is registered in the pxe
-    const partialAddress = (await accountManager.getCompleteAddress()).partialAddress;
-    await pxe.registerAccount(secretKey, partialAddress);
-    await pxe.registerContract({
-        instance: accountManager.getInstance(),
-        artifact: SchnorrAccountContractArtifact
-    });
-    return accountManager.getWallet();
+    const accountSecret = accounts[accountType];
+    const secretKey = Fr.fromString(accountSecret.secretKey);
+    const salt = Fr.fromString(accountSecret.salt);
+    const manager = await wallet.createSchnorrAccount(secretKey, salt);
+    return manager.address;
 }
 
-export const waitForBlock = async (pxe: PXE, targetBlock: number) => {
+export const waitForBlock = async (node: AztecNode, targetBlock: number) => {
     return new Promise((resolve) => {
         let currentBlock = 0;
         let seconds = 0;
@@ -99,7 +100,7 @@ export const waitForBlock = async (pxe: PXE, targetBlock: number) => {
         const interval = setInterval(async () => {
             if (seconds % 5 === 0) {
                 (async () => {
-                    currentBlock = await pxe.getBlockNumber();
+                    currentBlock = await node.getBlockNumber();
                 })();
             }
             seconds++;

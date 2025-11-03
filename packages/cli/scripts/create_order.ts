@@ -1,22 +1,22 @@
 import "dotenv/config";
 import {
-    createPXE,
     deployEscrowContract,
     depositToEscrow,
     getTokenContract,
-} from "@aztec-otc-desk/contracts";
-import { AztecAddress } from "@aztec/aztec.js";
+} from "@aztec-otc-desk/contracts/contract";
+import { AztecAddress } from "@aztec/aztec.js/addresses";
 import {
     eth as ethDeployment,
     usdc as usdcDeployment
 } from "./data/deployments.json"
 import {
     createOrder,
-    ethMintAmount,
+    ETH_SWAP_AMOUNT,
     getOTCAccounts,
-    usdcMintAmount,
+    USDC_SWAP_AMOUNT,
     getTestnetSendWaitOptions
 } from "./utils";
+import { createAztecNodeClient } from "@aztec/aztec.js/node";
 
 // get environment variables
 const { L2_NODE_URL, API_URL } = process.env;
@@ -28,56 +28,54 @@ if (!API_URL) {
 }
 
 const main = async () => {
-
-    const pxe = await createPXE(1);
-
     // get accounts
-    const { seller } = await getOTCAccounts(pxe);
+    const node = await createAztecNodeClient(L2_NODE_URL);
+    const { wallet, sellerAddress } = await getOTCAccounts(node);
 
     // get tokens
     const ethAddress = AztecAddress.fromString(ethDeployment.address);
-    const eth = await getTokenContract(pxe, seller, ethAddress, L2_NODE_URL);
+    const eth = await getTokenContract(wallet, sellerAddress, node, ethAddress);
     //// NOTE: need to get usdc token too to make sure PXE knows it exists
     ////       but we don't need to do anything with it
     const usdcAddress = AztecAddress.fromString(usdcDeployment.address);
-    await getTokenContract(pxe, seller, usdcAddress, L2_NODE_URL);
+    await getTokenContract(wallet, sellerAddress, node, usdcAddress);
 
     // if testnet, get send/ wait opts optimized for waiting and high gas
-    const opts = await getTestnetSendWaitOptions(pxe, seller.getAddress());
+    const opts = await getTestnetSendWaitOptions(node, wallet, sellerAddress);
 
     // build deploy
-    const { contract: escrowContract, secretKey } = await deployEscrowContract(pxe,
-        seller,
-        eth.address,
-        ethMintAmount,
-        AztecAddress.fromString(usdcDeployment.address),
-        usdcMintAmount,
+    const { contract: escrowContract, secretKey } = await deployEscrowContract(
+        wallet,
+        sellerAddress,
+        ethAddress,
+        ETH_SWAP_AMOUNT,
+        usdcAddress,
+        USDC_SWAP_AMOUNT,
         opts
     );
 
-    console.log("Escrow contract deployed, address: ", escrowContract.address);
-    console.log("Escrow contract secret key: ", secretKey);
+    console.log(`Escrow contract deployed, address: ${escrowContract.address}, secret key: ${secretKey}`);
 
     console.log("Depositing eth to escrow");
     const receipt = await depositToEscrow(
+        wallet,
+        sellerAddress,
         escrowContract,
-        seller,
         eth,
-        ethMintAmount,
+        ETH_SWAP_AMOUNT,
         opts
     );
-    console.log("Eth deposited to escrow, transaction hash: ", receipt.hash);
+    console.log("1 ETH deposited to escrow, transaction hash: ", receipt.hash);
 
     // update api to add order
     await createOrder(
         escrowContract.address,
         escrowContract.instance,
         secretKey,
-        (await escrowContract.partialAddress),
         eth.address,
-        ethMintAmount,
+        ETH_SWAP_AMOUNT,
         AztecAddress.fromString(usdcDeployment.address),
-        usdcMintAmount,
+        USDC_SWAP_AMOUNT,
         API_URL
     )
 }

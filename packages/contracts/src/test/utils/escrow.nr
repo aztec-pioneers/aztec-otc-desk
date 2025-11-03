@@ -5,17 +5,17 @@ use aztec::{
 };
 use crate::{
     OTCEscrow,
-    types::definition_note::DefinitionNote,
+    types::config_note::ConfigNote,
     test::utils::token::{private_transfer_authwit}
 };
 
-pub unconstrained fn get_escrow_definition(
+pub unconstrained fn get_escrow_config(
     env: &mut TestEnvironment,
     escrow_address: AztecAddress
-) -> DefinitionNote {
+) -> ConfigNote {
     env.simulate_utility(
         OTCEscrow::at(escrow_address)
-            .get_definition()
+            .get_config()
     )
 }
 
@@ -30,6 +30,7 @@ pub unconstrained fn deposit_to_escrow(
     // add transfer authwit
     let mut nonce = unsafe { random() };
     private_transfer_authwit(
+        *env,
         sell_token_address,
         escrow_address,
         seller_address,
@@ -59,6 +60,7 @@ pub unconstrained fn fill_otc_order(
     // add transfer authwit
     let mut nonce = unsafe { random() };
     private_transfer_authwit(
+        *env,
         buy_token_address,
         escrow_address,
         buyer_address,

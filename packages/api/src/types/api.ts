@@ -6,7 +6,6 @@ export interface Order {
   escrowAddress: string;
   contractInstance: string;
   secretKey: string;
-  partialAddress: string;
   sellTokenAddress: string;
   sellTokenAmount: BigInt;
   buyTokenAddress: string;
@@ -21,7 +20,6 @@ export interface CreateOrderRequest {
   sellTokenAddress: string;
   contractInstance: string;
   secretKey: string;
-  partialAddress: string;
   sellTokenAmount: BigInt;
   buyTokenAddress: string;
   buyTokenAmount: BigInt;

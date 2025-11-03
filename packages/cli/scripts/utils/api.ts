@@ -1,18 +1,18 @@
 import {
-    AccountWalletWithSecretKey,
-    AztecAddress,
-    type ContractInstanceWithAddress,
-    Fr,
-    type PXE,
-} from "@aztec/aztec.js";
-import { ContractInstanceWithAddressSchema } from "@aztec/stdlib/contract";
-import { OTCEscrowContract, getEscrowContract } from "@aztec-otc-desk/contracts";
+    ContractInstanceWithAddressSchema,
+    type ContractInstanceWithAddress
+} from "@aztec/stdlib/contract";
+import { OTCEscrowContract } from "@aztec-otc-desk/contracts/artifacts";
+import { getEscrowContract } from "@aztec-otc-desk/contracts/contract";
 import type { Order } from "../../../api/src/types/api";
 import {
     eth as ethDeployment,
     usdc as usdcDeployment
 } from "../data/deployments.json"
 import type { OrderAPIResponse } from "./types";
+import { AztecAddress } from "@aztec/stdlib/aztec-address";
+import { Fr } from "@aztec/aztec.js/fields";
+import type { BaseWallet } from "@aztec/aztec.js/wallet";
 
 /**
  * Fetch orders from the API
@@ -65,7 +65,6 @@ export const createOrder = async (
     escrowAddress: AztecAddress | string,
     contractInstance: ContractInstanceWithAddress,
     secretKey: Fr,
-    partialaAddress: Fr,
     sellTokenAddress: AztecAddress | string,
     sellTokenAmount: bigint,
     buyTokenAddress: AztecAddress | string,
@@ -75,9 +74,6 @@ export const createOrder = async (
     // parse inputs
     if (typeof escrowAddress === "string") {
         escrowAddress = AztecAddress.fromString(escrowAddress);
-    }
-    if (typeof partialaAddress === "string") {
-        partialaAddress = Fr.fromString(partialaAddress);
     }
     if (typeof sellTokenAddress === "string") {
         sellTokenAddress = AztecAddress.fromString(sellTokenAddress);
@@ -90,12 +86,12 @@ export const createOrder = async (
         escrowAddress: escrowAddress.toString(),
         contractInstance: JSON.stringify(contractInstance),
         secretKey: secretKey.toString(),
-        partialAddress: partialaAddress.toString(),
         sellTokenAddress: sellTokenAddress.toString(),
         sellTokenAmount: sellTokenAmount.toString(),
         buyTokenAddress: buyTokenAddress.toString(),
         buyTokenAmount: buyTokenAmount.toString()
     }
+
     // post request to add order to api
     try {
         const fullURL = `${apiUrl}/order`;
@@ -131,22 +127,20 @@ export const closeOrder = async (id: string, apiUrl: string) => {
 }
 
 export const escrowInstanceFromOrder = async (
-    pxe: PXE,
-    caller: AccountWalletWithSecretKey,
+    wallet: BaseWallet,
+    from: AztecAddress,
     order: Order,
 ): Promise<OTCEscrowContract> => {
     const escrowContractInstance = ContractInstanceWithAddressSchema.parse(
         JSON.parse(order.contractInstance)
     );
     const escrowSecretKey = Fr.fromString(order.secretKey);
-    const escrowPartialAddress = Fr.fromString(order.partialAddress);
     const escrowAddress = AztecAddress.fromString(order.escrowAddress);
     return await getEscrowContract(
-        pxe,
-        caller,
+        wallet,
+        from,
         escrowAddress,
         escrowContractInstance,
         escrowSecretKey,
-        escrowPartialAddress
     );
 }

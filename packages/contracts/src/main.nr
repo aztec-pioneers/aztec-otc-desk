@@ -8,23 +8,23 @@ pub contract OTCEscrow {
     // imports
     use aztec::{
         macros::{
-            functions::{initializer, private, utility},
+            functions::{initializer, external},
             storage::storage
         },
-        messages::logs::note::encode_and_encrypt_note,
+        messages::message_delivery::MessageDelivery,
         protocol_types::address::AztecAddress,
         state_vars::PrivateImmutable
     };
     use token_contract::Token;
-    use crate::types::definition_note::DefinitionNote;
+    use crate::types::config_note::ConfigNote;
 
 
     #[storage]
     struct Storage<Context> {
-        definition: PrivateImmutable<DefinitionNote, Context>,
+        config: PrivateImmutable<ConfigNote, Context>,
     }
     
-    #[private]
+    #[external("private")]
     #[initializer]
     fn constructor(
         sell_token_address: AztecAddress,
@@ -33,18 +33,16 @@ pub contract OTCEscrow {
         buy_token_amount: u128,
     ) {
         let self_address = context.this_address();
-        let caller = context.msg_sender();
 
         // create partial note
         let partial_note = Token::at(buy_token_address)
             .initialize_transfer_commitment(
                 self_address,
-                caller,
                 self_address
             ).call(&mut context);
 
-        // Create definition note
-        let definition = DefinitionNote::new(
+        // Create config note
+        let config = ConfigNote::new(
             self_address,
             partial_note,
             sell_token_address,
@@ -53,10 +51,9 @@ pub contract OTCEscrow {
             buy_token_amount
         );
         
-        storage.definition.initialize(definition).emit(encode_and_encrypt_note(
-            &mut context,
-            self_address
-        ));
+        storage.config
+            .initialize(config)
+            .emit(self_address, MessageDelivery.CONSTRAINED_ONCHAIN);
     }
     
     /**
@@ -65,25 +62,24 @@ pub contract OTCEscrow {
      * @param _nonce - authwit nonce used in `transfer_private_to_private`
      * @return - the commitment for the partial note
      */
-    #[private]
+    #[external("private")]
     fn deposit_tokens(_nonce: Field) {
-
-        let definition = storage.definition.get_note();
+        let config = storage.config.get_note();
         let self_address = context.this_address();
-        let caller = context.msg_sender();
+        let caller = context.msg_sender().unwrap();
 
         // transfer tokens in
-        Token::at(definition.sell_token_address)
+        Token::at(config.sell_token_address)
             .transfer_private_to_private(
                 caller,
                 self_address,
-                definition.sell_token_amount,
+                config.sell_token_amount,
                 _nonce
             )
             .call(&mut context);
 
         // emit nullifier to prevent multiple deposits
-        let deposit_nullifier = definition.get_nullifier(true);
+        let deposit_nullifier = config.get_nullifier(true);
         context.push_nullifier(deposit_nullifier);
     }
 
@@ -92,48 +88,48 @@ pub contract OTCEscrow {
      *
      * @param _nonce - authwit nonce used in `transfer_private_to_private`
      */
-    #[private]
+    #[external("private")]
     fn fill_order(_nonce: Field) {
-        let definition = storage.definition.get_note();
+        let config = storage.config.get_note();
         let self_address = context.this_address();
-        let caller = context.msg_sender();
+        let caller = context.msg_sender().unwrap();
 
         // transfer ask tokens in
-        Token::at(definition.buy_token_address)
+        Token::at(config.buy_token_address)
             .transfer_private_to_private(
                 caller,
                 self_address,
-                definition.buy_token_amount,
+                config.buy_token_amount,
                 _nonce
             )
             .call(&mut context);
 
-        Token::at(definition.buy_token_address)
+        Token::at(config.buy_token_address)
             .transfer_private_to_commitment(
                 self_address,
-                definition.partial_note,
-                definition.buy_token_amount,
+                config.partial_note,
+                config.buy_token_amount,
                 0
             )
             .call(&mut context);
 
         // transfer offer tokens out
-        Token::at(definition.sell_token_address)
+        Token::at(config.sell_token_address)
             .transfer_private_to_private(
                 self_address,
                 caller,
-                definition.sell_token_amount,
+                config.sell_token_amount,
                 0
             )
             .call(&mut context);
 
         // emit nullifier to prevent multiple fills
-        let fill_nullifier = definition.get_nullifier(false);
+        let fill_nullifier = config.get_nullifier(false);
         context.push_nullifier(fill_nullifier);
     }
 
-    #[utility]
-    unconstrained fn get_definition() -> DefinitionNote {
-        storage.definition.view_note()
+    #[external("utility")]
+    unconstrained fn get_config() -> ConfigNote {
+        storage.config.view_note()
     }
 }

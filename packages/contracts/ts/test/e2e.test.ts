@@ -1,25 +1,31 @@
-import { AccountWallet, PXE, Fr, AztecAddress } from "@aztec/aztec.js";
-import { getInitialTestAccountsManagers } from "@aztec/accounts/testing";
+import { before, describe, test } from "node:test";
+import { expect } from '@jest/globals';
+import { getInitialTestAccountsData } from '@aztec/accounts/testing';
+import { AztecAddress } from '@aztec/aztec.js/addresses';
+import { Fr } from '@aztec/aztec.js/fields';
+import { createAztecNodeClient, type AztecNode } from "@aztec/aztec.js/node";
+import { TestWallet } from '@aztec/test-wallet/server';
+import { OTCEscrowContract, TokenContract } from "@aztec-otc-desk/contracts/artifacts";
+import { TOKEN_METADATA } from "@aztec-otc-desk/contracts/constants";
 import {
     deployEscrowContract,
-    deployTokenContractWithMinter,
-    wad,
+    deployTokenContract,
     depositToEscrow,
-    createPXE,
-    TOKEN_METADATA,
-    fillOTCOrder,
     expectBalancePrivate,
-    OTCEscrowContract,
-    TokenContract,
-} from "../src";
+    fillOTCOrder,
+    getEscrowConfig
+} from "@aztec-otc-desk/contracts/contract";
+import { wad } from "@aztec-otc-desk/contracts/utils";
+
+const { AZTEC_NODE_URL = "http://localhost:8080" } = process.env;
 
 describe("Private Transfer Demo Test", () => {
-    let sellerPXE: PXE;
-    let buyerPXE: PXE;
 
-    let minter: AccountWallet;
-    let seller: AccountWallet;
-    let buyer: AccountWallet;
+    let node: AztecNode;
+
+    let minterWallet: TestWallet;
+    let sellerWallet: TestWallet;
+    let buyerWallet: TestWallet;
 
     let minterAddress: AztecAddress;
     let sellerAddress: AztecAddress;
@@ -36,54 +42,54 @@ describe("Private Transfer Demo Test", () => {
     const sellerUSDCInitialBalance = wad(10000n, 6n);
     const buyerETHInitialBalance = wad(4n);
 
-    beforeAll(async () => {
-        // setup PXE connections
-        sellerPXE = await createPXE(1);
-        buyerPXE = await createPXE(2);
-        console.log("PXEs connected");
+    before(async () => {
+        // setup aztec node client
+        node = createAztecNodeClient(AZTEC_NODE_URL);
+        console.log(`Connected to Aztec node at "${AZTEC_NODE_URL}"`);
 
-        // get PXE 1 accounts
-        const walletsPXE1 = await Promise.all(
-            (await getInitialTestAccountsManagers(sellerPXE)).map(m => m.register())
-        );
-        minter = walletsPXE1[0];
-        minterAddress = minter.getAddress();
-        seller = walletsPXE1[1];
-        sellerAddress = seller.getAddress();
-        // get PXE 2 account
-        const walletsPXE2 = await Promise.all(
-            (await getInitialTestAccountsManagers(buyerPXE)).map(m => m.register())
-        );
-        buyer = walletsPXE2[2];
-        buyerAddress = buyer.getAddress();
+        // setup wallets
+        minterWallet = await TestWallet.create(node);
+        sellerWallet = await TestWallet.create(node);
+        buyerWallet = await TestWallet.create(node);
+        const [minterAccount, buyerAccount, sellerAccount] = await getInitialTestAccountsData();
 
-        
-        // deploy token contract
-        usdc = await deployTokenContractWithMinter(TOKEN_METADATA.usdc, minter);
-        eth = await deployTokenContractWithMinter(TOKEN_METADATA.eth, minter);
+        await minterWallet.createSchnorrAccount(minterAccount.secret, minterAccount.salt);
+        minterAddress = await minterWallet.getAccounts().then(accounts => accounts[0].item);
+        await sellerWallet.createSchnorrAccount(sellerAccount.secret, sellerAccount.salt);
+        sellerAddress = await sellerWallet.getAccounts().then(accounts => accounts[0].item);
+        await buyerWallet.createSchnorrAccount(buyerAccount.secret, buyerAccount.salt);
+        buyerAddress = await buyerWallet.getAccounts().then(accounts => accounts[0].item);
 
-        // register accounts and contracts in each PXE
-        await seller.registerSender(buyerAddress);
-        await buyer.registerSender(minterAddress);
-        await buyer.registerSender(sellerAddress);
-        await buyer.registerContract(usdc);
-        await buyer.registerContract(eth);
+        // connect accounts to eachother
+        await minterWallet.registerSender(sellerAddress);
+        await minterWallet.registerSender(buyerAddress);
+        await sellerWallet.registerSender(minterAddress);
+        await sellerWallet.registerSender(buyerAddress);
+        await buyerWallet.registerSender(minterAddress);
+        await buyerWallet.registerSender(sellerAddress);
+
+        // deploy token contracts
+        usdc = await deployTokenContract(minterWallet, minterAddress, TOKEN_METADATA.usdc);
+        eth = await deployTokenContract(minterWallet, minterAddress, TOKEN_METADATA.eth);
+
+        // register token contracts in other wallets
+        await sellerWallet.registerContract(usdc);
+        await sellerWallet.registerContract(eth);
+        await buyerWallet.registerContract(usdc);
+        await buyerWallet.registerContract(eth);
 
         // mint tokens
         await eth
-            .withWallet(minter)
+            .withWallet(minterWallet)
             .methods.mint_to_private(
-                minterAddress,
                 buyerAddress,
                 wad(4n, 18n)
             )
             .send({ from: minterAddress })
             .wait();
-
         await usdc
-            .withWallet(minter)
+            .withWallet(minterWallet)
             .methods.mint_to_private(
-                minterAddress,
                 sellerAddress,
                 wad(10000n, 6n)
             )
@@ -94,44 +100,44 @@ describe("Private Transfer Demo Test", () => {
     test("check escrow key leaking", async () => {
         // deploy new escrow instance
         ({ contract: escrow, secretKey: escrowMasterKey } = await deployEscrowContract(
-            sellerPXE,
-            seller,
+            sellerWallet,
+            sellerAddress,
             usdc.address,
-            buyTokenAmount,
-            eth.address,
             sellTokenAmount,
+            eth.address,
+            buyTokenAmount,
         ));
 
         // Check seller Escrow
-        const sellerDefinition = await escrow
-            .withWallet(seller)
-            .methods.get_definition()
-            .simulate({ from: sellerAddress });
-        // expect(sellerDefinition.owner).toEqual(escrow.address.toBigInt());
-        expect(sellerDefinition.owner).not.toEqual(0n);
+        const sellerConfig = await getEscrowConfig(sellerWallet, sellerAddress, escrow);
+        expect(sellerConfig.owner).toEqual(escrow.address);
+        expect(sellerConfig.sell_token_address).toEqual(usdc.address);
+        expect(sellerConfig.sell_token_amount).toEqual(sellTokenAmount);
+        expect(sellerConfig.buy_token_address).toEqual(eth.address);
+        expect(sellerConfig.buy_token_amount).toEqual(buyTokenAmount);
+        expect(sellerConfig.randomness).not.toEqual(0n);
 
-        // register contract but do not register decryption keys
-        // if contract is not registered they definitely can't call it
-        await buyerPXE.registerContract(escrow);
+        // register contract without decryption keys
+        await buyerWallet.registerContract(escrow);
 
         // check if maker note exists
         expect(async () => {
             await escrow
-                .withWallet(buyer)
-                .methods.get_definition()
+                .withWallet(buyerWallet)
+                .methods.get_config()
                 .simulate({ from: buyerAddress });
         }).toThrow()
 
         // add account to buyer pxe
-        await buyerPXE.registerAccount(escrowMasterKey, await escrow.partialAddress);
+        await buyerWallet.registerContract(escrow, undefined, escrowMasterKey);
         await escrow
-            .withWallet(buyer)
+            .withWallet(buyerWallet)
             .methods.sync_private_state()
             .simulate({ from: buyerAddress });
         const buyerDefinition = await escrow
-            .withWallet(buyer)
+            .withWallet(buyerWallet)
             .methods
-            .get_definition()
+            .get_config()
             .simulate({ from: buyerAddress });
         expect(buyerDefinition.owner).not.toEqual(0n);
     });
@@ -139,8 +145,8 @@ describe("Private Transfer Demo Test", () => {
     test("e2e", async () => {
         // deploy new escrow instance
         ({ contract: escrow, secretKey: escrowMasterKey } = await deployEscrowContract(
-            sellerPXE,
-            seller,
+            sellerWallet,
+            sellerAddress,
             usdc.address,
             sellTokenAmount,
             eth.address,
@@ -148,50 +154,50 @@ describe("Private Transfer Demo Test", () => {
         ));
 
         // check balances before
-        usdc = usdc.withWallet(seller);
-        expect(expectBalancePrivate(usdc, sellerAddress, sellerUSDCInitialBalance)).toBeTruthy();
-        expect(expectBalancePrivate(usdc, escrow.address, 0n)).toBeTruthy();
+        expect(
+            expectBalancePrivate(sellerWallet, sellerAddress, usdc, sellerUSDCInitialBalance)
+        ).toBeTruthy();
+        expect(
+            expectBalancePrivate(sellerWallet, escrow.address, usdc, 0n)
+        ).toBeTruthy();
 
         // deposit tokens into the escrow
-        await depositToEscrow(
-            escrow,
-            seller,
-            usdc,
-            sellTokenAmount,
-        );
+        await depositToEscrow(sellerWallet, sellerAddress, escrow, usdc, sellTokenAmount);
 
         // check USDC balances after transfer in
-        usdc = usdc.withWallet(seller);
+        const expectedUSDCAfterDeposit = sellerUSDCInitialBalance - sellTokenAmount;
         expect(
-            expectBalancePrivate(usdc, sellerAddress, sellerUSDCInitialBalance - sellTokenAmount)
+            expectBalancePrivate(sellerWallet, sellerAddress, usdc, expectedUSDCAfterDeposit)
         ).toBeTruthy();
-        expect(expectBalancePrivate(usdc, escrow.address, sellTokenAmount)).toBeTruthy();
+        expect(
+            expectBalancePrivate(sellerWallet, escrow.address, usdc, sellTokenAmount)
+        ).toBeTruthy();
 
 
         // check buyer balance balances before filling order
-        usdc = usdc.withWallet(buyer);
-        eth = eth.withWallet(buyer);
-        expect(expectBalancePrivate(eth, sellerAddress, buyerETHInitialBalance)).toBeTruthy();
-        expect(expectBalancePrivate(usdc, sellerAddress, 0n)).toBeTruthy();
-        expect(expectBalancePrivate(eth, escrow.address, 0n)).toBeTruthy();
+        expect(
+            expectBalancePrivate(buyerWallet, sellerAddress, eth, buyerETHInitialBalance)
+        ).toBeTruthy();
+        expect(expectBalancePrivate(buyerWallet, sellerAddress, usdc, 0n)).toBeTruthy();
+        expect(expectBalancePrivate(buyerWallet, escrow.address, eth, 0n)).toBeTruthy();
 
         // give buyer knowledge of the escrow
-        await buyerPXE.registerAccount(escrowMasterKey, await escrow.partialAddress);
-        await buyerPXE.registerContract(escrow);
-        await escrow
-            .withWallet(buyer)
-            .methods.sync_private_state()
-            .simulate({ from: buyerAddress });
+        await buyerWallet.registerContract(escrow, undefined, escrowMasterKey);
 
         // transfer tokens back out
-        await fillOTCOrder(escrow, buyer, eth, buyTokenAmount);
+        await fillOTCOrder(buyerWallet, buyerAddress, escrow, eth, buyTokenAmount);
 
         // check balances after filling order
+        const expectedETHAfterFill = buyerETHInitialBalance - buyTokenAmount;
         expect(
-            expectBalancePrivate(eth, buyerAddress, buyerETHInitialBalance - buyTokenAmount)
+            expectBalancePrivate(buyerWallet, buyerAddress, eth, expectedETHAfterFill)
         ).toBeTruthy();
-        expect(expectBalancePrivate(usdc, buyerAddress, sellTokenAmount)).toBeTruthy();
-        expect(expectBalancePrivate(eth, sellerAddress, buyTokenAmount)).toBeTruthy();
-        expect(expectBalancePrivate(usdc, escrow.address, 0n)).toBeTruthy();
+        expect(
+            expectBalancePrivate(buyerWallet, buyerAddress, usdc, sellTokenAmount)
+        ).toBeTruthy();
+        expect(expectBalancePrivate(buyerWallet, escrow.address, usdc, 0n)).toBeTruthy();
+        expect(
+            expectBalancePrivate(sellerWallet, sellerAddress, eth, buyTokenAmount)
+        ).toBeTruthy();
     });
 });

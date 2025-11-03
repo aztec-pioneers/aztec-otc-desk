@@ -1,15 +1,16 @@
 import "dotenv/config";
-import { createPXE, fillOTCOrder, getTokenContract } from "@aztec-otc-desk/contracts";
+import { fillOTCOrder, getTokenContract } from "@aztec-otc-desk/contracts/contract";
 import { eth as ethDeployment, usdc as usdcDeployment } from "./data/deployments.json"
-import { AztecAddress } from "@aztec/aztec.js";
+import { AztecAddress } from "@aztec/aztec.js/addresses";
 import {
     closeOrder,
     escrowInstanceFromOrder,
     getOrders,
     getOTCAccounts,
     getTestnetSendWaitOptions,
-    usdcMintAmount
+    USDC_SWAP_AMOUNT
 } from "./utils";
+import { createAztecNodeClient } from "@aztec/aztec.js/node";
 
 // get environment variables
 const { L2_NODE_URL, API_URL } = process.env;
@@ -28,29 +29,34 @@ const main = async () => {
     const orderToFill = orders[0]!;
     console.log("Found a matching order to fill");
 
-    // setup PXE
-    const pxe = await createPXE(2);
-    const { buyer } = await getOTCAccounts(pxe);
-
-    // instantiate token contracts
-    const ethAddress = AztecAddress.fromString(ethDeployment.address);
-    const eth = await getTokenContract(pxe, buyer, ethAddress, L2_NODE_URL);
-    await eth.methods.sync_private_state().simulate({from: buyer.getAddress()});
+    // setup wallets
+    const node = await createAztecNodeClient(L2_NODE_URL);
+    const { wallet, buyerAddress } = await getOTCAccounts(node);
 
     // get USDC token
     const usdcAddress = AztecAddress.fromString(usdcDeployment.address);
-    const usdc = await getTokenContract(pxe, buyer, usdcAddress, L2_NODE_URL);
-    await usdc.methods.sync_private_state().simulate({from: buyer.getAddress()});
+    const usdc = await getTokenContract(wallet, buyerAddress, node, usdcAddress);
+
+    // register ETH token
+    const ethAddress = AztecAddress.fromString(ethDeployment.address);
+    await getTokenContract(wallet, buyerAddress, node, ethAddress);
 
     // register escrow contract and account then get deployed instance
-    const escrow = await escrowInstanceFromOrder(pxe, buyer, orderToFill);
+    const escrow = await escrowInstanceFromOrder(wallet, buyerAddress, orderToFill);
 
     // if testnet, get send/ wait opts optimized for waiting and high gas
-    const opts = await getTestnetSendWaitOptions(pxe, buyer.getAddress());
+    const opts = await getTestnetSendWaitOptions(node, wallet, buyerAddress);
 
     // fill the otc order
     console.log("Attempting to fill order");
-    const txHash = await fillOTCOrder(escrow, buyer, usdc, usdcMintAmount, opts);
+    const txHash = await fillOTCOrder(
+        wallet,
+        buyerAddress,
+        escrow,
+        usdc,
+        USDC_SWAP_AMOUNT,
+        opts
+    );
     console.log("Filled OTC order with txHash: ", txHash);
 
     // remove the order from the OTC service so it isn't reused
