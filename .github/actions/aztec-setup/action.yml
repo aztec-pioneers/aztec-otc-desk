@@ -7,9 +7,13 @@ inputs:
     required: false
     default: '22.20.0'
   start-sandbox:
-    description: 'Whether to start the sandbox'
+    description: 'Whether to start the Aztec Sandbox'
     required: false
-    default: 'true'
+    default: 'false'
+  start-api:
+    description: 'Whether to start the Orderflow API'
+    required: false
+    default: 'false'
 
 outputs:
   aztec-version:
@@ -58,10 +62,16 @@ runs:
         VERSION=${{ steps.aztec-version.outputs.version }} aztec-up
       shell: bash
     
-    - name: Start sandbox
-      if: inputs.start-sandbox == 'true'
+    - name: Start Sandbox
+      if: inputs.start-sandbox == 'true' && inputs.start-api == 'false'
       run: |
-        cd packages/contracts && bun run sandbox &
+        bun run scripts/docker.ts sandbox &
+      shell: bash
+    
+    - name: Start Sandbox and Orderflow API
+      if: inputs.start-sandbox == 'true' && inputs.start-api == 'true'
+      run: |
+        bun run sandbox &
       shell: bash
     
     - name: Install project dependencies
