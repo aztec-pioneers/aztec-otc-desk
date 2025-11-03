@@ -4,8 +4,6 @@ import { getTokenContract } from "@aztec-otc-desk/contracts/contract"
 import { getOTCAccounts } from "./utils";
 import { eth as ethDeployment, usdc as usdcDeployment } from "./data/deployments.json"
 import { createAztecNodeClient } from "@aztec/aztec.js/node";
-import { isTestnet } from "@aztec-otc-desk/contracts/utils";
-import { getFeeJuicePublicBalance } from "@aztec-otc-desk/contracts/fees";
 
 
 const { L2_NODE_URL } = process.env;
