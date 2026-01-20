@@ -65,7 +65,7 @@ runs:
     - name: Start Aztec local network
       if: inputs.start-local-net == 'true' && inputs.start-api == 'false'
       run: |
-        bun run scripts/docker.ts sandbox &
+        bun run scripts/docker.ts local-network &
       shell: bash
     
     - name: Start Aztec local network and Orderflow API
