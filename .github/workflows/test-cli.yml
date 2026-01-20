@@ -34,7 +34,7 @@ jobs:
         - name: Environment Setup (Install Bun & Aztec, Build Project, Run Sandbox)
           uses: ./.github/actions/aztec-setup
           with:
-            start-sandbox: 'true'
+            start-local-net: 'true'
             start-api: 'true'
         
         - name: Add sandbox .env

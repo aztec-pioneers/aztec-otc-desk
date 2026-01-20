@@ -6,7 +6,7 @@ inputs:
     description: 'Node.js version to use'
     required: false
     default: '22.20.0'
-  start-sandbox:
+  start-local-net:
     description: 'Whether to start the Aztec Sandbox'
     required: false
     default: 'false'
@@ -62,14 +62,14 @@ runs:
         VERSION=${{ steps.aztec-version.outputs.version }} aztec-up
       shell: bash
     
-    - name: Start Sandbox
-      if: inputs.start-sandbox == 'true' && inputs.start-api == 'false'
+    - name: Start Aztec local network
+      if: inputs.start-local-net == 'true' && inputs.start-api == 'false'
       run: |
         bun run scripts/docker.ts sandbox &
       shell: bash
     
-    - name: Start Sandbox and Orderflow API
-      if: inputs.start-sandbox == 'true' && inputs.start-api == 'true'
+    - name: Start Aztec local network and Orderflow API
+      if: inputs.start-local-net == 'true' && inputs.start-api == 'true'
       run: |
         bun run sandbox &
       shell: bash
