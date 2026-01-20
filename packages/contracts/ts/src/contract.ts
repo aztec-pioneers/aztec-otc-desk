@@ -8,7 +8,7 @@ import type {
 import { Fr } from "@aztec/aztec.js/fields";
 import type { AztecNode } from "@aztec/aztec.js/node";
 import { TxHash } from "@aztec/aztec.js/tx";
-import { BaseWallet } from "@aztec/aztec.js/wallet";
+import type { Wallet } from "@aztec/aztec.js/wallet";
 import { AuthWitness } from "@aztec/stdlib/auth-witness";
 import { deriveKeys } from "@aztec/stdlib/keys";
 import {
@@ -35,17 +35,17 @@ import { type EscrowConfig } from "./constants";
  *          secretKey - the master key for the contract
  */
 export async function deployEscrowContract(
-    wallet: BaseWallet,
+    wallet: Wallet,
     from: AztecAddress,
     sellTokenAddress: AztecAddress,
     sellTokenAmount: bigint,
     buyTokenAddress: AztecAddress,
     buyTokenAmount: bigint,
     opts: { send: SendInteractionOptions, wait?: WaitOpts } = { send: { from } }
-): Promise<{ contract: OTCEscrowContract, secretKey: Fr }> {
+): Promise<{ contract: OTCEscrowContract, instance: ContractInstanceWithAddress, secretKey: Fr }> {
     // get keys for contract
-    const contractSecretKey = Fr.random();
-    const contractPublicKeys = (await deriveKeys(contractSecretKey)).publicKeys;
+    const secretKey = Fr.random();
+    const contractPublicKeys = (await deriveKeys(secretKey)).publicKeys;
     // set up contract deployment tx
     const contractDeployment = await OTCEscrowContract.deployWithPublicKeys(
         contractPublicKeys,
@@ -57,15 +57,12 @@ export async function deployEscrowContract(
     );
     // add contract decryption keys to PXE
     const instance = await contractDeployment.getInstance();
-    await wallet.registerContract(instance, OTCEscrowContractArtifact, contractSecretKey);
+    await wallet.registerContract(instance, OTCEscrowContractArtifact, secretKey);
     // deploy contract
     const contract = await contractDeployment
         .send(opts.send)
         .deployed(opts.wait);
-    return {
-        contract: contract as OTCEscrowContract,
-        secretKey: contractSecretKey,
-    };
+    return { contract, instance, secretKey };
 }
 
 /**
@@ -76,13 +73,13 @@ export async function deployEscrowContract(
  * @returns - the deployed Token Contract
  */
 export async function deployTokenContract(
-    wallet: BaseWallet,
+    wallet: Wallet,
     from: AztecAddress,
     tokenMetadata: { name: string; symbol: string; decimals: number },
     opts: { send: SendInteractionOptions, wait?: WaitOpts } = { send: { from } }
-): Promise<TokenContract> {
+): Promise<{ contract: TokenContract, instance: ContractInstanceWithAddress}> {
     // deploy contract
-    const contract = await TokenContract.deployWithOpts(
+    const contractDeployment = await TokenContract.deployWithOpts(
         { wallet, method: "constructor_with_minter" },
         tokenMetadata.name,
         tokenMetadata.symbol,
@@ -90,9 +87,9 @@ export async function deployTokenContract(
         from,
         AztecAddress.ZERO,
     )
-        .send(opts.send)
-        .deployed(opts.wait);
-    return contract as TokenContract;
+    const instance = await contractDeployment.getInstance();
+    const contract = await contractDeployment.send(opts.send).deployed(opts.wait);
+    return { contract, instance};
 }
 
 /**
@@ -106,7 +103,7 @@ export async function deployTokenContract(
  * @returns - the transaction hash of the deposit transaction
  */
 export async function depositToEscrow(
-    wallet: BaseWallet,
+    wallet: Wallet,
     from: AztecAddress,
     escrow: OTCEscrowContract,
     token: TokenContract,
@@ -143,7 +140,7 @@ export async function depositToEscrow(
  * @returns - the transaction hash of the order fill transaction
  */
 export async function fillOTCOrder(
-    wallet: BaseWallet,
+    wallet: Wallet,
     from: AztecAddress,
     escrow: OTCEscrowContract,
     token: TokenContract,
@@ -171,7 +168,7 @@ export async function fillOTCOrder(
 }
 
 export async function getPrivateTransferAuthwit(
-    wallet: BaseWallet,
+    wallet: Wallet,
     from: AztecAddress,
     token: TokenContract,
     caller: AztecAddress,
@@ -192,7 +189,7 @@ export async function getPrivateTransferAuthwit(
 }
 
 export async function getEscrowConfig(
-    wallet: BaseWallet,
+    wallet: Wallet,
     from: AztecAddress,
     escrow: OTCEscrowContract,
     opts: SimulateInteractionOptions = { from }
@@ -212,7 +209,7 @@ export async function getEscrowConfig(
  * @returns - true if balance matches expectations, and false otherwise
  */
 export async function expectBalancePrivate(
-    wallet: BaseWallet,
+    wallet: Wallet,
     from: AztecAddress,
     token: TokenContract,
     expectedBalance: bigint,
@@ -228,22 +225,19 @@ export async function expectBalancePrivate(
 
 
 export const getTokenContract = async (
-    wallet: BaseWallet,
+    wallet: Wallet,
     from: AztecAddress,
     node: AztecNode,
     tokenAddress: AztecAddress,
 ): Promise<TokenContract> => {
-    
+
     // get public contract instance
     const contractInstance = await node.getContract(tokenAddress);
-    if (!contractInstance) {
+    if (!contractInstance)
         throw new Error(`No instance for token contract at ${tokenAddress.toString()} found!`);
-    }
+
     // register contract
-    await wallet.registerContract({
-        instance: contractInstance,
-        artifact: TokenContractArtifact
-    });
+    await wallet.registerContract(contractInstance, TokenContractArtifact);
     // return synced token contract
     const token = await TokenContract.at(tokenAddress, wallet);
     await token.methods.sync_private_state().simulate({ from });
@@ -251,7 +245,7 @@ export const getTokenContract = async (
 };
 
 export const getEscrowContract = async (
-    wallet: BaseWallet,
+    wallet: Wallet,
     from: AztecAddress,
     escrowAddress: AztecAddress,
     contractInstance: ContractInstanceWithAddress,

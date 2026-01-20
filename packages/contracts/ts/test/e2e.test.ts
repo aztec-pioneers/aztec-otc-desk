@@ -5,7 +5,7 @@ import { AztecAddress } from '@aztec/aztec.js/addresses';
 import { Fr } from '@aztec/aztec.js/fields';
 import { createAztecNodeClient, type AztecNode } from "@aztec/aztec.js/node";
 import { TestWallet } from '@aztec/test-wallet/server';
-import { OTCEscrowContract, TokenContract } from "@aztec-otc-desk/contracts/artifacts";
+import { OTCEscrowContract, OTCEscrowContractArtifact, TokenContract, TokenContractArtifact } from "@aztec-otc-desk/contracts/artifacts";
 import { TOKEN_METADATA } from "@aztec-otc-desk/contracts/constants";
 import {
     deployEscrowContract,
@@ -16,6 +16,8 @@ import {
     getEscrowConfig
 } from "@aztec-otc-desk/contracts/contract";
 import { wad } from "@aztec-otc-desk/contracts/utils";
+import type { ContractInstanceWithAddress } from "@aztec/stdlib/contract";
+import { sleep } from "bun";
 
 const { AZTEC_NODE_URL = "http://localhost:8080" } = process.env;
 
@@ -36,6 +38,9 @@ describe("Private Transfer Demo Test", () => {
     let escrow: OTCEscrowContract;
     let usdc: TokenContract;
     let eth: TokenContract;
+    let escrowInstance: ContractInstanceWithAddress;
+    let usdcInstance: ContractInstanceWithAddress;
+    let ethInstance: ContractInstanceWithAddress;
 
     const sellTokenAmount = wad(1000n, 6n);
     const buyTokenAmount = wad(1n);
@@ -69,14 +74,18 @@ describe("Private Transfer Demo Test", () => {
         await buyerWallet.registerSender(sellerAddress);
 
         // deploy token contracts
-        usdc = await deployTokenContract(minterWallet, minterAddress, TOKEN_METADATA.usdc);
-        eth = await deployTokenContract(minterWallet, minterAddress, TOKEN_METADATA.eth);
+        ({
+            contract: usdc, instance: usdcInstance
+        } = await deployTokenContract(minterWallet, minterAddress, TOKEN_METADATA.usdc));
+        ({
+            contract: eth, instance: ethInstance
+        } = await deployTokenContract(minterWallet, minterAddress, TOKEN_METADATA.eth))
 
         // register token contracts in other wallets
-        await sellerWallet.registerContract(usdc);
-        await sellerWallet.registerContract(eth);
-        await buyerWallet.registerContract(usdc);
-        await buyerWallet.registerContract(eth);
+        await sellerWallet.registerContract(usdcInstance, TokenContractArtifact);
+        await sellerWallet.registerContract(ethInstance, TokenContractArtifact);
+        await buyerWallet.registerContract(usdcInstance, TokenContractArtifact);
+        await buyerWallet.registerContract(ethInstance, TokenContractArtifact);
 
         // mint tokens
         await eth
@@ -99,7 +108,11 @@ describe("Private Transfer Demo Test", () => {
 
     test("check escrow key leaking", async () => {
         // deploy new escrow instance
-        ({ contract: escrow, secretKey: escrowMasterKey } = await deployEscrowContract(
+        ({
+            contract: escrow,
+            instance: escrowInstance,
+            secretKey: escrowMasterKey
+        } = await deployEscrowContract(
             sellerWallet,
             sellerAddress,
             usdc.address,
@@ -118,7 +131,7 @@ describe("Private Transfer Demo Test", () => {
         expect(sellerConfig.randomness).not.toEqual(0n);
 
         // register contract without decryption keys
-        await buyerWallet.registerContract(escrow);
+        await buyerWallet.registerContract(escrowInstance, OTCEscrowContractArtifact);
 
         // check if maker note exists
         expect(async () => {
@@ -129,7 +142,7 @@ describe("Private Transfer Demo Test", () => {
         }).toThrow()
 
         // add account to buyer pxe
-        await buyerWallet.registerContract(escrow, undefined, escrowMasterKey);
+        await buyerWallet.registerContract(escrowInstance, OTCEscrowContractArtifact, escrowMasterKey);
         await escrow
             .withWallet(buyerWallet)
             .methods.sync_private_state()
@@ -144,7 +157,11 @@ describe("Private Transfer Demo Test", () => {
 
     test("e2e", async () => {
         // deploy new escrow instance
-        ({ contract: escrow, secretKey: escrowMasterKey } = await deployEscrowContract(
+        ({
+            contract: escrow,
+            instance: escrowInstance,
+            secretKey: escrowMasterKey
+        } = await deployEscrowContract(
             sellerWallet,
             sellerAddress,
             usdc.address,
@@ -182,7 +199,7 @@ describe("Private Transfer Demo Test", () => {
         expect(expectBalancePrivate(buyerWallet, escrow.address, eth, 0n)).toBeTruthy();
 
         // give buyer knowledge of the escrow
-        await buyerWallet.registerContract(escrow, undefined, escrowMasterKey);
+        await buyerWallet.registerContract(escrowInstance, OTCEscrowContractArtifact, escrowMasterKey);
 
         // transfer tokens back out
         await fillOTCOrder(buyerWallet, buyerAddress, escrow, eth, buyTokenAmount);
