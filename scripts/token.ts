@@ -30,7 +30,7 @@ function parseArgs(): ScriptOptions {
   return { skipSubmodules };
 }
 
-async function replaceInFile(filePath: string, searchText: string, replaceText: string): Promise<void> {
+async function replaceInFile(filePath: string, searchText: string, replaceText: string) {
   try {
     const content = await readFile(filePath, "utf-8");
     const updatedContent = content.replace(new RegExp(searchText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), replaceText);
@@ -41,7 +41,7 @@ async function replaceInFile(filePath: string, searchText: string, replaceText: 
   }
 }
 
-async function execCommand(command: string, args: string[] = [], cwd?: string): Promise<void> {
+async function execCommand(command: string, args: string[] = [], cwd?: string) {
   const proc = spawn({
     cmd: [command, ...args],
     cwd,
