@@ -16,7 +16,7 @@ const main = async () => {
 
 
     let pxeConfig = {};
-    if (await isTestnet(node)) pxeConfig = { rollupVersion: 1667575857, proverEnabled: false };
+    if (await isTestnet(node)) pxeConfig = { proverEnabled: true };
 
     // get accounts
     const { wallet, sellerAddress: deployerAddress } = await getOTCAccounts(node, pxeConfig);
@@ -53,4 +53,4 @@ const main = async () => {
     console.log(`Deployments written to ${filepath}`);
 }
 
-main();
+main().then(() => process.exit(0));

@@ -17,6 +17,8 @@ import {
     getTestnetSendWaitOptions
 } from "./utils";
 import { createAztecNodeClient } from "@aztec/aztec.js/node";
+import type { PXEConfig } from "@aztec/pxe/config";
+import { isTestnet } from "@aztec-otc-desk/contracts/utils";
 
 // get environment variables
 const { L2_NODE_URL, API_URL } = process.env;
@@ -30,7 +32,11 @@ if (!API_URL) {
 const main = async () => {
     // get accounts
     const node = await createAztecNodeClient(L2_NODE_URL);
-    const { wallet, sellerAddress } = await getOTCAccounts(node);
+    let pxeConfig: Partial<PXEConfig> = {};
+    if (await isTestnet(node)) pxeConfig = { proverEnabled: true };
+
+    // get seller account
+    const { wallet, sellerAddress } = await getOTCAccounts(node, pxeConfig);
 
     // get tokens
     const ethAddress = AztecAddress.fromString(ethDeployment.address);
@@ -47,7 +53,7 @@ const main = async () => {
     const {
         contract: escrowContract,
         instance: escrowContractInstance,
-        secretKey 
+        secretKey
     } = await deployEscrowContract(
         wallet,
         sellerAddress,
@@ -84,4 +90,4 @@ const main = async () => {
     )
 }
 
-main();
+main().then(() => process.exit(0));

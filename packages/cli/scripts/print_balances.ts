@@ -52,4 +52,4 @@ const main = async () => {
     console.log("==============================================");
 }
 
-main();
+main().then(() => process.exit(0));
