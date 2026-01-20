@@ -27,6 +27,7 @@
     "testnet": "bun run scripts/docker.ts api"
   },
   "config": {
-    "aztecVersion": "3.0.0-devnet.6-patch.1"
+    "aztecVersion": "3.0.0-devnet.6-patch.1",
+    "aztecStandardsVersion": "dev"
   }
 }
