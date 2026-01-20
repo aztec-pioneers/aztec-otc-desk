@@ -25,7 +25,7 @@ const main = async () => {
     const opts = await getTestnetSendWaitOptions(node, wallet, deployerAddress);
     // deploy token contracts
     console.log("Deploying Wrapped Ether token contract");
-    const eth = await deployTokenContract(
+    const { contract: eth } = await deployTokenContract(
         wallet,
         deployerAddress,
         TOKEN_METADATA.eth,
@@ -34,7 +34,7 @@ const main = async () => {
     console.log("Ether token contract deployed, address: ", eth.address);
 
     console.log("Deploying USD Coin token contract");
-    const usdc = await deployTokenContract(
+    const { contract: usdc } = await deployTokenContract(
         wallet,
         deployerAddress,
         TOKEN_METADATA.usdc,

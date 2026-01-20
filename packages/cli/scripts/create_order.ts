@@ -44,7 +44,11 @@ const main = async () => {
     const opts = await getTestnetSendWaitOptions(node, wallet, sellerAddress);
 
     // build deploy
-    const { contract: escrowContract, secretKey } = await deployEscrowContract(
+    const {
+        contract: escrowContract,
+        instance: escrowContractInstance,
+        secretKey 
+    } = await deployEscrowContract(
         wallet,
         sellerAddress,
         ethAddress,
@@ -70,7 +74,7 @@ const main = async () => {
     // update api to add order
     await createOrder(
         escrowContract.address,
-        escrowContract.instance,
+        escrowContractInstance,
         secretKey,
         eth.address,
         ETH_SWAP_AMOUNT,

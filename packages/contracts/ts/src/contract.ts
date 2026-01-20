@@ -77,7 +77,7 @@ export async function deployTokenContract(
     from: AztecAddress,
     tokenMetadata: { name: string; symbol: string; decimals: number },
     opts: { send: SendInteractionOptions, wait?: WaitOpts } = { send: { from } }
-): Promise<{ contract: TokenContract, instance: ContractInstanceWithAddress}> {
+): Promise<{ contract: TokenContract, instance: ContractInstanceWithAddress }> {
     // deploy contract
     const contractDeployment = await TokenContract.deployWithOpts(
         { wallet, method: "constructor_with_minter" },
@@ -89,7 +89,7 @@ export async function deployTokenContract(
     )
     const instance = await contractDeployment.getInstance();
     const contract = await contractDeployment.send(opts.send).deployed(opts.wait);
-    return { contract, instance};
+    return { contract, instance };
 }
 
 /**
@@ -230,13 +230,12 @@ export const getTokenContract = async (
     node: AztecNode,
     tokenAddress: AztecAddress,
 ): Promise<TokenContract> => {
-
     // get public contract instance
     const contractInstance = await node.getContract(tokenAddress);
     if (!contractInstance)
         throw new Error(`No instance for token contract at ${tokenAddress.toString()} found!`);
 
-    // register contract
+    // register contract in each included wallet
     await wallet.registerContract(contractInstance, TokenContractArtifact);
     // return synced token contract
     const token = await TokenContract.at(tokenAddress, wallet);
@@ -258,6 +257,7 @@ export const getEscrowContract = async (
         escrowSecretKey
     );
     await wallet.registerSender(escrowAddress);
+
     // return synced escrow contract
     const escrow = await OTCEscrowContract.at(escrowAddress, wallet);
     await escrow.methods.sync_private_state().simulate({ from });

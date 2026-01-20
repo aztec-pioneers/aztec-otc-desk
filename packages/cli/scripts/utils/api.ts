@@ -12,7 +12,7 @@ import {
 import type { OrderAPIResponse } from "./types";
 import { AztecAddress } from "@aztec/stdlib/aztec-address";
 import { Fr } from "@aztec/aztec.js/fields";
-import type { BaseWallet } from "@aztec/aztec.js/wallet";
+import type { Wallet } from "@aztec/aztec.js/wallet";
 
 /**
  * Fetch orders from the API
@@ -127,7 +127,7 @@ export const closeOrder = async (id: string, apiUrl: string) => {
 }
 
 export const escrowInstanceFromOrder = async (
-    wallet: BaseWallet,
+    wallet: Wallet,
     from: AztecAddress,
     order: Order,
 ): Promise<OTCEscrowContract> => {
