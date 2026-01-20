@@ -57,7 +57,7 @@ const main = async () => {
         USDC_SWAP_AMOUNT,
         opts
     );
-    console.log("Filled OTC order with txHash: ", txHash);
+    console.log("Filled OTC order with txHash: ", txHash.hash.toString());
 
     // remove the order from the OTC service so it isn't reused
     await closeOrder(orderToFill.orderId, API_URL);

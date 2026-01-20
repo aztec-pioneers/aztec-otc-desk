@@ -23,8 +23,8 @@
   },
   "scripts": {
     "postinstall": "bun run scripts/token.ts",
-    "sandbox": "bun run scripts/docker.ts sandbox api",
-    "testnet": "bun run scripts/docker.ts api"
+    "local": "bun run scripts/docker.ts local-network api",
+    "devnet": "bun run scripts/docker.ts api"
   },
   "config": {
     "aztecVersion": "3.0.0-devnet.6-patch.1",
