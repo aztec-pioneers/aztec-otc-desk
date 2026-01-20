@@ -6,7 +6,7 @@ inputs:
     description: 'Node.js version to use'
     required: false
     default: '22.20.0'
-  start-sandbox:
+  start-local-net:
     description: 'Whether to start the Aztec Sandbox'
     required: false
     default: 'false'
@@ -62,18 +62,26 @@ runs:
         VERSION=${{ steps.aztec-version.outputs.version }} aztec-up
       shell: bash
     
-    - name: Start Sandbox
-      if: inputs.start-sandbox == 'true' && inputs.start-api == 'false'
+    - name: Start Aztec local network
+      if: inputs.start-local-net == 'true' && inputs.start-api == 'false'
       run: |
-        bun run scripts/docker.ts sandbox &
+        bun run scripts/docker.ts local-network &
       shell: bash
     
-    - name: Start Sandbox and Orderflow API
-      if: inputs.start-sandbox == 'true' && inputs.start-api == 'true'
+    - name: Start Aztec local network and Orderflow API
+      if: inputs.start-local-net == 'true' && inputs.start-api == 'true'
       run: |
-        bun run sandbox &
+        bun run local &
       shell: bash
-    
+
+    - name: Wait for Aztec node to be healthy
+      if: inputs.start-local-net == 'true'
+      run: |
+        echo "Waiting for Aztec node to be ready..."
+        timeout 120 bash -c 'until curl -f http://localhost:8080/status > /dev/null 2>&1; do sleep 2; done'
+        echo "Aztec node is ready!"
+      shell: bash
+
     - name: Install project dependencies
       run: bun install
       shell: bash

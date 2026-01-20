@@ -15,7 +15,7 @@
     "test": "bun run test:nr && bun test",
     "test:nr": "aztec test",
     "deploy-token": "bun run ./scripts/deploy_token.ts",
-    "compile": "aztec-nargo compile && aztec-postprocess-contract",
+    "compile": "aztec compile",
     "codegen": "aztec codegen target --outdir ts/src/artifacts/escrow -f && rm ts/src/artifacts/escrow/Token.ts",
     "copy-artifacts": "bun run scripts/add_artifacts.ts",
     "build": "bun run compile && bun run codegen && bun run copy-artifacts"

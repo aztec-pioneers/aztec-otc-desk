@@ -13,7 +13,7 @@ if (!L2_NODE_URL) {
 
 // Get balances for users
 const main = async () => {
-    // Create PXE and FeeJuicePortalManager instances
+    // Create wallet connection, using same wallet for both accounts for simplicity
     const node = await createAztecNodeClient(L2_NODE_URL);
     const { wallet, sellerAddress, buyerAddress } = await getOTCAccounts(node);
 
@@ -26,34 +26,20 @@ const main = async () => {
 
     // check balances for seller
     const sellerETHBalance = await eth
-        .withWallet(wallet)
         .methods
         .balance_of_private(sellerAddress)
         .simulate({ from: sellerAddress });
     const sellerUSDCBalance = await usdc
-        .withWallet(wallet)
         .methods
         .balance_of_private(sellerAddress)
         .simulate({ from: sellerAddress });
     
-    // add tokens to buyer wallet
-    await wallet.registerContract(eth);
-    await eth
-        .withWallet(wallet)
-        .methods
-        .sync_private_state();
-    await wallet.registerContract(usdc);
-    await usdc
-        .withWallet(wallet)
-        .methods
-        .sync_private_state();
+    // check balances for buyer
     const buyerETHBalance = await eth
-        .withWallet(wallet)
         .methods
         .balance_of_private(buyerAddress)
         .simulate({ from: buyerAddress });
     const buyerUSDCBalance = await usdc
-        .withWallet(wallet)
         .methods
         .balance_of_private(buyerAddress)
         .simulate({ from: buyerAddress });
@@ -66,4 +52,4 @@ const main = async () => {
     console.log("==============================================");
 }
 
-main();
+main().then(() => process.exit(0));

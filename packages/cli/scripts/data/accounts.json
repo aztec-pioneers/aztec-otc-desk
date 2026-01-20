@@ -1,10 +1,10 @@
 {
   "seller": {
-    "secretKey": "0x04d5f9fb5fc358860bc375d7845db6188e6ab9a2cd1d73083010d1a05a4bb00d",
-    "salt": "0x2da6d9ede9ab4a8496b8717d7de4e45545cdca6cff7d3dfc0e5df0174fe09cf7"
+    "secretKey": "0x1ab07c5571aec692d4ea2dc7caabdb3dee60a8fd768de5c7a7b02212982570bd",
+    "salt": "0x1826748dcb6197b189323d07976426dcf36bb8e51cff166e377cc41b858831fb"
   },
   "buyer": {
-    "secretKey": "0x12517ddeaae823be7269061928c8a4469da46089ac22b5dd256efb7bb98cf90d",
-    "salt": "0x0ea0a139dcff9728e89f5c24114da5517df885eba3c666d25840f5c8a047b281"
+    "secretKey": "0x1d10b92a0a69f2cb8673ddd848b35c7d64bbcdbd7742ab53e902cc8492ed8c9f",
+    "salt": "0x2d811654ca982d4a052fd3446694c146285118e2b080192423fda387d9067f05"
   }
 }

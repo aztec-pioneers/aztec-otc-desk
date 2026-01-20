@@ -2,8 +2,8 @@ services:
   anvil:
     container_name: anvil-ethereum-node
     profiles:
-      - sandbox
-    image: aztecprotocol/aztec:3.0.0-devnet.2
+      - local-network
+    image: aztecprotocol/aztec:3.0.0-devnet.6-patch.1
     ports:
       - "8545:8545"
     entrypoint: ["/bin/bash", "-c"]
@@ -13,11 +13,11 @@ services:
     restart: unless-stopped
     networks:
       - aztec-network
-  aztec-sandbox-node:
-    container_name: aztec-sandbox-node
+  aztec-local-network-node:
+    container_name: aztec-local-network-node
     profiles:
-      - sandbox
-    image: aztecprotocol/aztec:3.0.0-devnet.2
+      - local-network
+    image: aztecprotocol/aztec:3.0.0-devnet.6-patch.1
     ports:
       - "8080:8080"
       - "40400:40400"
@@ -31,7 +31,7 @@ services:
     entrypoint: ["/bin/bash", "-c"]
     command:
       - |
-        node --no-warnings /usr/src/yarn-project/aztec/dest/bin/index.js start --sandbox
+        node --no-warnings /usr/src/yarn-project/aztec/dest/bin/index.js start --local-network
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/status"]
       interval: 10s

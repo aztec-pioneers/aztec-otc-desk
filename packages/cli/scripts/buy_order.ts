@@ -11,6 +11,8 @@ import {
     USDC_SWAP_AMOUNT
 } from "./utils";
 import { createAztecNodeClient } from "@aztec/aztec.js/node";
+import type { PXEConfig } from "@aztec/pxe/config";
+import { isTestnet } from "@aztec-otc-desk/contracts/utils";
 
 // get environment variables
 const { L2_NODE_URL, API_URL } = process.env;
@@ -29,9 +31,13 @@ const main = async () => {
     const orderToFill = orders[0]!;
     console.log("Found a matching order to fill");
 
-    // setup wallets
+    // get accounts
     const node = await createAztecNodeClient(L2_NODE_URL);
-    const { wallet, buyerAddress } = await getOTCAccounts(node);
+    let pxeConfig: Partial<PXEConfig> = {};
+    if (await isTestnet(node)) pxeConfig = { proverEnabled: true };
+
+    // get seller account
+    const { wallet, buyerAddress } = await getOTCAccounts(node, pxeConfig);
 
     // get USDC token
     const usdcAddress = AztecAddress.fromString(usdcDeployment.address);
@@ -57,10 +63,10 @@ const main = async () => {
         USDC_SWAP_AMOUNT,
         opts
     );
-    console.log("Filled OTC order with txHash: ", txHash);
+    console.log("Filled OTC order with txHash: ", txHash.hash.toString());
 
     // remove the order from the OTC service so it isn't reused
     await closeOrder(orderToFill.orderId, API_URL);
 }
 
-main();
+main().then(() => process.exit(0));

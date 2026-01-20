@@ -1,10 +1,7 @@
 use token_contract::Token;
 use aztec::{
     protocol_types::address::AztecAddress,
-    test::helpers::{
-        test_environment::TestEnvironment,
-        authwit::add_private_authwit_from_call_interface
-    }
+    test::helpers::{test_environment::TestEnvironment, authwit}
 };
 
 /**
@@ -47,7 +44,7 @@ pub unconstrained fn private_transfer_authwit(
 ) {
     let call_interface = Token::at(token_address)
         .transfer_private_to_private(from, caller, amount, nonce);
-    add_private_authwit_from_call_interface(
+    authwit::add_private_authwit_from_call(
         env,
         from,
         caller,

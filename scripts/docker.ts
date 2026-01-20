@@ -4,14 +4,9 @@ import { spawn } from 'child_process';
 
 const extraProfiles = process.argv.slice(2);  // Get additional args (e.g., 'orderflow')
 
-if (extraProfiles.includes("sandbox") && extraProfiles.includes("testnet")) {
-    console.error("Cannot use both 'sandbox' and 'testnet' profiles together.");
-    process.exit(1);
-}
-
 const cmd = ['docker', 'compose'];
 const usedProfiles = new Set<string>();
-const allowedProfiles = ['sandbox', 'testnet', 'api'];
+const allowedProfiles = ['testnet', 'api', 'local-network'];
 
 
 for (const profile of extraProfiles) {

@@ -21,7 +21,7 @@ const main = async () => {
 
     // get accounts
     let pxeConfig = {};
-    if (await isTestnet(node)) pxeConfig = { rollupVersion: 1667575857, proverEnabled: false };
+    if (await isTestnet(node)) pxeConfig = { proverEnabled: true };
     const { wallet, sellerAddress, buyerAddress } = await getOTCAccounts(node, pxeConfig);
 
     // get eth token
@@ -55,4 +55,4 @@ const main = async () => {
     console.log("50,000 USDC minted to buyer");
 }
 
-main();
+main().then(() => process.exit(0));

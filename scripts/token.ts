@@ -6,6 +6,7 @@ import { writeFile } from "fs/promises";
 import { readFile } from "fs/promises";
 import { mkdir, rm } from "fs/promises";
 import { join } from "path";
+import { config } from "../package.json" with { type: "json" };
 
 interface ScriptOptions {
   skipSubmodules: boolean;
@@ -29,7 +30,7 @@ function parseArgs(): ScriptOptions {
   return { skipSubmodules };
 }
 
-async function replaceInFile(filePath: string, searchText: string, replaceText: string): Promise<void> {
+async function replaceInFile(filePath: string, searchText: string, replaceText: string) {
   try {
     const content = await readFile(filePath, "utf-8");
     const updatedContent = content.replace(new RegExp(searchText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), replaceText);
@@ -40,7 +41,7 @@ async function replaceInFile(filePath: string, searchText: string, replaceText: 
   }
 }
 
-async function execCommand(command: string, args: string[] = [], cwd?: string): Promise<void> {
+async function execCommand(command: string, args: string[] = [], cwd?: string) {
   const proc = spawn({
     cmd: [command, ...args],
     cwd,
@@ -60,11 +61,11 @@ async function main() {
   try {
     if (!options.skipSubmodules) {
       console.log("Updating git submodules...");
-      await execCommand("git", ["submodule", "update", "--init", "--recursive"]);
+      await execCommand("git", ["submodule", "update", "--init", "--recursive", "--remote"]);
       console.log("Fetching tags in aztec-standards...");
       await execCommand("git", ["fetch", "--tags"], "deps/aztec-standards");
-      console.log("Checking out aztec-standards v3.0.0-devnet.2...");
-      await execCommand("git", ["checkout", "chore/v3-devnet.2"], "deps/aztec-standards");
+      console.log("Checking out aztec-standards...");
+      await execCommand("git", ["checkout", config.aztecStandardsVersion], "deps/aztec-standards");
     } else {
       console.log("Skipping submodule update, removing target directory...");
       const targetPath = "deps/aztec-standards/target";
@@ -74,10 +75,7 @@ async function main() {
     }
 
     console.log("Compiling token contract...");
-    await execCommand("aztec-nargo", ["compile", "--package", "token_contract"], "deps/aztec-standards");
-
-    console.log("Postprocessing contract...");
-    await execCommand("aztec-postprocess-contract");
+    await execCommand("aztec", ["compile", "--package", "token_contract"], "deps/aztec-standards");
 
     console.log("Generating TypeScript bindings...");
     await execCommand("aztec", [

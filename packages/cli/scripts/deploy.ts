@@ -16,7 +16,7 @@ const main = async () => {
 
 
     let pxeConfig = {};
-    if (await isTestnet(node)) pxeConfig = { rollupVersion: 1667575857, proverEnabled: false };
+    if (await isTestnet(node)) pxeConfig = { proverEnabled: true };
 
     // get accounts
     const { wallet, sellerAddress: deployerAddress } = await getOTCAccounts(node, pxeConfig);
@@ -25,7 +25,7 @@ const main = async () => {
     const opts = await getTestnetSendWaitOptions(node, wallet, deployerAddress);
     // deploy token contracts
     console.log("Deploying Wrapped Ether token contract");
-    const eth = await deployTokenContract(
+    const { contract: eth } = await deployTokenContract(
         wallet,
         deployerAddress,
         TOKEN_METADATA.eth,
@@ -34,7 +34,7 @@ const main = async () => {
     console.log("Ether token contract deployed, address: ", eth.address);
 
     console.log("Deploying USD Coin token contract");
-    const usdc = await deployTokenContract(
+    const { contract: usdc } = await deployTokenContract(
         wallet,
         deployerAddress,
         TOKEN_METADATA.usdc,
@@ -53,4 +53,4 @@ const main = async () => {
     console.log(`Deployments written to ${filepath}`);
 }
 
-main();
+main().then(() => process.exit(0));

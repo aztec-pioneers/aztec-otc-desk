@@ -3,16 +3,16 @@
   "workspaces": {
     "packages": ["packages/*"],
     "catalog": {
-      "@aztec/aztec.js": "3.0.0-devnet.2",
-      "@aztec/accounts": "3.0.0-devnet.2",
-      "@aztec/constants": "3.0.0-devnet.2",
-      "@aztec/entrypoints": "3.0.0-devnet.2",
-      "@aztec/ethereum": "3.0.0-devnet.2",
-      "@aztec/foundation": "3.0.0-devnet.2",
-      "@aztec/noir-contracts.js": "3.0.0-devnet.2",
-      "@aztec/pxe": "3.0.0-devnet.2",
-      "@aztec/stdlib": "3.0.0-devnet.2",
-      "@aztec/test-wallet": "3.0.0-devnet.2",
+      "@aztec/aztec.js": "3.0.0-devnet.6-patch.1",
+      "@aztec/accounts": "3.0.0-devnet.6-patch.1",
+      "@aztec/constants": "3.0.0-devnet.6-patch.1",
+      "@aztec/entrypoints": "3.0.0-devnet.6-patch.1",
+      "@aztec/ethereum": "3.0.0-devnet.6-patch.1",
+      "@aztec/foundation": "3.0.0-devnet.6-patch.1",
+      "@aztec/noir-contracts.js": "3.0.0-devnet.6-patch.1",
+      "@aztec/pxe": "3.0.0-devnet.6-patch.1",
+      "@aztec/stdlib": "3.0.0-devnet.6-patch.1",
+      "@aztec/test-wallet": "3.0.0-devnet.6-patch.1",
       "@jest/globals": "^30.0.5",
       "@types/bun": "latest",
       "@types/jest": "^30.0.0",
@@ -23,10 +23,11 @@
   },
   "scripts": {
     "postinstall": "bun run scripts/token.ts",
-    "sandbox": "bun run scripts/docker.ts sandbox api",
-    "testnet": "bun run scripts/docker.ts api"
+    "local": "bun run scripts/docker.ts local-network api",
+    "devnet": "bun run scripts/docker.ts api"
   },
   "config": {
-    "aztecVersion": "3.0.0-devnet.2"
+    "aztecVersion": "3.0.0-devnet.6-patch.1",
+    "aztecStandardsVersion": "dev"
   }
 }

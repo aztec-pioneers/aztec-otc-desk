@@ -7,8 +7,9 @@ import { L1FeeJuicePortalManager, type L2AmountClaim } from "@aztec/aztec.js/eth
 import { SponsoredFeePaymentMethod } from '@aztec/aztec.js/fee';
 import { Fr } from '@aztec/aztec.js/fields';
 import type { AztecNode } from '@aztec/aztec.js/node';
-import { AccountManager, BaseWallet } from '@aztec/aztec.js/wallet';
-import { createEthereumChain, createExtendedL1Client } from '@aztec/ethereum';
+import { AccountManager, type Wallet } from '@aztec/aztec.js/wallet';
+import { createEthereumChain } from '@aztec/ethereum/chain';
+import { createExtendedL1Client } from '@aztec/ethereum/client';
 import { createLogger } from '@aztec/foundation/log';
 import { SponsoredFPCContractArtifact } from '@aztec/noir-contracts.js/SponsoredFPC';
 import { GasSettings } from '@aztec/stdlib/gas';
@@ -16,7 +17,7 @@ import { deriveStorageSlotInMap } from '@aztec/stdlib/hash';
 import type { TestWallet } from '@aztec/test-wallet/server';
 import { wad } from './utils';
 
-export async function getSponsoredPaymentMethod(wallet: BaseWallet) {
+export async function getSponsoredPaymentMethod(wallet: Wallet) {
     const instance = await getContractInstanceFromInstantiationParams(
         SponsoredFPCContractArtifact,
         { salt: new Fr(0) },

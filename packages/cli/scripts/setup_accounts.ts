@@ -10,27 +10,20 @@ import { Fr } from "@aztec/aztec.js/fields";
 
 // get environment variables
 const {
-    MNEMONIC,
     L1_RPC_URL,
     L2_NODE_URL
 } = process.env;
-if (!MNEMONIC) {
-    throw new Error("MNEMONIC is not defined");
-}
-if (!L1_RPC_URL) {
-    throw new Error("L1_RPC_URL is not defined");
-}
-if (!L2_NODE_URL) {
-    throw new Error("L2_NODE_URL is not defined");
-}
+
+if (!L1_RPC_URL) throw new Error("L1_RPC_URL is not defined");
+if (!L2_NODE_URL) throw new Error("L2_NODE_URL is not defined");
+
 
 // Fund 2 accounts
 const main = async () => {
     // Create Node & PXE Config Options
     const node = createAztecNodeClient(L2_NODE_URL);
     let pxeConfig: Partial<PXEConfig> = {};
-    if (await isTestnet(node)) 
-        pxeConfig = { rollupVersion: 1667575857, proverEnabled: false };
+    if (await isTestnet(node)) pxeConfig = { proverEnabled: true };
 
     // deploy seller account
     const sellerWallet = await TestWallet.create(node, pxeConfig);
@@ -62,4 +55,4 @@ const main = async () => {
     console.log(`Account Setup complete!`);
 }
 
-main();
+main().then(() => process.exit(0));
