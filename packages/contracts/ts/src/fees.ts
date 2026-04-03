@@ -14,7 +14,7 @@ import { createLogger } from '@aztec/foundation/log';
 import { SponsoredFPCContractArtifact } from '@aztec/noir-contracts.js/SponsoredFPC';
 import { GasSettings } from '@aztec/stdlib/gas';
 import { deriveStorageSlotInMap } from '@aztec/stdlib/hash';
-import type { TestWallet } from '@aztec/test-wallet/server';
+import type { EmbeddedWallet } from '@aztec/wallets/embedded';
 import { wad } from './utils';
 
 export async function getSponsoredPaymentMethod(wallet: Wallet) {
@@ -78,7 +78,7 @@ export async function getPriorityFeeOptions(
  *      - claim: the claim to make once enough blocks have passed
  */
 export const setupAccountWithFeeClaim = async (
-    wallet: TestWallet,
+    wallet: EmbeddedWallet,
     feeJuicePortalManager: L1FeeJuicePortalManager,
     amount: bigint = wad(1000n)
 ): Promise<{

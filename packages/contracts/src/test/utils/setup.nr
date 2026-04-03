@@ -1,8 +1,10 @@
 
 use aztec::{
     oracle::random::random,
-    protocol_types::address::AztecAddress,
-    test::helpers::{test_environment::TestEnvironment, txe_oracles}
+    protocol::address::AztecAddress,
+    test::helpers::{
+        test_environment::{TestEnvironment, DeployOptions},
+    }
 };
 use token_contract::Token;
 use crate::OTCEscrow;
@@ -133,8 +135,7 @@ pub unconstrained fn deploy_token_contract(
             name,
             symbol,
             decimals,
-            owner,
-            AztecAddress::zero()
+            owner
         );
     env.deploy("Token")
         .with_public_initializer(owner, initializer_call_interface)
@@ -150,7 +151,6 @@ pub unconstrained fn deploy_escrow_contract(
 ) -> (AztecAddress, Field) {
     // setup keys for escrow account
     let escrow_secret = unsafe { random() };
-    let _ = txe_oracles::add_account(escrow_secret);
 
     // deploy escrow contract
     let initializer_call_interface = OTCEscrow::interface()
@@ -160,19 +160,9 @@ pub unconstrained fn deploy_escrow_contract(
             buy_token_address,
             buy_token_amount
         );
-     // deploy escrow contract
-    let initializer_call_interface = OTCEscrow::interface()
-        .constructor(
-            sell_token_address,
-            sell_token_amount,
-            buy_token_address,
-            buy_token_amount
-        );
-    let mut contract_instance = env.deploy("OTCEscrow");
-
-    contract_instance.secret = escrow_secret;
-        
-    let contract_address = contract_instance.with_private_initializer(owner, initializer_call_interface);
+    let opts = DeployOptions::new().with_secret(escrow_secret);
+    let contract_address = env.deploy_opts(opts, "OTCEscrow")
+        .with_private_initializer(owner, initializer_call_interface);
 
     (contract_address, escrow_secret)
 }
