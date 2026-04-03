@@ -1,7 +1,7 @@
 import "dotenv/config";
 import { writeFileSync } from "fs";
 import { createAztecNodeClient } from "@aztec/aztec.js/node";
-import { TestWallet } from "@aztec/test-wallet/server";
+import { EmbeddedWallet } from "@aztec/wallets/embedded";
 import { getTestnetSendWaitOptions, waitForBlock } from "./utils";
 import { isTestnet } from "@aztec-otc-desk/contracts/utils";
 import { AztecAddress } from "@aztec/aztec.js/addresses";
@@ -26,7 +26,7 @@ const main = async () => {
     if (await isTestnet(node)) pxeConfig = { proverEnabled: true };
 
     // deploy seller account
-    const sellerWallet = await TestWallet.create(node, pxeConfig);
+    const sellerWallet = await EmbeddedWallet.create(node, { pxeConfig });
     const sellerSecret = Fr.random();
     const sellerSalt = Fr.random();
     const sellerManager = await sellerWallet.createSchnorrAccount(sellerSecret, sellerSalt);
@@ -35,7 +35,7 @@ const main = async () => {
         .then(deployMethod => deployMethod.send(sellerOpts.send).wait(sellerOpts.wait));
     
     // deploy buyer account
-    const buyerWallet = await TestWallet.create(node, pxeConfig);
+    const buyerWallet = await EmbeddedWallet.create(node, { pxeConfig });
     const buyerSecret = Fr.random();
     const buyerSalt = Fr.random();
     const buyerManager = await buyerWallet.createSchnorrAccount(buyerSecret, buyerSalt);

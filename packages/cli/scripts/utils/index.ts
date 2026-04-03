@@ -1,4 +1,4 @@
-import { TestWallet } from "@aztec/test-wallet/server";
+import { EmbeddedWallet } from "@aztec/wallets/embedded";
 import { getInitialTestAccountsData } from "@aztec/accounts/testing";
 import { isTestnet, wad } from "@aztec-otc-desk/contracts/utils";
 import { getPriorityFeeOptions, getSponsoredPaymentMethod } from "@aztec-otc-desk/contracts/fees";
@@ -26,7 +26,7 @@ export const testnetInterval = 3; // seconds between polling for tx
  */
 export const getTestnetSendWaitOptions = async (
     node: AztecNode,
-    wallet: TestWallet,
+    wallet: EmbeddedWallet,
     from: AztecAddress,
     withFPC: boolean = true,
 ): Promise<{
@@ -51,12 +51,12 @@ export const getOTCAccounts = async (
     node: AztecNode,
     pxeConfig: Partial<PXEConfig> = {}
 ): Promise<{
-    wallet: TestWallet,
+    wallet: EmbeddedWallet,
     sellerAddress: AztecAddress,
     buyerAddress: AztecAddress,
 }> => {
     // check if testnet
-    let wallet = await TestWallet.create(node, pxeConfig);
+    let wallet = await EmbeddedWallet.create(node, { pxeConfig });
     let sellerAddress: AztecAddress;
     let buyerAddress: AztecAddress;
     if (await isTestnet(node)) {
@@ -69,10 +69,8 @@ export const getOTCAccounts = async (
         if (!sellerAccount) throw new Error("Seller/ Minter not found");
         if (!buyerAccount) throw new Error("Buyer not found");
         // create accounts
-        await wallet.createSchnorrAccount(sellerAccount.secret, sellerAccount.salt);
-        sellerAddress = sellerAccount.address;
-        await wallet.createSchnorrAccount(buyerAccount.secret, buyerAccount.salt);
-        buyerAddress = buyerAccount.address;
+        sellerAddress = (await wallet.createSchnorrAccount(sellerAccount.secret, sellerAccount.salt, sellerAccount.signingKey)).address;
+        buyerAddress = (await wallet.createSchnorrAccount(buyerAccount.secret, buyerAccount.salt, buyerAccount.signingKey)).address;
     }
     // register accounts to eachother
     await wallet.registerSender(buyerAddress);
@@ -82,7 +80,7 @@ export const getOTCAccounts = async (
 
 export const getAccountFromFs = async (
     accountType: "seller" | "buyer",
-    wallet: TestWallet
+    wallet: EmbeddedWallet
 ): Promise<AztecAddress> => {
     // reinstantiate the account
     const accountSecret = accounts[accountType];

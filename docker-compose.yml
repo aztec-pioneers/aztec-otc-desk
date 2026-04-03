@@ -3,7 +3,7 @@ services:
     container_name: anvil-ethereum-node
     profiles:
       - local-network
-    image: aztecprotocol/aztec:3.0.0-devnet.6-patch.1
+    image: aztecprotocol/aztec:4.2.0-aztecnr-rc.2
     ports:
       - "8545:8545"
     entrypoint: ["/bin/bash", "-c"]
@@ -17,7 +17,7 @@ services:
     container_name: aztec-local-network-node
     profiles:
       - local-network
-    image: aztecprotocol/aztec:3.0.0-devnet.6-patch.1
+    image: aztecprotocol/aztec:4.2.0-aztecnr-rc.2
     ports:
       - "8080:8080"
       - "40400:40400"

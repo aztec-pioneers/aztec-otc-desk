@@ -117,7 +117,7 @@ describe("Private Transfer Demo Test", () => {
         ));
 
         // Check seller Escrow
-        const sellerConfig = await getEscrowConfig(sellerWallet, sellerAddress, escrow);
+        const sellerConfig = await getEscrowConfig(sellerWallet, escrow);
         expect(sellerConfig.owner).toEqual(escrow.address);
         expect(sellerConfig.sell_token_address).toEqual(usdc.address);
         expect(sellerConfig.sell_token_amount).toEqual(sellTokenAmount);
@@ -129,15 +129,15 @@ describe("Private Transfer Demo Test", () => {
         await buyerWallet.registerContract(escrowInstance, OTCEscrowContractArtifact);
 
         // check if maker note exists
-        expect(async () => { await getEscrowConfig(buyerWallet, buyerAddress, escrow)}).toThrow()
+        expect(async () => { await getEscrowConfig(buyerWallet, escrow)}).toThrow()
 
         // add account to buyer pxe
         await buyerWallet.registerContract(escrowInstance, OTCEscrowContractArtifact, escrowMasterKey);
-        const buyerConfig = await getEscrowConfig(buyerWallet, buyerAddress, escrow)
+        const buyerConfig = await getEscrowConfig(buyerWallet, escrow)
         expect(buyerConfig.owner).not.toEqual(0n);
     });
 
-    test.skip("e2e", async () => {
+    test("e2e", async () => {
         // deploy new escrow instance
         ({
             contract: escrow,

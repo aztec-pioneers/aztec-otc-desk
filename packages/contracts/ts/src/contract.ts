@@ -106,7 +106,7 @@ export async function depositToEscrow(
     escrow: OTCEscrowContract,
     token: TokenContract,
     amount: bigint,
-    opts: { send: SendInteractionOptions } = { send: { from } }
+    opts: { send: SendInteractionOptions } = { send: { from, additionalScopes: [escrow.address] } }
 ): Promise<TxHash> {
     escrow = escrow.withWallet(wallet);
     // create authwit
@@ -142,7 +142,7 @@ export async function fillOTCOrder(
     escrow: OTCEscrowContract,
     token: TokenContract,
     amount: bigint,
-    opts: { send: SendInteractionOptions } = { send: { from } }
+    opts: { send: SendInteractionOptions } = { send: { from, additionalScopes: [escrow.address] } }
 ): Promise<TxHash> {
     escrow = escrow.withWallet(wallet);
     // create authwit
@@ -186,18 +186,14 @@ export async function getPrivateTransferAuthwit(
 
 export async function getEscrowConfig(
     wallet: Wallet,
-    from: AztecAddress,
     escrow: OTCEscrowContract,
 ): Promise<EscrowConfig> {
-    // Workaround: .simulate() drops additionalScopes for utility functions
-    // (aztec-packages bug). Call executeUtility directly with correct scopes.
-    // https://github.com/AztecProtocol/aztec-packages/issues/22298
-    const interaction = escrow.withWallet(wallet).methods.get_config();
-    const call = await interaction.getFunctionCall();
-    const utilityResult = await wallet.executeUtility(call, {
-        scopes: [from, escrow.address],
-    });
-    return decodeFromAbi(call.returnTypes, utilityResult.result) as EscrowConfig;
+    const { result } = await escrow
+        .withWallet(wallet)
+        .methods
+        .get_config()
+        .simulate({ from: escrow.address });
+    return result;
 }
 
 /**

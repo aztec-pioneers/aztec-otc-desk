@@ -11,7 +11,7 @@
       "@aztec/ethereum": "catalog:",
       "@aztec/noir-contracts.js": "catalog:",
       "@aztec/pxe": "catalog:",
-      "@aztec/test-wallet": "catalog:",
+      "@aztec/wallets": "catalog:",
       "@aztec/stdlib": "catalog:",
       "@aztec-otc-desk/contracts": "workspace:*",
       "dotenv": "catalog:"
