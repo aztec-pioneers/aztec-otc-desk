@@ -82,7 +82,7 @@ runs:
       if: inputs.start-local-net == 'true'
       run: |
         echo "Waiting for Aztec node to be ready..."
-        timeout 120 bash -c 'until curl -f http://localhost:8080/status > /dev/null 2>&1; do sleep 2; done'
+        timeout 300 bash -c 'until curl -f http://localhost:8080/status > /dev/null 2>&1; do sleep 2; done'
         echo "Aztec node is ready!"
       shell: bash
 
