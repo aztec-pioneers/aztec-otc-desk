@@ -49,7 +49,7 @@ runs:
 
     - name: Install Aztec CLI
       run: |
-        curl -s https://install.aztec.network | bash
+        curl -sL https://install.aztec.network | bash
       shell: bash
 
     - name: Update path for Aztec
