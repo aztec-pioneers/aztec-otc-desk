@@ -56,6 +56,13 @@ runs:
       run: echo "$HOME/.aztec/bin" >> $GITHUB_PATH
       shell: bash
 
+    - name: Install Foundry
+      run: |
+        curl -L https://foundry.paradigm.xyz | bash
+        echo "$HOME/.foundry/bin" >> $GITHUB_PATH
+        $HOME/.foundry/bin/foundryup
+      shell: bash
+
     - name: Install Aztec version
       run: |
         aztec-up install ${{ steps.aztec-version.outputs.version }}
