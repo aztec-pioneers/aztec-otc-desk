@@ -48,12 +48,7 @@ runs:
       shell: bash
 
     - name: Install Foundry
-      run: |
-        curl -L https://foundry.paradigm.xyz -o /tmp/foundry-install.sh
-        bash /tmp/foundry-install.sh
-        echo "$HOME/.foundry/bin" >> $GITHUB_PATH
-        $HOME/.foundry/bin/foundryup
-      shell: bash
+      uses: foundry-rs/foundry-toolchain@v1
 
     - name: Install Aztec CLI
       run: |
