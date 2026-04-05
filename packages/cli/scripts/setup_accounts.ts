@@ -4,17 +4,12 @@ import { createAztecNodeClient } from "@aztec/aztec.js/node";
 import { EmbeddedWallet } from "@aztec/wallets/embedded";
 import { getTestnetSendWaitOptions, waitForBlock } from "./utils";
 import { isTestnet } from "@aztec-otc-desk/contracts/utils";
-import { AztecAddress } from "@aztec/aztec.js/addresses";
 import type { PXEConfig } from "@aztec/pxe/config";
 import { Fr } from "@aztec/aztec.js/fields";
 
 // get environment variables
-const {
-    L1_RPC_URL,
-    L2_NODE_URL
-} = process.env;
+const { L2_NODE_URL } = process.env;
 
-if (!L1_RPC_URL) throw new Error("L1_RPC_URL is not defined");
 if (!L2_NODE_URL) throw new Error("L2_NODE_URL is not defined");
 
 
@@ -30,7 +25,7 @@ const main = async () => {
     const sellerSecret = Fr.random();
     const sellerSalt = Fr.random();
     const sellerManager = await sellerWallet.createSchnorrAccount(sellerSecret, sellerSalt);
-    const sellerOpts = await getTestnetSendWaitOptions(node, sellerWallet, AztecAddress.ZERO);
+    const sellerOpts = await getTestnetSendWaitOptions(node, sellerWallet, sellerManager.address);
     await sellerManager.getDeployMethod()
         .then(deployMethod => deployMethod.send(sellerOpts.send));
     
@@ -39,7 +34,7 @@ const main = async () => {
     const buyerSecret = Fr.random();
     const buyerSalt = Fr.random();
     const buyerManager = await buyerWallet.createSchnorrAccount(buyerSecret, buyerSalt);
-    const buyerOpts = await getTestnetSendWaitOptions(node, buyerWallet, AztecAddress.ZERO);
+    const buyerOpts = await getTestnetSendWaitOptions(node, buyerWallet, buyerManager.address);
     await buyerManager.getDeployMethod()
         .then(deployMethod => deployMethod.send(buyerOpts.send));
 

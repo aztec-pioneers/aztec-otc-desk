@@ -36,7 +36,9 @@ export const getTestnetSendWaitOptions = async (
     if (await isTestnet(node)) {
         let fee = await getPriorityFeeOptions(node, testnetPriorityFee);
         if (withFPC) {
-            const paymentMethod = await getSponsoredPaymentMethod(wallet);
+            const { SPONSORED_FPC_ADDRESS } = process.env;
+            if (!SPONSORED_FPC_ADDRESS) throw new Error("SPONSORED_FPC_ADDRESS is not defined");
+            const paymentMethod = await getSponsoredPaymentMethod(node, wallet, AztecAddress.fromString(SPONSORED_FPC_ADDRESS));
             fee = { ...fee, paymentMethod };
         }
         send = { ...send, fee, wait: { timeout: testnetTimeout, interval: testnetInterval } };
