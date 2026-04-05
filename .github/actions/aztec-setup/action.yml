@@ -49,8 +49,8 @@ runs:
 
     - name: Install Foundry
       run: |
-        curl -L https://foundry.paradigm.xyz | bash
-        source $HOME/.bashrc || true
+        curl -L https://foundry.paradigm.xyz -o /tmp/foundry-install.sh
+        bash /tmp/foundry-install.sh
         echo "$HOME/.foundry/bin" >> $GITHUB_PATH
         $HOME/.foundry/bin/foundryup
       shell: bash
