@@ -49,17 +49,16 @@ runs:
 
     - name: Install Aztec CLI
       run: |
-        curl -s https://install.aztec.network > tmp.sh
-        bash tmp.sh <<< yes "yes"
+        curl -s https://install.aztec.network | bash
       shell: bash
 
     - name: Update path for Aztec
-      run: echo "/home/runner/.aztec/bin" >> $GITHUB_PATH
+      run: echo "$HOME/.aztec/bin" >> $GITHUB_PATH
       shell: bash
 
-    - name: Set Aztec version
+    - name: Install Aztec version
       run: |
-        VERSION=${{ steps.aztec-version.outputs.version }} aztec-up
+        aztec-up install ${{ steps.aztec-version.outputs.version }}
       shell: bash
     
     - name: Start Aztec local network
