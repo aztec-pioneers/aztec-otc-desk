@@ -1,6 +1,7 @@
 import { AztecAddress } from "@aztec/aztec.js/addresses";
 import type {
     ContractInstanceWithAddress,
+    InteractionWaitOptions,
     SendInteractionOptions,
     SimulateInteractionOptions,
 } from "@aztec/aztec.js/contracts";
@@ -41,7 +42,7 @@ export async function deployEscrowContract(
     sellTokenAmount: bigint,
     buyTokenAddress: AztecAddress,
     buyTokenAmount: bigint,
-    opts: { send: SendInteractionOptions } = { send: { from } }
+    opts: { send: SendInteractionOptions<InteractionWaitOptions> } = { send: { from } }
 ): Promise<{ contract: OTCEscrowContract, instance: ContractInstanceWithAddress, secretKey: Fr }> {
     // get keys for contract
     const secretKey = Fr.random();
@@ -75,7 +76,7 @@ export async function deployTokenContract(
     wallet: Wallet,
     from: AztecAddress,
     tokenMetadata: { name: string; symbol: string; decimals: number },
-    opts: { send: SendInteractionOptions } = { send: { from } }
+    opts: { send: SendInteractionOptions<InteractionWaitOptions> } = { send: { from } }
 ): Promise<{ contract: TokenContract, instance: ContractInstanceWithAddress }> {
     // deploy contract
     const contractDeployment = await TokenContract.deployWithOpts(
@@ -106,7 +107,7 @@ export async function depositToEscrow(
     escrow: OTCEscrowContract,
     token: TokenContract,
     amount: bigint,
-    opts: { send: SendInteractionOptions } = { send: { from, additionalScopes: [escrow.address] } }
+    opts: { send: SendInteractionOptions<InteractionWaitOptions> } = { send: { from, additionalScopes: [escrow.address] } }
 ): Promise<TxHash> {
     escrow = escrow.withWallet(wallet);
     // create authwit
@@ -142,7 +143,7 @@ export async function fillOTCOrder(
     escrow: OTCEscrowContract,
     token: TokenContract,
     amount: bigint,
-    opts: { send: SendInteractionOptions } = { send: { from, additionalScopes: [escrow.address] } }
+    opts: { send: SendInteractionOptions<InteractionWaitOptions> } = { send: { from, additionalScopes: [escrow.address] } }
 ): Promise<TxHash> {
     escrow = escrow.withWallet(wallet);
     // create authwit

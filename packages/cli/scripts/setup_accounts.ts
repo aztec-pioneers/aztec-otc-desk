@@ -32,7 +32,7 @@ const main = async () => {
     const sellerManager = await sellerWallet.createSchnorrAccount(sellerSecret, sellerSalt);
     const sellerOpts = await getTestnetSendWaitOptions(node, sellerWallet, AztecAddress.ZERO);
     await sellerManager.getDeployMethod()
-        .then(deployMethod => deployMethod.send(sellerOpts.send).wait(sellerOpts.wait));
+        .then(deployMethod => deployMethod.send(sellerOpts.send));
     
     // deploy buyer account
     const buyerWallet = await EmbeddedWallet.create(node, { pxeConfig });
@@ -41,7 +41,7 @@ const main = async () => {
     const buyerManager = await buyerWallet.createSchnorrAccount(buyerSecret, buyerSalt);
     const buyerOpts = await getTestnetSendWaitOptions(node, buyerWallet, AztecAddress.ZERO);
     await buyerManager.getDeployMethod()
-        .then(deployMethod => deployMethod.send(buyerOpts.send).wait(buyerOpts.wait));
+        .then(deployMethod => deployMethod.send(buyerOpts.send));
 
     // save the accounts to fs
     const accountData = {

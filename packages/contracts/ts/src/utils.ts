@@ -1,7 +1,9 @@
 import type { AztecNode } from "@aztec/aztec.js/node";
 
-export const precision = (n: bigint = 1n, decimals: bigint = 18n) =>
+export const wad = (n: bigint = 1n, decimals: bigint = 18n) =>
     n * 10n ** decimals;
+
+export const precision = wad;
 
 
 export const isTestnet = async (node: AztecNode): Promise<boolean> => {

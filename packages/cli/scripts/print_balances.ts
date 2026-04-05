@@ -25,21 +25,21 @@ const main = async () => {
     const usdc = await getTokenContract(wallet, sellerAddress, node, usdcAddress);
 
     // check balances for seller
-    const sellerETHBalance = await eth
+    const { result: sellerETHBalance } = await eth
         .methods
         .balance_of_private(sellerAddress)
         .simulate({ from: sellerAddress });
-    const sellerUSDCBalance = await usdc
+    const { result: sellerUSDCBalance } = await usdc
         .methods
         .balance_of_private(sellerAddress)
         .simulate({ from: sellerAddress });
-    
+
     // check balances for buyer
-    const buyerETHBalance = await eth
+    const { result: buyerETHBalance } = await eth
         .methods
         .balance_of_private(buyerAddress)
         .simulate({ from: buyerAddress });
-    const buyerUSDCBalance = await usdc
+    const { result: buyerUSDCBalance } = await usdc
         .methods
         .balance_of_private(buyerAddress)
         .simulate({ from: buyerAddress });

@@ -1,9 +1,11 @@
 
 use aztec::{
+    context::PrivateCall,
     oracle::random::random,
     protocol::address::AztecAddress,
     test::helpers::{
-        test_environment::{TestEnvironment, DeployOptions},
+        test_environment::TestEnvironment,
+        txe_oracles,
     }
 };
 use token_contract::Token;
@@ -137,13 +139,13 @@ pub unconstrained fn deploy_token_contract(
             decimals,
             owner
         );
-    env.deploy("Token")
+    env.deploy("@token_contract/Token")
         .with_public_initializer(owner, initializer_call_interface)
 }
 
 pub unconstrained fn deploy_escrow_contract(
     env: &mut TestEnvironment,
-    owner: AztecAddress,
+    _owner: AztecAddress,
     sell_token_address: AztecAddress,
     sell_token_amount: u128,
     buy_token_address: AztecAddress,
@@ -153,16 +155,34 @@ pub unconstrained fn deploy_escrow_contract(
     let escrow_secret = unsafe { random() };
 
     // deploy escrow contract
-    let initializer_call_interface = OTCEscrow::interface()
+    // The TXE sets key validation scopes=[from]. SinglePrivateImmutable::initialize calls
+    // request_nhk_app for the contract's own keys. We deploy manually and call the initializer
+    // from the escrow's own address so that scopes=[escrow] includes the escrow's keys.
+    let initializer_call = OTCEscrow::interface()
         .constructor(
             sell_token_address,
             sell_token_amount,
             buy_token_address,
             buy_token_amount
         );
-    let opts = DeployOptions::new().with_secret(escrow_secret);
-    let contract_address = env.deploy_opts(opts, "OTCEscrow")
-        .with_private_initializer(owner, initializer_call_interface);
+    let instance = txe_oracles::deploy(
+        "OTCEscrow",
+        initializer_call.name,
+        initializer_call.args,
+        escrow_secret,
+        0, // salt
+        AztecAddress::zero(), // deployer
+    );
+    let contract_address = instance.to_address();
+    env.call_private(
+        contract_address,
+        PrivateCall::new(
+            contract_address,
+            initializer_call.selector,
+            initializer_call.name,
+            initializer_call.args
+        )
+    );
 
     (contract_address, escrow_secret)
 }

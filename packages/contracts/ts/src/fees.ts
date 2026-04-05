@@ -63,8 +63,7 @@ export async function getPriorityFeeOptions(
     node: AztecNode,
     feeMultiplier: bigint
 ): Promise<InteractionFeeOptions> {
-    const maxFeesPerGas = await node.getCurrentBaseFees()
-        .then(res => res.mul(feeMultiplier));
+    const maxFeesPerGas = (await node.getCurrentMinFees()).mul(feeMultiplier);
     return { gasSettings: GasSettings.default({ maxFeesPerGas }) };
 }
 

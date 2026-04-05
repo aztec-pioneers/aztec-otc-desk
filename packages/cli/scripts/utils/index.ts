@@ -22,7 +22,7 @@ export const testnetInterval = 3; // seconds between polling for tx
  * In high fee environments (testnet) get send and wait options
  * @param pxe - the PXE to execute with
  * @param withFPC - if true, use sponsored FPC
- * @returns send/ wait options optimized for testnet
+ * @returns send options optimized for testnet
  */
 export const getTestnetSendWaitOptions = async (
     node: AztecNode,
@@ -30,21 +30,18 @@ export const getTestnetSendWaitOptions = async (
     from: AztecAddress,
     withFPC: boolean = true,
 ): Promise<{
-    send: SendInteractionOptions,
-    wait: WaitOpts
+    send: SendInteractionOptions<WaitOpts>,
 }> => {
-    let send: SendInteractionOptions = { from };
-    let wait: WaitOpts = {};
+    let send: SendInteractionOptions<WaitOpts> = { from };
     if (await isTestnet(node)) {
         let fee = await getPriorityFeeOptions(node, testnetPriorityFee);
         if (withFPC) {
             const paymentMethod = await getSponsoredPaymentMethod(wallet);
             fee = { ...fee, paymentMethod };
         }
-        send = { ...send, fee };
-        wait = { timeout: testnetTimeout, interval: testnetInterval };
+        send = { ...send, fee, wait: { timeout: testnetTimeout, interval: testnetInterval } };
     }
-    return { send, wait };
+    return { send };
 }
 
 export const getOTCAccounts = async (
@@ -73,8 +70,8 @@ export const getOTCAccounts = async (
         buyerAddress = (await wallet.createSchnorrAccount(buyerAccount.secret, buyerAccount.salt, buyerAccount.signingKey)).address;
     }
     // register accounts to eachother
-    await wallet.registerSender(buyerAddress);
-    await wallet.registerSender(sellerAddress);
+    await wallet.registerSender(buyerAddress, "buyer");
+    await wallet.registerSender(sellerAddress, "seller");
     return { wallet, sellerAddress, buyerAddress };
 }
 
