@@ -66,6 +66,8 @@ const main = async () => {
 
     console.log(`Escrow contract deployed, address: ${escrowContract.address}, secret key: ${secretKey}`);
 
+    // add escrow to scopes so seller can read escrow's config note
+    const depositOpts = { send: { ...opts.send, additionalScopes: [escrowContract.address] } };
     console.log("Depositing eth to escrow");
     const receipt = await depositToEscrow(
         wallet,
@@ -73,7 +75,7 @@ const main = async () => {
         escrowContract,
         eth,
         ETH_SWAP_AMOUNT,
-        opts
+        depositOpts
     );
     console.log("1 ETH deposited to escrow, transaction hash: ", receipt.hash);
 

@@ -4,7 +4,7 @@ import { getInitialTestAccountsData } from '@aztec/accounts/testing';
 import { AztecAddress } from '@aztec/aztec.js/addresses';
 import { Fr } from '@aztec/aztec.js/fields';
 import { createAztecNodeClient, type AztecNode } from "@aztec/aztec.js/node";
-import { TestWallet } from '@aztec/test-wallet/server';
+import { EmbeddedWallet } from '@aztec/wallets/embedded';
 import { OTCEscrowContract, OTCEscrowContractArtifact, TokenContract, TokenContractArtifact } from "@aztec-otc-desk/contracts/artifacts";
 import { TOKEN_METADATA } from "@aztec-otc-desk/contracts/constants";
 import {
@@ -15,7 +15,7 @@ import {
     fillOTCOrder,
     getEscrowConfig
 } from "@aztec-otc-desk/contracts/contract";
-import { wad } from "@aztec-otc-desk/contracts/utils";
+import { precision } from "@aztec-otc-desk/contracts/utils";
 import type { ContractInstanceWithAddress } from "@aztec/stdlib/contract";
 import { sleep } from "bun";
 
@@ -25,9 +25,9 @@ describe("Private Transfer Demo Test", () => {
 
     let node: AztecNode;
 
-    let minterWallet: TestWallet;
-    let sellerWallet: TestWallet;
-    let buyerWallet: TestWallet;
+    let minterWallet: EmbeddedWallet;
+    let sellerWallet: EmbeddedWallet;
+    let buyerWallet: EmbeddedWallet;
 
     let minterAddress: AztecAddress;
     let sellerAddress: AztecAddress;
@@ -42,10 +42,10 @@ describe("Private Transfer Demo Test", () => {
     let usdcInstance: ContractInstanceWithAddress;
     let ethInstance: ContractInstanceWithAddress;
 
-    const sellTokenAmount = wad(1000n, 6n);
-    const buyTokenAmount = wad(1n);
-    const sellerUSDCInitialBalance = wad(10000n, 6n);
-    const buyerETHInitialBalance = wad(4n);
+    const sellTokenAmount = precision(1000n, 6n);
+    const buyTokenAmount = precision(1n);
+    const sellerUSDCInitialBalance = precision(10000n, 6n);
+    const buyerETHInitialBalance = precision(4n);
 
     before(async () => {
         // setup aztec node client
@@ -53,27 +53,24 @@ describe("Private Transfer Demo Test", () => {
         console.log(`Connected to Aztec node at "${AZTEC_NODE_URL}"`);
 
         // setup wallets
-        minterWallet = await TestWallet.create(node);
-        sellerWallet = await TestWallet.create(node);
-        buyerWallet = await TestWallet.create(node);
+        minterWallet = await EmbeddedWallet.create(node, { ephemeral: true, pxeConfig: { proverEnabled: false } });
+        sellerWallet = await EmbeddedWallet.create(node, { ephemeral: true, pxeConfig: { proverEnabled: false } });
+        buyerWallet = await EmbeddedWallet.create(node, { ephemeral: true, pxeConfig: { proverEnabled: false } });
         const [minterAccount, buyerAccount, sellerAccount] = await getInitialTestAccountsData();
 
-        await minterWallet.createSchnorrAccount(minterAccount.secret, minterAccount.salt);
-        minterAddress = await minterWallet.getAccounts().then(accounts => accounts[0].item);
-        await sellerWallet.createSchnorrAccount(sellerAccount.secret, sellerAccount.salt);
-        sellerAddress = await sellerWallet.getAccounts().then(accounts => accounts[0].item);
-        await buyerWallet.createSchnorrAccount(buyerAccount.secret, buyerAccount.salt);
-        buyerAddress = await buyerWallet.getAccounts().then(accounts => accounts[0].item);
+        minterAddress = (await minterWallet.createSchnorrAccount(minterAccount.secret, minterAccount.salt, minterAccount.signingKey)).address;
+        sellerAddress = (await sellerWallet.createSchnorrAccount(sellerAccount.secret, sellerAccount.salt, sellerAccount.signingKey)).address;
+        buyerAddress = (await buyerWallet.createSchnorrAccount(buyerAccount.secret, buyerAccount.salt, buyerAccount.signingKey)).address;
 
         // connect accounts to eachother
-        await minterWallet.registerSender(sellerAddress);
-        await minterWallet.registerSender(buyerAddress);
-        await sellerWallet.registerSender(minterAddress);
-        await sellerWallet.registerSender(buyerAddress);
-        await buyerWallet.registerSender(minterAddress);
-        await buyerWallet.registerSender(sellerAddress);
+        await minterWallet.registerSender(sellerAddress, "seller");
+        await minterWallet.registerSender(buyerAddress, "buyer");
+        await sellerWallet.registerSender(minterAddress, "minter");
+        await sellerWallet.registerSender(buyerAddress, "buyer");
+        await buyerWallet.registerSender(minterAddress, "minter");
+        await buyerWallet.registerSender(sellerAddress, "seller");
 
-        // deploy token contracts
+        // // deploy token contracts
         ({
             contract: usdc, instance: usdcInstance
         } = await deployTokenContract(minterWallet, minterAddress, TOKEN_METADATA.usdc));
@@ -92,18 +89,16 @@ describe("Private Transfer Demo Test", () => {
             .withWallet(minterWallet)
             .methods.mint_to_private(
                 buyerAddress,
-                wad(4n, 18n)
+                precision(4n, 18n)
             )
-            .send({ from: minterAddress })
-            .wait();
+            .send({ from: minterAddress });
         await usdc
             .withWallet(minterWallet)
             .methods.mint_to_private(
                 sellerAddress,
-                wad(10000n, 6n)
+                precision(10000n, 6n)
             )
-            .send({ from: minterAddress })
-            .wait();
+            .send({ from: minterAddress });
     });
 
     test("check escrow key leaking", async () => {
@@ -122,7 +117,7 @@ describe("Private Transfer Demo Test", () => {
         ));
 
         // Check seller Escrow
-        const sellerConfig = await getEscrowConfig(sellerWallet, sellerAddress, escrow);
+        const sellerConfig = await getEscrowConfig(sellerWallet, escrow);
         expect(sellerConfig.owner).toEqual(escrow.address);
         expect(sellerConfig.sell_token_address).toEqual(usdc.address);
         expect(sellerConfig.sell_token_amount).toEqual(sellTokenAmount);
@@ -134,25 +129,12 @@ describe("Private Transfer Demo Test", () => {
         await buyerWallet.registerContract(escrowInstance, OTCEscrowContractArtifact);
 
         // check if maker note exists
-        expect(async () => {
-            await escrow
-                .withWallet(buyerWallet)
-                .methods.get_config()
-                .simulate({ from: buyerAddress });
-        }).toThrow()
+        expect(async () => { await getEscrowConfig(buyerWallet, escrow)}).toThrow()
 
         // add account to buyer pxe
         await buyerWallet.registerContract(escrowInstance, OTCEscrowContractArtifact, escrowMasterKey);
-        await escrow
-            .withWallet(buyerWallet)
-            .methods.sync_private_state()
-            .simulate({ from: buyerAddress });
-        const buyerDefinition = await escrow
-            .withWallet(buyerWallet)
-            .methods
-            .get_config()
-            .simulate({ from: buyerAddress });
-        expect(buyerDefinition.owner).not.toEqual(0n);
+        const buyerConfig = await getEscrowConfig(buyerWallet, escrow)
+        expect(buyerConfig.owner).not.toEqual(0n);
     });
 
     test("e2e", async () => {

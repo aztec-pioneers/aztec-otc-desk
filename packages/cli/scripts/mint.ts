@@ -37,8 +37,7 @@ const main = async () => {
         .withWallet(wallet)
         .methods
         .mint_to_private(sellerAddress, ETH_MINT_AMOUNT)
-        .send(opts.send)
-        .wait(opts.wait);
+        .send(opts.send);
     console.log("10 eth minted to seller");
 
     // get USDC token
@@ -50,8 +49,7 @@ const main = async () => {
         .withWallet(wallet)
         .methods
         .mint_to_private(buyerAddress, USDC_MINT_AMOUNT)
-        .send(opts.send)
-        .wait(opts.wait);
+        .send(opts.send);
     console.log("50,000 USDC minted to buyer");
 }
 

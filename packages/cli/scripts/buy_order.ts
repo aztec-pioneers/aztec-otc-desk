@@ -53,7 +53,8 @@ const main = async () => {
     // if testnet, get send/ wait opts optimized for waiting and high gas
     const opts = await getTestnetSendWaitOptions(node, wallet, buyerAddress);
 
-    // fill the otc order
+    // fill the otc order — add escrow to scopes so buyer can read escrow's config note
+    opts.send = { ...opts.send, additionalScopes: [escrow.address] };
     console.log("Attempting to fill order");
     const txHash = await fillOTCOrder(
         wallet,

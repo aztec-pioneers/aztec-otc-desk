@@ -38,12 +38,8 @@ cd packages/contracts
 bun install
 bun run build
 
-## Run the TXE tests
-bun run test:nr
 ## Run the PXE tests
 bun test
-## Run both tests
-bun run test
 ```
 
 ### 2. 🖥️ CLI Demo (`packages/cli`)
@@ -245,8 +241,6 @@ bun run build
 # Contract tests (requires running sandbox)
 cd packages/contracts
 bun test                # Run JS (PXE) tests
-bun run test:nr         # Run Noir (TXE) tests
-bun run test            # Run all contract tests
 
 # Orderflow service tests
 cd packages/api

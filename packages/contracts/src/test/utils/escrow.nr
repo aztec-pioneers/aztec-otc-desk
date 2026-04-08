@@ -1,6 +1,6 @@
 use aztec::{
     oracle::random::random,
-    protocol_types::address::AztecAddress,
+    protocol::address::AztecAddress,
     test::helpers::test_environment::TestEnvironment,
 };
 use crate::{
@@ -13,7 +13,7 @@ pub unconstrained fn get_escrow_config(
     env: &mut TestEnvironment,
     escrow_address: AztecAddress
 ) -> ConfigNote {
-    env.simulate_utility(
+    env.execute_utility(
         OTCEscrow::at(escrow_address)
             .get_config()
     )

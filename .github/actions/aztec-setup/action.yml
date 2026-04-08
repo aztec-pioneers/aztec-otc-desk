@@ -47,19 +47,23 @@ runs:
         echo "Aztec version is $AZTEC_VERSION"
       shell: bash
 
+    - name: Install Foundry
+      uses: foundry-rs/foundry-toolchain@v1
+
     - name: Install Aztec CLI
       run: |
-        curl -s https://install.aztec.network > tmp.sh
-        bash tmp.sh <<< yes "yes"
+        curl -sL https://install.aztec.network | bash
       shell: bash
 
     - name: Update path for Aztec
-      run: echo "/home/runner/.aztec/bin" >> $GITHUB_PATH
+      run: echo "$HOME/.aztec/bin" >> $GITHUB_PATH
       shell: bash
 
-    - name: Set Aztec version
+    - name: Install Aztec version
       run: |
-        VERSION=${{ steps.aztec-version.outputs.version }} aztec-up
+        aztec-up install ${{ steps.aztec-version.outputs.version }}
+        echo "$HOME/.aztec/current/node_modules/.bin" >> $GITHUB_PATH
+        echo "$HOME/.aztec/current/bin" >> $GITHUB_PATH
       shell: bash
     
     - name: Start Aztec local network
@@ -78,7 +82,7 @@ runs:
       if: inputs.start-local-net == 'true'
       run: |
         echo "Waiting for Aztec node to be ready..."
-        timeout 120 bash -c 'until curl -f http://localhost:8080/status > /dev/null 2>&1; do sleep 2; done'
+        timeout 300 bash -c 'until curl -f http://localhost:8080/status > /dev/null 2>&1; do sleep 2; done'
         echo "Aztec node is ready!"
       shell: bash
 

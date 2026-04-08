@@ -1,10 +1,10 @@
 use aztec::{
     macros::notes::note,
     oracle::random::random,
-    protocol_types::{
+    protocol::{
         traits::{Deserialize, Serialize, Packable},
         address::AztecAddress,
-    },  
+    },
 };
 use poseidon::poseidon2::Poseidon2;
 

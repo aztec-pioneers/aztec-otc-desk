@@ -12,7 +12,7 @@ pub contract OTCEscrow {
             storage::storage
         },
         messages::message_delivery::MessageDelivery,
-        protocol_types::address::AztecAddress,
+        protocol::address::AztecAddress,
         state_vars::SinglePrivateImmutable
     };
     use token_contract::Token;
@@ -52,7 +52,7 @@ pub contract OTCEscrow {
         
         self.storage.config
             .initialize(config)
-            .deliver(MessageDelivery.CONSTRAINED_ONCHAIN);
+            .deliver(MessageDelivery.ONCHAIN_CONSTRAINED);
     }
     
     /**
@@ -64,7 +64,7 @@ pub contract OTCEscrow {
     #[external("private")]
     fn deposit_tokens(_nonce: Field) {
         let config = self.storage.config.get_note();
-        let caller = self.msg_sender().expect(f"Caller not defined");
+        let caller = self.msg_sender();
 
         // transfer tokens in
         self.call(Token::at(config.sell_token_address)
@@ -88,7 +88,7 @@ pub contract OTCEscrow {
     #[external("private")]
     fn fill_order(_nonce: Field) {
         let config = self.storage.config.get_note();
-        let caller = self.msg_sender().expect(f"Caller not defined");
+        let caller = self.msg_sender();
 
         // transfer ask tokens in
         self.call(Token::at(config.buy_token_address)

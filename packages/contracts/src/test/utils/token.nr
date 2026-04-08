@@ -1,6 +1,6 @@
 use token_contract::Token;
 use aztec::{
-    protocol_types::address::AztecAddress,
+    protocol::address::AztecAddress,
     test::helpers::{test_environment::TestEnvironment, authwit}
 };
 
@@ -19,7 +19,7 @@ pub unconstrained fn expect_private_balance(
     expected_balance: u128
 ) {
     assert_eq(
-        env.simulate_utility(Token::at(token_address).balance_of_private(account_address)),
+        env.execute_utility(Token::at(token_address).balance_of_private(account_address)),
         expected_balance,
     )
 }

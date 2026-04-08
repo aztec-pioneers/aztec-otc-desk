@@ -1,2 +1,2 @@
-export { TokenContract, TokenContractArtifact } from "./token/Token";
-export { OTCEscrowContract, OTCEscrowContractArtifact } from "./escrow/OTCEscrow";
+export { TokenContract, TokenContractArtifact } from "./token/Token.js";
+export { OTCEscrowContract, OTCEscrowContractArtifact } from "./escrow/OTCEscrow.js";
