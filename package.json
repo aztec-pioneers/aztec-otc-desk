@@ -3,18 +3,18 @@
   "workspaces": {
     "packages": ["packages/*"],
     "catalog": {
-      "@aztec/aztec.js": "4.2.0-aztecnr-rc.2",
-      "@aztec/accounts": "4.2.0-aztecnr-rc.2",
-      "@aztec/constants": "4.2.0-aztecnr-rc.2",
-      "@aztec/entrypoints": "4.2.0-aztecnr-rc.2",
-      "@aztec/ethereum": "4.2.0-aztecnr-rc.2",
-      "@aztec/foundation": "4.2.0-aztecnr-rc.2",
-      "@aztec/noir-contracts.js": "4.2.0-aztecnr-rc.2",
-      "@aztec/pxe": "4.2.0-aztecnr-rc.2",
-      "@aztec/stdlib": "4.2.0-aztecnr-rc.2",
-      "@aztec/wallets": "4.2.0-aztecnr-rc.2",
-      "@aztec/wallet-sdk": "4.2.0-aztecnr-rc.2",
-      "@aztec/protocol-contracts": "4.2.0-aztecnr-rc.2",
+      "@aztec/aztec.js": "4.2.0",
+      "@aztec/accounts": "4.2.0",
+      "@aztec/constants": "4.2.0",
+      "@aztec/entrypoints": "4.2.0",
+      "@aztec/ethereum": "4.2.0",
+      "@aztec/foundation": "4.2.0",
+      "@aztec/noir-contracts.js": "4.2.0",
+      "@aztec/pxe": "4.2.0",
+      "@aztec/stdlib": "4.2.0",
+      "@aztec/wallets": "4.2.0",
+      "@aztec/wallet-sdk": "4.2.0",
+      "@aztec/protocol-contracts": "4.2.0",
       "@jest/globals": "^30.0.5",
       "@types/bun": "latest",
       "@types/jest": "^30.0.0",
@@ -29,7 +29,7 @@
     "devnet": "bun run scripts/docker.ts api"
   },
   "config": {
-    "aztecVersion": "4.2.0-aztecnr-rc.2",
+    "aztecVersion": "4.2.0",
     "aztecStandardsVersion": "dev"
   }
 }
