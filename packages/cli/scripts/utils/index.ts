@@ -1,4 +1,5 @@
 import { EmbeddedWallet } from "@aztec/wallets/embedded";
+import type { NoFrom } from "@aztec/aztec.js/account";
 import { getInitialTestAccountsData } from "@aztec/accounts/testing";
 import { isTestnet, wad } from "@aztec-otc-desk/contracts/utils";
 import { getPriorityFeeOptions, getSponsoredPaymentMethod } from "@aztec-otc-desk/contracts/fees";
@@ -27,7 +28,7 @@ export const testnetInterval = 3; // seconds between polling for tx
 export const getTestnetSendWaitOptions = async (
     node: AztecNode,
     wallet: EmbeddedWallet,
-    from: AztecAddress,
+    from: AztecAddress | NoFrom,
     withFPC: boolean = true,
 ): Promise<{
     send: SendInteractionOptions<WaitOpts>,
